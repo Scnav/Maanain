@@ -2,23 +2,87 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Programação</title>
+    <title>Programação - MAANAIN</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <!-- HEADER (IGUAL AO INDEX) -->
     <header class="header">
-        <h1>IGREJA MAANAIN</h1>
+        <h1>MAANAIN</h1>
+        <p class="header-subtitle">Igreja Evangélica da Cidade</p>
         <nav class="nav">
-            <a href="index.html">Notícias</a>
+            <a href="index.html">Início</a>
             <a href="programacao.html">Programação</a>
-            <a href="login.html">Login</a>
+            <a href="login.html">Área do Membro</a>
         </nav>
     </header>
 
-    <main class="main">
-        <h2>Programação do Site</h2>
-        <p>Conteúdo relacionado a programação (tutoriais, dicas, etc.).</p>
-    </main>
+    <!-- CONTEÚDO PROGRAMAÇÃO -->
+    <section class="section">
+        <div class="hero">
+            <h2>Agenda de Cultos e Eventos</h2>
+            <p>Conheça todos os nossos encontros semanais e especiais</p>
+        </div>
+
+        <!-- CARDS DE PROGRAMAÇÃO -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
+            
+            <!-- SÁBADO -->
+            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
+                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h4>Culto de Adoração</h4>
+                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                    Sábado • 18:30
+                </p>
+                <p>Salão Principal - MAANAIN</p>
+            </div>
+
+            <!-- DOMINGO EBD -->
+            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
+                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h4>Escola Bíblica Dominical</h4>
+                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                    Domingo • 08:30
+                </p>
+                <p>Sala de Ensino - MAANAIN</p>
+            </div>
+
+            <!-- DOMINGO CULT O -->
+            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
+                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
+                    <i class="fas fa-church"></i>
+                </div>
+                <h4>Culto de Ensino</h4>
+                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                    Domingo • 09:45
+                </p>
+                <p>Salão Principal - MAANAIN</p>
+            </div>
+
+            <!-- QUARTA ORAÇÃO -->
+            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
+                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
+                    <i class="fas fa-hands-praying"></i>
+                </div>
+                <h4>Culto de Oração</h4>
+                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                    Quarta-feira • 19:30
+                </p>
+                <p>Salão Principal - MAANAIN</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER (IGUAL AO INDEX) -->
+    <footer class="footer">
+        <p>MAANAIN © 2026 – Toda glória a Deus</p>
+        <p><a href="mailto:contato@maanain.com.br" style="color: white;">contato@maanain.com.br</a> | (XX) 9XXXX-XXXX</p>
+    </footer>
 
     <script src="js/script.js"></script>
 </body>

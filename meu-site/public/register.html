@@ -2,28 +2,69 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Registro</title>
+    <title>Novo Membro - MAANAIN</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <!-- HEADER (IGUAL AO INDEX) -->
     <header class="header">
-        <h1>Registro</h1>
+        <h1>MAANAIN</h1>
+        <p class="header-subtitle">Igreja Evangélica da Cidade</p>
+        <nav class="nav">
+            <a href="index.html">Início</a>
+            <a href="programacao.html">Programação</a>
+            <a href="login.html">Área do Membro</a>
+        </nav>
     </header>
 
-    <main class="main">
-        <form class="form" id="registerForm">
-            <label>Nome de usuário</label>
-            <input type="text" name="username" required>
+    <!-- FORMULÁRIO DE REGISTRO -->
+    <section class="section">
+        <div class="form-section">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-user-plus" style="font-size: 4rem; color: var(--verde-principal);"></i>
+            </div>
+            
+            <h2>Cadastre-se na MAANAIN</h2>
+            <p style="text-align: center; color: var(--cinza-escuro); margin-bottom: 2rem;">
+                Crie sua conta para ter acesso à área exclusiva dos membros
+            </p>
 
-            <label>Email</label>
-            <input type="email" name="email" required>
+            <form id="registerForm" style="display: flex; flex-direction: column;">
+                <label style="font-weight: 600; color: var(--verde-principal); margin-bottom: 0.5rem;">
+                    Nome completo
+                </label>
+                <input type="text" name="name" placeholder="Ex: João da Silva" required>
 
-            <label>Senha</label>
-            <input type="password" name="password" required>
+                <label style="font-weight: 600; color: var(--verde-principal); margin-bottom: 0.5rem;">
+                    Nome de usuário
+                </label>
+                <input type="text" name="username" placeholder="Ex: joaosilva" required>
 
-            <button type="submit">Cadastrar</button>
-        </form>
-    </main>
+                <label style="font-weight: 600; color: var(--verde-principal); margin-bottom: 0.5rem;">
+                    Email
+                </label>
+                <input type="email" name="email" placeholder="seu@email.com" required>
+
+                <label style="font-weight: 600; color: var(--verde-principal); margin-bottom: 0.5rem;">
+                    Senha
+                </label>
+                <input type="password" name="password" placeholder="Digite sua senha" required>
+
+                <button type="submit">Cadastrar Novo Membro</button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem;">
+                Já tem conta? <a href="login.html" style="color: var(--dourado); font-weight: 600;">Faça login</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- FOOTER (IGUAL AO INDEX) -->
+    <footer class="footer">
+        <p>MAANAIN © 2026 – Toda glória a Deus</p>
+        <p><a href="mailto:contato@maanain.com.br" style="color: white;">contato@maanain.com.br</a> | (XX) 9XXXX-XXXX</p>
+    </footer>
 
     <script src="js/script.js"></script>
 </body>
