@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Bíblia - MAANAIN</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- HEADER (será controlado pelo JS) -->
+    <header class="header">
+        <h1>MAANAIN</h1>
+        <p class="header-subtitle">Igreja Evangélica da Cidade</p>
+        <nav class="nav">
+            <a href="index.html" data-aba="inicio">Início</a>
+            <a href="programacao.html" data-aba="programacao">Programação</a>
+            <a href="biblia.html" data-aba="biblia">Bíblia</a>
+            <a href="login.html">Entrar</a>
+        </nav>
+    </header>
+
+    <!-- CONTEÚDO BÍBLIA -->
+    <section class="section">
+        <div class="hero">
+            <h2>Estudos Bíblicos</h2>
+            <p>Devocionais, estudos e mensagens para edificação</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
+            <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
+                <i class="fas fa-book-bible" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
+                <h3>Devocional Diário</h3>
+                <p>Leitura e reflexão do dia para começar bem sua jornada espiritual.</p>
+            </div>
+
+            <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
+                <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
+                <h3>Estudos Semanais</h3>
+                <p>Prepare-se para a Escola Bíblica Dominical com nossos estudos.</p>
+            </div>
+
+            <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
+                <i class="fas fa-podcast" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
+                <h3>Mensagens</h3>
+                <p>Ouvi ou leia as pregações dos últimos domingos.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>MAANAIN © 2026 – Toda glória a Deus</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

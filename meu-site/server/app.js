@@ -16,14 +16,16 @@ app.use(cors());
 
 // Criar tabela de usuários se não existir
 db.serialize(() => {
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT,
-            password_hash TEXT NOT NULL
-        )
-    `);
+    // Na parte de criação da tabela, altere para:
+db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT,
+        password_hash TEXT NOT NULL,
+        role TEXT DEFAULT 'frequentador'  -- 👈 NOVA COLUNA
+    )
+`);
 });
 
 // Rota: cadastro de usuário
@@ -37,7 +39,7 @@ app.post("/api/register", async (req, res) => {
     try {
         const hashed = await bcrypt.hash(password, 10);
         const stmt = db.prepare("INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)");
-        stmt.run(username, email || null, hashed, function (err) {
+        stmt.run(username, email || null, hashed, 'frequentador', function (err) {
             if (err) {
                 if (err.message.includes("UNIQUE constraint failed")) {
                     return res.status(400).json({ error: "Usuário já existe." });
@@ -73,7 +75,7 @@ app.post("/api/login", async (req, res) => {
             }
             res.json({
                 message: "Login bem‑sucedido!",
-                user: { id: row.id, username: row.username, email: row.email }
+                user: { id: row.id, username: row.username, email: row.email, role: row.role }
             });
         }
     );
