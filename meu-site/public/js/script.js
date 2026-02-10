@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ADMIN: 'admin'
     };
 
+    // CORREÇÃO: Nomes EXATOS das abas que aparecem no HTML
     const ABAS_POR_ROLE = {
         [ROLES.VISITANTE]: ['inicio', 'programacao'],
         [ROLES.FREQUENTADOR]: ['inicio', 'programacao', 'biblia'],
@@ -18,45 +19,75 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let usuarioLogado = null;
 
-    // Função para carregar usuário do localStorage
+    // Carrega usuário do localStorage
     function carregarUsuario() {
         const userData = localStorage.getItem('maanain_user');
         if (userData) {
             usuarioLogado = JSON.parse(userData);
             atualizarHeader();
+            // 👇 REDIRECIONA PARA INÍCIO SE ACABOU DE LOGAR
+            if (window.location.pathname.includes('login.html') || window.location.pathname.includes('register.html')) {
+                window.location.href = 'index.html';
+            }
         }
     }
 
-    // Função para atualizar header baseado na role
+    // CORREÇÃO: Header dinâmico COMPLETO
     function atualizarHeader() {
-        const navLinks = document.querySelectorAll('.nav a');
-        navLinks.forEach(link => {
-            const aba = link.getAttribute('data-aba') || link.textContent.toLowerCase();
-            
-            if (!usuarioLogado || !ABAS_POR_ROLE[usuarioLogado.role]?.includes(aba)) {
-                link.style.display = 'none';
+        const nav = document.querySelector('.nav');
+        if (!nav) return;
+
+        // Limpa links existentes
+        nav.innerHTML = '';
+
+        // Define abas baseado na role
+        const abasVisiveis = usuarioLogado ? 
+            ABAS_POR_ROLE[usuarioLogado.role] || ABAS_POR_ROLE[ROLES.VISITANTE] : 
+            ABAS_POR_ROLE[ROLES.VISITANTE];
+
+        // Cria links das abas permitidas
+        const links = {
+            'inicio': { href: 'index.html', texto: 'Início' },
+            'programacao': { href: 'programacao.html', texto: 'Programação' },
+            'biblia': { href: 'biblia.html', texto: 'Bíblia' },
+            'membros': { href: 'membros.html', texto: 'Membros' },
+            'relatorios': { href: 'relatorios.html', texto: 'Relatórios' },
+            'admin': { href: 'admin.html', texto: 'Admin' }
+        };
+
+        abasVisiveis.forEach(aba => {
+            if (links[aba]) {
+                const link = document.createElement('a');
+                link.href = links[aba].href;
+                link.textContent = links[aba].texto;
+                link.setAttribute('data-aba', aba);
+                nav.appendChild(link);
             }
         });
 
-        // Botão de logout se logado
-        const nav = document.querySelector('.nav');
-        if (usuarioLogado && !document.querySelector('#logout-link')) {
+        // 👇 BOTÃO SAIR (só se logado)
+        if (usuarioLogado) {
             const logoutBtn = document.createElement('a');
             logoutBtn.href = '#';
             logoutBtn.id = 'logout-link';
-            logoutBtn.textContent = 'Sair';
-            logoutBtn.style.color = '#ff6b6b';
+            logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Sair';
+            logoutBtn.style.cssText = `
+                color: #ff6b6b !important;
+                font-weight: 600;
+                padding: 0.8rem 1.5rem !important;
+            `;
             logoutBtn.onclick = fazerLogout;
             nav.appendChild(logoutBtn);
         }
     }
 
-    // Função logout
-    function fazerLogout() {
+    // Logout
+    function fazerLogout(e) {
+        e.preventDefault();
         localStorage.removeItem('maanain_user');
         usuarioLogado = null;
         atualizarHeader();
-        alert('Logout realizado com sucesso!');
+        alert('Você saiu da Área do Membro. Volte sempre!');
     }
 
     // ========== LOGIN ==========
@@ -72,19 +103,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
             })
-                .then(r => r.json())
-                .then((data) => {
-                    if (data.error) {
-                        alert("Erro: " + data.error);
-                    } else {
-                        // Salva no localStorage com role
-                        localStorage.setItem('maanain_user', JSON.stringify(data.user));
-                        usuarioLogado = data.user;
-                        atualizarHeader();
-                        alert(`Bem-vindo, ${data.user.username}! (${data.user.role})`);
-                    }
-                })
-                .catch(err => alert("Erro na conexão: " + err.message));
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    alert("❌ Erro: " + data.error);
+                } else {
+                    // Salva usuário e redireciona
+                    localStorage.setItem('maanain_user', JSON.stringify(data.user));
+                    usuarioLogado = data.user;
+                    atualizarHeader();
+                    
+                    // 👇 REDIRECIONAMENTO IMEDIATO PARA INÍCIO
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 500);
+                }
+            })
+            .catch(err => alert("❌ Erro de conexão: " + err.message));
         });
     }
 
@@ -101,19 +136,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
             })
-                .then(r => r.json())
-                .then((data) => {
-                    if (data.error) {
-                        alert("Erro: " + data.error);
-                    } else {
-                        alert("Cadastro concluído! Faça login agora.");
-                        window.location.href = 'login.html';
-                    }
-                })
-                .catch(err => alert("Erro na conexão: " + err.message));
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    alert("❌ Erro: " + data.error);
+                } else {
+                    alert("✅ Cadastro realizado! Faça login agora.");
+                    window.location.href = 'login.html';
+                }
+            })
+            .catch(err => alert("❌ Erro de conexão: " + err.message));
         });
     }
 
-    // Carrega estado inicial
+    // Inicializa sistema
     carregarUsuario();
 });

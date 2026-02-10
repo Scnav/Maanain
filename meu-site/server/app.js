@@ -14,21 +14,31 @@ const db = new sqlite3.Database(DB_PATH);
 app.use(express.json());
 app.use(cors());
 
-// Criar tabela de usuários se não existir
+// ✅ CORRIGIDO: Criação/migração da tabela SEM ERRO
 db.serialize(() => {
-    // Na parte de criação da tabela, altere para:
-db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT,
-        password_hash TEXT NOT NULL,
-        role TEXT DEFAULT 'frequentador'  -- 👈 NOVA COLUNA
-    )
-`);
+    // Tenta criar tabela NOVA com role
+    db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT,
+            password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'frequentador'
+        )
+    `, (err) => {
+        if (err && err.message.includes("users already exists")) {
+            // ✅ SE TABELA JÁ EXISTE, ADICIONA COLUNA role
+            db.run("PRAGMA table_info(users)", (err, rows) => {
+                const temRole = rows.some(row => row.name === 'role');
+                if (!temRole) {
+                    db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'frequentador'");
+                }
+            });
+        }
+    });
 });
 
-// Rota: cadastro de usuário
+// ✅ REGISTER PERFEITO (4 parâmetros)
 app.post("/api/register", async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -38,7 +48,7 @@ app.post("/api/register", async (req, res) => {
 
     try {
         const hashed = await bcrypt.hash(password, 10);
-        const stmt = db.prepare("INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)");
+        const stmt = db.prepare("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)");
         stmt.run(username, email || null, hashed, 'frequentador', function (err) {
             if (err) {
                 if (err.message.includes("UNIQUE constraint failed")) {
@@ -54,7 +64,7 @@ app.post("/api/register", async (req, res) => {
     }
 });
 
-// Rota: login
+// ✅ LOGIN PERFEITO (busca role)
 app.post("/api/login", async (req, res) => {
     const { username, password } = req.body;
 
@@ -63,27 +73,40 @@ app.post("/api/login", async (req, res) => {
     }
 
     db.get(
-        "SELECT id, username, email, password_hash FROM users WHERE username = ?",
+        "SELECT id, username, email, password_hash, role FROM users WHERE username = ?",
         [username],
         async (err, row) => {
             if (err || !row) {
                 return res.status(400).json({ error: "Usuário ou senha inválidos." });
             }
+            
+            // Se não tem role, define como frequentador
+            if (!row.role) {
+                db.run("UPDATE users SET role = 'frequentador' WHERE id = ?", [row.id]);
+                row.role = 'frequentador';
+            }
+            
             const valid = await bcrypt.compare(password, row.password_hash);
             if (!valid) {
                 return res.status(400).json({ error: "Usuário ou senha inválidos." });
             }
+            
             res.json({
-                message: "Login bem‑sucedido!",
-                user: { id: row.id, username: row.username, email: row.email, role: row.role }
+                message: "Login bem-sucedido!",
+                user: { 
+                    id: row.id, 
+                    username: row.username, 
+                    email: row.email, 
+                    role: row.role 
+                }
             });
         }
     );
 });
 
-// Servir arquivos estáticos do diretório /public
+// Servir arquivos estáticos
 app.use("/", express.static(path.join(__dirname, "../public")));
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
+    console.log(`✅ Servidor MAANAIN rodando em http://localhost:${PORT}`);
 });
