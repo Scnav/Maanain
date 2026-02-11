@@ -131,5 +131,5 @@ app.use("/", express.static(path.join(__dirname, "../public")));
 
 app.listen(PORT, () => {
     console.log(`✅ MAANAIN Server: http://localhost:${PORT}`);
-    console.log(`🔥 Criar admin: http://localhost:${PORT}/setar-admin`);
+    
 });
