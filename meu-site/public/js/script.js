@@ -1,58 +1,32 @@
+// VARIÁVEL GLOBAL para controle
+window.MAANAIN_AUTH = { usuario: null, atualizarHeader: null };
+
 document.addEventListener("DOMContentLoaded", () => {
-    // ========== SISTEMA DE ROLES ==========
-    const ROLES = {
-        VISITANTE: 'visitante',
-        FREQUENTADOR: 'frequentador',
-        MEMBRO: 'membro',
-        CONSELHO: 'conselho',
-        ADMIN: 'admin'
-    };
-
-    // CORREÇÃO: Nomes EXATOS das abas que aparecem no HTML
-    const ABAS_POR_ROLE = {
-        [ROLES.VISITANTE]: ['inicio', 'programacao'],
-        [ROLES.FREQUENTADOR]: ['inicio', 'programacao', 'biblia'],
-        [ROLES.MEMBRO]: ['inicio', 'programacao', 'biblia', 'membros'],
-        [ROLES.CONSELHO]: ['inicio', 'programacao', 'biblia', 'membros', 'relatorios'],
-        [ROLES.ADMIN]: ['inicio', 'programacao', 'biblia', 'membros', 'relatorios', 'admin']
-    };
-
     let usuarioLogado = null;
 
-    // Carrega usuário do localStorage
-    function carregarUsuario() {
-        const userData = localStorage.getItem('maanain_user');
-        if (userData) {
-            usuarioLogado = JSON.parse(userData);
-            atualizarHeader();
-            // 👇 REDIRECIONA PARA INÍCIO SE ACABOU DE LOGAR
-            if (window.location.pathname.includes('login.html') || window.location.pathname.includes('register.html')) {
-                window.location.href = 'index.html';
-            }
-        }
-    }
-
-    // CORREÇÃO: Header dinâmico COMPLETO
+    // ✅ HEADER CORRIGIDO COM "Entrar" para Visitante
     function atualizarHeader() {
         const nav = document.querySelector('.nav');
         if (!nav) return;
 
-        // Limpa links existentes
-        nav.innerHTML = '';
+        nav.innerHTML = ''; // Limpa tudo
 
-        // Define abas baseado na role
-        const abasVisiveis = usuarioLogado ? 
-            ABAS_POR_ROLE[usuarioLogado.role] || ABAS_POR_ROLE[ROLES.VISITANTE] : 
-            ABAS_POR_ROLE[ROLES.VISITANTE];
+        let abasVisiveis;
+        if (usuarioLogado?.role === 'admin') {
+            abasVisiveis = ['inicio', 'programacao', 'biblia', 'admin'];
+        } else if (usuarioLogado?.role === 'frequentador') {
+            abasVisiveis = ['inicio', 'programacao', 'biblia'];
+        } else {
+            // 👇 VISITANTE: Início | Programação | Entrar
+            abasVisiveis = ['inicio', 'programacao', 'entrar'];
+        }
 
-        // Cria links das abas permitidas
         const links = {
             'inicio': { href: 'index.html', texto: 'Início' },
             'programacao': { href: 'programacao.html', texto: 'Programação' },
             'biblia': { href: 'biblia.html', texto: 'Bíblia' },
-            'membros': { href: 'membros.html', texto: 'Membros' },
-            'relatorios': { href: 'relatorios.html', texto: 'Relatórios' },
-            'admin': { href: 'admin.html', texto: 'Admin' }
+            'admin': { href: 'admin.html', texto: 'Admin' },
+            'entrar': { href: 'login.html', texto: 'Entrar' }
         };
 
         abasVisiveis.forEach(aba => {
@@ -60,43 +34,49 @@ document.addEventListener("DOMContentLoaded", () => {
                 const link = document.createElement('a');
                 link.href = links[aba].href;
                 link.textContent = links[aba].texto;
-                link.setAttribute('data-aba', aba);
+                link.dataset.aba = aba;
                 nav.appendChild(link);
             }
         });
 
-        // 👇 BOTÃO SAIR (só se logado)
+        // Botão Sair (se logado)
         if (usuarioLogado) {
             const logoutBtn = document.createElement('a');
             logoutBtn.href = '#';
             logoutBtn.id = 'logout-link';
             logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Sair';
-            logoutBtn.style.cssText = `
-                color: #ff6b6b !important;
-                font-weight: 600;
-                padding: 0.8rem 1.5rem !important;
-            `;
-            logoutBtn.onclick = fazerLogout;
+            logoutBtn.style.cssText = 'color: #ff6b6b !important; font-weight: 600;';
+            logoutBtn.onclick = (e) => { e.preventDefault(); fazerLogout(); };
             nav.appendChild(logoutBtn);
         }
     }
 
+    // Carrega usuário
+    function carregarUsuario() {
+        const userData = localStorage.getItem('maanain_user');
+        usuarioLogado = userData ? JSON.parse(userData) : null;
+        atualizarHeader();
+
+        // Redireciona se já logado
+        if (usuarioLogado && (window.location.pathname.includes('login.html') || window.location.pathname.includes('register.html'))) {
+            window.location.href = 'index.html';
+        }
+    }
+
     // Logout
-    function fazerLogout(e) {
-        e.preventDefault();
+    function fazerLogout() {
         localStorage.removeItem('maanain_user');
         usuarioLogado = null;
         atualizarHeader();
-        alert('Você saiu da Área do Membro. Volte sempre!');
+        setTimeout(() => window.location.reload(), 100);
     }
 
-    // ========== LOGIN ==========
+    // LOGIN
     const loginForm = document.getElementById("loginForm");
     if (loginForm) {
         loginForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            const fd = new FormData(loginForm);
-            const body = Object.fromEntries(fd.entries());
+            const body = Object.fromEntries(new FormData(loginForm).entries());
 
             fetch("http://localhost:3000/api/login", {
                 method: "POST",
@@ -106,30 +86,24 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(data => {
                 if (data.error) {
-                    alert("❌ Erro: " + data.error);
+                    alert("❌ " + data.error);
                 } else {
-                    // Salva usuário e redireciona
                     localStorage.setItem('maanain_user', JSON.stringify(data.user));
                     usuarioLogado = data.user;
                     atualizarHeader();
-                    
-                    // 👇 REDIRECIONAMENTO IMEDIATO PARA INÍCIO
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 500);
+                    setTimeout(() => window.location.href = 'index.html', 500);
                 }
             })
-            .catch(err => alert("❌ Erro de conexão: " + err.message));
+            .catch(err => alert("❌ " + err.message));
         });
     }
 
-    // ========== REGISTRO ==========
+    // REGISTER
     const registerForm = document.getElementById("registerForm");
     if (registerForm) {
         registerForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            const fd = new FormData(registerForm);
-            const body = Object.fromEntries(fd.entries());
+            const body = Object.fromEntries(new FormData(registerForm).entries());
 
             fetch("http://localhost:3000/api/register", {
                 method: "POST",
@@ -139,16 +113,21 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(data => {
                 if (data.error) {
-                    alert("❌ Erro: " + data.error);
+                    alert("❌ " + data.error);
                 } else {
-                    alert("✅ Cadastro realizado! Faça login agora.");
+                    alert("✅ Cadastro OK!");
                     window.location.href = 'login.html';
                 }
             })
-            .catch(err => alert("❌ Erro de conexão: " + err.message));
+            .catch(err => alert("❌ " + err.message));
         });
     }
 
-    // Inicializa sistema
+    // Multi-abas
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'maanain_user') window.location.reload();
+    });
+
+    // Inicializa
     carregarUsuario();
 });
