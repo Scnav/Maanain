@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - MAANAIN</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* HEADER VERMELHO ESPECÍFICO */
+        body.admin-mode .header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            box-shadow: 0 4px 20px rgba(220, 53, 69, 0.4) !important;
+        }
+        
+        .admin-container { display: flex; min-height: calc(100vh - 120px); }
+        .admin-sidebar { 
+            width: 280px; 
+            background: rgba(255,255,255,0.95); 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+            padding: 2rem 0; 
+        }
+        .admin-main { flex: 1; padding: 2rem; }
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+        .sidebar-section h3 { 
+            padding: 0 1.5rem 1rem; 
+            color: #dc3545; 
+            font-size: 0.9rem; 
+            text-transform: uppercase; 
+        }
+        .sidebar-section a { 
+            display: block; padding: 1rem 1.5rem; 
+            color: #333; text-decoration: none; 
+            transition: all 0.3s; 
+        }
+        .sidebar-section a:hover, .sidebar-section a.active { 
+            background: rgba(220, 53, 69, 0.1); 
+            color: #dc3545; 
+        }
+        .stats-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 1.5rem; margin-top: 2rem; 
+        }
+        .stat-card { 
+            background: white; padding: 2rem; border-radius: 15px; 
+            text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+        }
+        .stat-card h3 { font-size: 2.5rem; color: #dc3545; }
+        .users-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .users-table th, .users-table td { padding: 1rem; border-bottom: 1px solid #eee; text-align: left; }
+        .users-table th { background: rgba(220, 53, 69, 0.1); color: #dc3545; }
+        .admin-badge { background: #dc3545; color: white; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem; }
+    </style>
+</head>
+<body class="admin-mode">
+    <!-- HEADER VERMELHO -->
+    <header class="header">
+        <h1>MAANAIN <span style="font-size: 0.6em; opacity: 0.8;">🔐 ADMIN</span></h1>
+        <p class="header-subtitle">Painel Administrativo Completo</p>
+        <nav class="nav">
+            <a href="index.html">← Voltar ao Site</a>
+        </nav>
+    </header>
+
+    <div class="admin-container">
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-section">
+                <h3>📊 Dashboard</h3>
+                <a href="#" data-section="stats" class="active"><i class="fas fa-chart-bar"></i> Estatísticas</a>
+            </div>
+            <div class="sidebar-section">
+                <h3>👥 Usuários</h3>
+                <a href="#" data-section="users"><i class="fas fa-users"></i> Todos os Usuários</a>
+            </div>
+            <div class="sidebar-section">
+                <h3>📰 Conteúdo</h3>
+                <a href="#" data-section="noticias"><i class="fas fa-newspaper"></i> Notícias</a>
+                <a href="#" data-section="eventos"><i class="fas fa-calendar"></i> Eventos</a>
+            </div>
+            <a href="index.html" id="logout-admin" style="position: absolute; bottom: 2rem; left: 1.5rem; right: 1.5rem; color: #ff6b6b; padding: 1rem; text-decoration: none; border-top: 1px solid #eee;">
+                <i class="fas fa-sign-out-alt"></i> Sair do Painel Admin
+            </a>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="admin-main">
+            <!-- ESTATÍSTICAS -->
+            <section id="stats" class="admin-section active">
+                <h2>📊 Estatísticas da MAANAIN</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="total-users">0</h3>
+                        <p>Total de Usuários Cadastrados</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="frequentadores">0</h3>
+                        <p>Frequentadores Ativos</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="admins">0</h3>
+                        <p>Administradores</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- USUÁRIOS -->
+            <section id="users" class="admin-section">
+                <h2>👥 Gerenciar Usuários</h2>
+                <div style="background: white; border-radius: 15px; padding: 1.5rem; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-top: 1rem;">
+                    <table class="users-table" id="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <tr><td colspan="5" style="text-align: center; padding: 2rem;">Carregando usuários...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- NOTÍCIAS -->
+            <section id="noticias" class="admin-section">
+                <h2>📰 Gerenciar Notícias</h2>
+                <p>Funcionalidade em desenvolvimento... <br>
+                <small>Crie notícias que aparecerão no site público!</small></p>
+            </section>
+
+            <!-- EVENTOS -->
+            <section id="eventos" class="admin-section">
+                <h2>📅 Gerenciar Eventos</h2>
+                <p>Funcionalidade em desenvolvimento...</p>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // ✅ VERIFICA SE É ADMIN
+        const user = JSON.parse(localStorage.getItem('maanain_user') || '{}');
+        if (!user?.role || user.role !== 'admin') {
+            alert('🔒 Acesso restrito a administradores');
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // TOKEN SIMPLES PARA ADMIN
+            const ADMIN_TOKEN = 'maanain2026';
+
+            // Carrega usuários
+            try {
+                const usersRes = await fetch('http://localhost:3000/api/admin/users', {
+                    headers: { 'X-Admin-Token': ADMIN_TOKEN }
+                });
+                const users = await usersRes.json();
+
+                const tbody = document.getElementById('users-tbody');
+                tbody.innerHTML = '';
+
+                let frequentadores = 0, admins = 0;
+                users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    const roleClass = u.role === 'admin' ? 'admin-badge' : '';
+                    
+                    if (u.role === 'frequentador') frequentadores++;
+                    if (u.role === 'admin') admins++;
+
+                    tr.innerHTML = `
+                        <td>${u.id}</td>
+                        <td><strong>${u.username}</strong></td>
+                        <td>${u.email || '-'}</td>
+                        <td><span class="${roleClass}">${u.role === 'admin' ? '🔐 Admin' : '👤 ' + u.role}</span></td>
+                        <td>
+                            <button class="btn-small btn-edit" onclick="editUser(${u.id})">Editar</button>
+                            <button class="btn-small btn-delete" onclick="deleteUser(${u.id})">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('total-users').textContent = users.length;
+                document.getElementById('frequentadores').textContent = frequentadores;
+                document.getElementById('admins').textContent = admins;
+
+            } catch (error) {
+                document.getElementById('users-tbody').innerHTML = '<tr><td colspan="5">Erro ao carregar usuários</td></tr>';
+            }
+
+            // Navigation
+            document.querySelectorAll('[data-section]').forEach(link => {
+                link.onclick = (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+                    document.getElementById(link.dataset.section).classList.add('active');
+                    document.querySelectorAll('.sidebar-section a').forEach(a => a.classList.remove('active'));
+                    link.classList.add('active');
+                };
+            });
+
+            // Logout
+            document.getElementById('logout-admin').onclick = () => {
+                localStorage.removeItem('maanain_user');
+                window.location.href = 'index.html';
+            };
+        });
+
+        function editUser(id) { alert('Editar usuário ' + id); }
+        function deleteUser(id) { if(confirm('Excluir?')) alert('Usuário ' + id + ' excluído'); }
+    </script>
+</body>
+</html>

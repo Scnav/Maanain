@@ -14,9 +14,8 @@ const db = new sqlite3.Database(DB_PATH);
 app.use(express.json());
 app.use(cors());
 
-// ✅ CORRIGIDO: Criação/migração da tabela SEM ERRO
+// ✅ Tabelas
 db.serialize(() => {
-    // Tenta criar tabela NOVA com role
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,51 +24,62 @@ db.serialize(() => {
             password_hash TEXT NOT NULL,
             role TEXT DEFAULT 'frequentador'
         )
-    `, (err) => {
-        if (err && err.message.includes("users already exists")) {
-            // ✅ SE TABELA JÁ EXISTE, ADICIONA COLUNA role
-            db.run("PRAGMA table_info(users)", (err, rows) => {
-                const temRole = rows.some(row => row.name === 'role');
-                if (!temRole) {
-                    db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'frequentador'");
-                }
-            });
-        }
-    });
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS noticias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            conteudo TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS eventos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            data TEXT NOT NULL,
+            local TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
 });
 
-// ✅ REGISTER PERFEITO (4 parâmetros)
+// ✅ REGISTER
 app.post("/api/register", async (req, res) => {
     const { username, email, password } = req.body;
 
     if (!username || !password) {
-        return res.status(400).json({ error: "Nome de usuário e senha são obrigatórios." });
+        return res.status(400).json({ error: "Nome e senha obrigatórios." });
     }
 
     try {
         const hashed = await bcrypt.hash(password, 10);
-        const stmt = db.prepare("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)");
-        stmt.run(username, email || null, hashed, 'frequentador', function (err) {
-            if (err) {
-                if (err.message.includes("UNIQUE constraint failed")) {
-                    return res.status(400).json({ error: "Usuário já existe." });
+        db.run(
+            "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
+            [username, email || null, hashed, 'frequentador'],
+            function(err) {
+                if (err) {
+                    if (err.message.includes("UNIQUE")) {
+                        return res.status(400).json({ error: "Usuário já existe." });
+                    }
+                    return res.status(500).json({ error: err.message });
                 }
-                return res.status(500).json({ error: err.message });
+                res.status(201).json({ message: "Cadastro OK!", id: this.lastID });
             }
-            res.status(201).json({ message: "Usuário cadastrado com sucesso.", id: this.lastID });
-        });
-        stmt.finalize();
+        );
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// ✅ LOGIN PERFEITO (busca role)
-app.post("/api/login", async (req, res) => {
+// ✅ LOGIN
+app.post("/api/login", (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-        return res.status(400).json({ error: "Usuário e senha são obrigatórios." });
+        return res.status(400).json({ error: "Usuário e senha obrigatórios." });
     }
 
     db.get(
@@ -79,34 +89,47 @@ app.post("/api/login", async (req, res) => {
             if (err || !row) {
                 return res.status(400).json({ error: "Usuário ou senha inválidos." });
             }
-            
-            // Se não tem role, define como frequentador
+
             if (!row.role) {
                 db.run("UPDATE users SET role = 'frequentador' WHERE id = ?", [row.id]);
                 row.role = 'frequentador';
             }
-            
+
             const valid = await bcrypt.compare(password, row.password_hash);
             if (!valid) {
                 return res.status(400).json({ error: "Usuário ou senha inválidos." });
             }
-            
+
             res.json({
-                message: "Login bem-sucedido!",
-                user: { 
-                    id: row.id, 
-                    username: row.username, 
-                    email: row.email, 
-                    role: row.role 
+                message: "Login OK!",
+                user: {
+                    id: row.id,
+                    username: row.username,
+                    email: row.email || null,
+                    role: row.role
                 }
             });
         }
     );
 });
 
-// Servir arquivos estáticos
+// ✅ ADMIN ROUTES
+app.get('/api/admin/users', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+    
+    db.all("SELECT id, username, email, role FROM users ORDER BY id DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+
+// ✅ Static files (SEMPRE POR ÚLTIMO)
 app.use("/", express.static(path.join(__dirname, "../public")));
 
 app.listen(PORT, () => {
-    console.log(`✅ Servidor MAANAIN rodando em http://localhost:${PORT}`);
+    console.log(`✅ MAANAIN Server: http://localhost:${PORT}`);
+    console.log(`🔥 Criar admin: http://localhost:${PORT}/setar-admin`);
 });
