@@ -409,17 +409,335 @@ async function excluirEvento(id) {
     }
 }
 
+// CULTOS SEMANAIS
+async function carregarCultos() {
+    try {
+        const response = await fetch('/api/cultos', {
+            headers: { 'x-admin-token': 'maanain2026' }
+        });
+        if (!response.ok) throw new Error('Erro ao carregar cultos');
+        const cultos = await response.json();
+        
+        // Preencher os campos com os valores do banco
+        cultos.forEach(culto => {
+            const tituloEl = document.getElementById(`culto${culto.id}-titulo`);
+            const horarioEl = document.getElementById(`culto${culto.id}-horario`);
+            const localEl = document.getElementById(`culto${culto.id}-local`);
+            
+            if (tituloEl) tituloEl.value = culto.titulo || '';
+            if (horarioEl) horarioEl.value = culto.horario || '';
+            if (localEl) localEl.value = culto.local || '';
+        });
+        
+        document.getElementById('cultosContainer').style.display = 'block';
+        document.getElementById('loadingCultos').style.display = 'none';
+    } catch (error) {
+        console.error('Erro ao carregar cultos:', error);
+        mostrarToast('❌ Erro ao carregar cultos', 'error');
+    }
+}
+
+async function salvarCulto(dia) {
+    const cultosMap = {
+        'sabado': 1,
+        'domingo_ebd': 2,
+        'domingo': 3,
+        'quarta': 4
+    };
+    
+    const id = cultosMap[dia];
+    if (!id) return;
+    
+    const titulo = document.getElementById(`culto${id}-titulo`).value;
+    const horario = document.getElementById(`culto${id}-horario`).value;
+    const local = document.getElementById(`culto${id}-local`).value;
+    
+    try {
+        const response = await fetch(`/api/admin/cultos/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-admin-token': 'maanain2026'
+            },
+            body: JSON.stringify({ titulo, horario, local })
+        });
+        
+        if (!response.ok) throw new Error('Erro ao salvar culto');
+        
+        mostrarToast('✅ Culto salvo com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar culto:', error);
+        mostrarToast('❌ Erro ao salvar culto', 'error');
+    }
+}
+
 // Carregar conteúdo quando navegar para as seções
 document.querySelectorAll('.sidebar-link[data-section]').forEach(link => {
     link.addEventListener('click', function(e) {
         const section = this.dataset.section;
         if (section === 'noticias') {
             setTimeout(carregarNoticias, 100);
-        } else if (section === 'eventos') {
-            setTimeout(carregarEventos, 100);
+        } else if (section === 'programacao') {
+            setTimeout(carregarCultos, 100);
+            setTimeout(carregarEventos, 200);
+        } else if (section === 'pagina-inicial') {
+            setTimeout(carregarConteudos, 100);
+        } else if (section === 'ministerios') {
+            setTimeout(carregarMinisterios, 100);
         }
     });
 });
+
+// MINISTÉRIOS
+document.getElementById('btnNovoMinisterio').addEventListener('click', () => mostrarFormMinisterio());
+document.getElementById('btnSalvarMinisterio').addEventListener('click', salvarMinisterio);
+document.getElementById('btnCancelarMinisterio').addEventListener('click', () => ocultarFormMinisterio());
+
+async function carregarMinisterios() {
+    try {
+        const response = await fetch('/api/admin/ministerios', {
+            headers: { 'x-admin-token': 'maanain2026' }
+        });
+        if (!response.ok) throw new Error('Erro ao carregar ministérios');
+        const ministerios = await response.json();
+
+        const container = document.getElementById('listaMinisterios');
+        if (ministerios.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Nenhum ministry cadastrado.</p>';
+        } else {
+            container.innerHTML = ministerios.map(criarItemMinisterio).join('');
+        }
+        document.getElementById('loadingMinisterios').style.display = 'none';
+    } catch (error) {
+        console.error('Erro ao carregar ministérios:', error);
+        mostrarToast('❌ Erro ao carregar ministérios', 'error');
+        document.getElementById('loadingMinisterios').textContent = 'Erro ao carregar ministérios.';
+    }
+}
+
+function criarItemMinisterio(ministerio) {
+    return `
+        <div style="background: white; border: 1px solid #eee; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="font-size: 2rem; color: var(--verde-principal);">
+                    <i class="${ministerio.icone}"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0 0 0.5rem 0; color: #333;">${ministerio.titulo}</h4>
+                    <p style="margin: 0; color: #666;">${ministerio.descricao || ''}</p>
+                </div>
+            </div>
+            <div>
+                <button onclick="editarMinisterio(${ministerio.id})" class="btn-editar-cargo" style="margin-right: 0.5rem;">✏️ Editar</button>
+                <button onclick="excluirMinisterio(${ministerio.id})" class="btn-delete">🗑️ Excluir</button>
+            </div>
+        </div>`;
+}
+
+function mostrarFormMinisterio(ministerio = null) {
+    const form = document.getElementById('formMinisterio');
+    const title = document.getElementById('formMinisterioTitle');
+    const id = document.getElementById('ministerioId');
+    const titulo = document.getElementById('ministerioTitulo');
+    const descricao = document.getElementById('ministerioDescricao');
+    const icone = document.getElementById('ministerioIcone');
+
+    if (ministerio) {
+        title.textContent = 'Editar Ministério';
+        id.value = ministerio.id;
+        titulo.value = ministerio.titulo;
+        descricao.value = ministerio.descricao || '';
+        icone.value = ministerio.icone || 'fas fa-church';
+    } else {
+        title.textContent = 'Novo Ministério';
+        id.value = '';
+        titulo.value = '';
+        descricao.value = '';
+        icone.value = 'fas fa-church';
+    }
+
+    form.style.display = 'block';
+}
+
+function ocultarFormMinisterio() {
+    document.getElementById('formMinisterio').style.display = 'none';
+}
+
+async function salvarMinisterio() {
+    const id = document.getElementById('ministerioId').value;
+    const titulo = document.getElementById('ministerioTitulo').value;
+    const descricao = document.getElementById('ministerioDescricao').value;
+    const icone = document.getElementById('ministerioIcone').value;
+
+    if (!titulo) {
+        mostrarToast('❌ Título é obrigatório', 'error');
+        return;
+    }
+
+    try {
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/admin/ministerios/${id}` : '/api/admin/ministerios';
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-admin-token': 'maanain2026'
+            },
+            body: JSON.stringify({ titulo, descricao, icone })
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar ministry');
+
+        mostrarToast(`✅ Ministério ${id ? 'atualizado' : 'criado'} com sucesso!`, 'success');
+        ocultarFormMinisterio();
+        carregarMinisterios();
+    } catch (error) {
+        console.error('Erro ao salvar ministry:', error);
+        mostrarToast('❌ Erro ao salvar ministry', 'error');
+    }
+}
+
+async function editarMinisterio(id) {
+    try {
+        const response = await fetch('/api/admin/ministerios', {
+            headers: { 'x-admin-token': 'maanain2026' }
+        });
+        const ministerios = await response.json();
+        const ministerio = ministerios.find(m => m.id == id);
+        if (ministerio) mostrarFormMinisterio(ministerio);
+    } catch (error) {
+        console.error('Erro ao carregar ministry:', error);
+        mostrarToast('❌ Erro ao carregar ministry', 'error');
+    }
+}
+
+async function excluirMinisterio(id) {
+    if (!confirm('Tem certeza que deseja excluir este ministry?')) return;
+
+    try {
+        const response = await fetch(`/api/admin/ministerios/${id}`, {
+            method: 'DELETE',
+            headers: { 'x-admin-token': 'maanain2026' }
+        });
+
+        if (!response.ok) throw new Error('Erro ao excluir ministry');
+
+        mostrarToast('🗑️ Ministério excluído!', 'success');
+        carregarMinisterios();
+    } catch (error) {
+        console.error('Erro ao excluir ministry:', error);
+        mostrarToast('❌ Erro ao excluir ministry', 'error');
+    }
+}
+
+// CONTEÚDOS DA PÁGINA INICIAL
+async function carregarConteudos() {
+    try {
+        const response = await fetch('/api/admin/page-content', {
+            headers: { 'x-admin-token': 'maanain2026' }
+        });
+        if (!response.ok) throw new Error('Erro ao carregar conteúdos');
+        const conteudos = await response.json();
+
+        const container = document.getElementById('conteudosContainer');
+        container.innerHTML = `
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Hero Section</h3>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
+                    <input type="text" id="hero-title" value="${conteudos.hero?.title || 'Bem-vindo à MAANAIN'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Subtítulo:</label>
+                    <input type="text" id="hero-subtitle" value="${conteudos.hero?.content || 'Uma família na fé'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <button onclick="salvarConteudo('hero')" class="btn-editar-cargo">💾 Salvar Hero</button>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Sobre Nós</h3>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
+                    <input type="text" id="sobre-title" value="${conteudos.sobre?.title || 'Sobre Nós'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Conteúdo:</label>
+                    <textarea id="sobre-content" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">${conteudos.sobre?.content || ''}</textarea>
+                </div>
+                <button onclick="salvarConteudo('sobre')" class="btn-editar-cargo">💾 Salvar Sobre</button>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Mensagens</h3>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título da Mensagem:</label>
+                    <input type="text" id="mensagem-title" value="${conteudos.mensagem?.title || 'Domingo'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Conteúdo da Mensagem:</label>
+                    <input type="text" id="mensagem-content" value="${conteudos.mensagem?.content || 'A Fé que Move Montanhas'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <button onclick="salvarConteudo('mensagem')" class="btn-editar-cargo">💾 Salvar Mensagem</button>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Título dos Ministérios</h3>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
+                    <input type="text" id="ministerios-title" value="${conteudos.ministerios?.title || 'Nossos Ministérios'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <button onclick="salvarConteudo('ministerios')" class="btn-editar-cargo">💾 Salvar Título</button>
+            </div>
+
+            <p style="color: #666; font-style: italic; margin-bottom: 2rem;">
+                ℹ️ Osministérios agora são gerenciados na aba <strong>"Ministrérios"</strong> do menu lateral.
+            </p>
+        `;
+
+        document.getElementById('loadingConteudos').style.display = 'none';
+    } catch (error) {
+        console.error('Erro ao carregar conteúdos:', error);
+        mostrarToast('❌ Erro ao carregar conteúdos', 'error');
+        document.getElementById('loadingConteudos').textContent = 'Erro ao carregar conteúdos.';
+    }
+}
+
+async function salvarConteudo(section) {
+    try {
+        let title, content;
+
+        if (section === 'hero') {
+            title = document.getElementById('hero-title').value;
+            content = document.getElementById('hero-subtitle').value;
+        } else if (section === 'sobre') {
+            title = document.getElementById('sobre-title').value;
+            content = document.getElementById('sobre-content').value;
+        } else if (section === 'mensagem') {
+            title = document.getElementById('mensagem-title').value;
+            content = document.getElementById('mensagem-content').value;
+        } else if (section === 'ministerios') {
+            title = document.getElementById('ministerios-title').value;
+            content = '';
+        }
+
+        const response = await fetch(`/api/admin/page-content/${section}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-admin-token': 'maanain2026'
+            },
+            body: JSON.stringify({ title, content })
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar conteúdo');
+
+        mostrarToast(`✅ ${section.charAt(0).toUpperCase() + section.slice(1)} salvo com sucesso!`, 'success');
+    } catch (error) {
+        console.error('Erro ao salvar conteúdo:', error);
+        mostrarToast('❌ Erro ao salvar conteúdo', 'error');
+    }
+}
 
 function mostrarToast(msg, type = 'info') {
     const toast = document.createElement('div');

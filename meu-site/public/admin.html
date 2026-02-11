@@ -25,8 +25,10 @@
             </div>
             <div class="sidebar-section">
                 <h3>Conteúdo</h3>
+                <a class="sidebar-link" data-section="pagina-inicial"><i>🏠</i> Página Inicial</a>
+                <a class="sidebar-link" data-section="ministerios"><i>⛪</i> Ministérios</a>
                 <a class="sidebar-link" data-section="noticias"><i>📰</i> Notícias</a>
-                <a class="sidebar-link" data-section="eventos"><i>📅</i> Eventos</a>
+                <a class="sidebar-link" data-section="programacao"><i>📅</i> Programação</a>
             </div>
             <a class="sidebar-link logout-link" id="logout"><i>🚪</i> Sair do Painel</a>
         </nav>
@@ -55,6 +57,43 @@
                 </table>
             </section>
 
+            <!-- Página Inicial -->
+            <section id="pagina-inicial" class="content-section">
+                <h2 class="section-title">🏠 Editar Página Inicial</h2>
+                <div class="loading" id="loadingConteudos">🔄 Carregando conteúdos...</div>
+                <div id="conteudosContainer">
+                    <!-- Formulários para editar conteúdos serão carregados dinamicamente -->
+                </div>
+            </section>
+
+            <!-- Ministérios -->
+            <section id="ministerios" class="content-section">
+                <h2 class="section-title">⛪ Gerenciar Ministérios</h2>
+                <button id="btnNovoMinisterio" class="btn-editar-cargo" style="margin-bottom: 2rem;">➕ Novo Ministério</button>
+
+                <div id="formMinisterio" style="display: none; background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+                    <h3 id="formMinisterioTitle">Novo Ministério</h3>
+                    <input type="hidden" id="ministerioId">
+                    <div style="margin-bottom: 1rem;">
+                        <label>Título:</label>
+                        <input type="text" id="ministerioTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Descrição:</label>
+                        <textarea id="ministerioDescricao" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Ícone (FontAwesome):</label>
+                        <input type="text" id="ministerioIcone" placeholder="fas fa-music" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <button id="btnSalvarMinisterio" class="btn-editar-cargo">💾 Salvar</button>
+                    <button id="btnCancelarMinisterio" style="background: #6c757d; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer;">❌ Cancelar</button>
+                </div>
+
+                <div class="loading" id="loadingMinisterios">🔄 Carregando ministérios...</div>
+                <div id="listaMinisterios" class="ministerios-grid-admin"></div>
+            </section>
+
             <!-- Notícias -->
             <section id="noticias" class="content-section">
                 <h2 class="section-title">📰 Gerenciar Notícias</h2>
@@ -79,9 +118,99 @@
                 <div id="listaNoticias"></div>
             </section>
 
-            <!-- Eventos -->
-            <section id="eventos" class="content-section">
-                <h2 class="section-title">📅 Gerenciar Eventos</h2>
+            <!-- Programação -->
+            <section id="programacao" class="content-section">
+                <h2 class="section-title">📅 Gerenciar Programação</h2>
+                
+                <!-- Cultos Semanais -->
+                <div style="margin-bottom: 3rem;">
+                    <h3 style="color: var(--verde-principal); margin-bottom: 1rem; border-bottom: 2px solid var(--verde-principal); padding-bottom: 0.5rem;">Cultos Semanais</h3>
+                    <div class="loading" id="loadingCultos">🔄 Carregando cultos...</div>
+                    <div id="cultosContainer" style="display: none;">
+                        <!-- Culto Sábado -->
+                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">🟣 Culto de Adoração (Sábado)</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
+                                    <input type="text" id="culto1-titulo" value="Culto de Adoração" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Horário:</label>
+                                    <input type="text" id="culto1-horario" value="18:30" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                                <div style="grid-column: 1 / -1;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Local:</label>
+                                    <input type="text" id="culto1-local" value="Salão Principal - MAANAIN" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                            </div>
+                            <button onclick="salvarCulto('sabado')" class="btn-editar-cargo" style="margin-top: 1rem;">💾 Salvar</button>
+                        </div>
+                        
+                        <!-- Culto Domingo EBD -->
+                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">🟣 Escola Bíblica Dominical (Domingo)</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
+                                    <input type="text" id="culto2-titulo" value="Escola Bíblica Dominical" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Horário:</label>
+                                    <input type="text" id="culto2-horario" value="08:30" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                                <div style="grid-column: 1 / -1;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Local:</label>
+                                    <input type="text" id="culto2-local" value="Sala de Ensino - MAANAIN" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                            </div>
+                            <button onclick="salvarCulto('domingo_ebd')" class="btn-editar-cargo" style="margin-top: 1rem;">💾 Salvar</button>
+                        </div>
+                        
+                        <!-- Culto Domingo -->
+                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">🟣 Culto de Ensino (Domingo)</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
+                                    <input type="text" id="culto3-titulo" value="Culto de Ensino" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Horário:</label>
+                                    <input type="text" id="culto3-horario" value="09:45" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                                <div style="grid-column: 1 / -1;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Local:</label>
+                                    <input type="text" id="culto3-local" value="Salão Principal - MAANAIN" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                            </div>
+                            <button onclick="salvarCulto('domingo')" class="btn-editar-cargo" style="margin-top: 1rem;">💾 Salvar</button>
+                        </div>
+                        
+                        <!-- Culto Quarta -->
+                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">🟣 Culto de Oração (Quarta-feira)</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
+                                    <input type="text" id="culto4-titulo" value="Culto de Oração" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Horário:</label>
+                                    <input type="text" id="culto4-horario" value="19:30" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                                <div style="grid-column: 1 / -1;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Local:</label>
+                                    <input type="text" id="culto4-local" value="Salão Principal - MAANAIN" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                </div>
+                            </div>
+                            <button onclick="salvarCulto('quarta')" class="btn-editar-cargo" style="margin-top: 1rem;">💾 Salvar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Eventos Especiais -->
+                <h3 style="color: var(--verde-principal); margin-bottom: 1rem; border-bottom: 2px solid var(--verde-principal); padding-bottom: 0.5rem;">Eventos Especiais</h3>
                 <button id="btnNovoEvento" class="btn-editar-cargo" style="margin-bottom: 2rem;">➕ Novo Evento</button>
 
                 <div id="formEvento" style="display: none; background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">

@@ -138,6 +138,17 @@ document.addEventListener("DOMContentLoaded", () => {
         carregarEventos();
     }
 
+    // Carregar cultos (se estiver na página de programação)
+    if (document.getElementById('cultosContainer')) {
+        carregarCultos();
+    }
+
+    // Carregar conteúdos da página inicial (se estiver na página inicial)
+    if (document.getElementById('heroTitle')) {
+        carregarConteudosPaginaInicial();
+        carregarMinisterios();
+    }
+
     // Inicializa
     carregarUsuario();
 });
@@ -225,6 +236,106 @@ async function carregarEventos() {
         const containerProgramacao = document.getElementById('eventosEspeciaisContainer');
         if (containerProgramacao) {
             containerProgramacao.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; grid-column: 1 / -1;">Erro ao carregar eventos especiais.</p>';
+        }
+    }
+}
+
+// Carregar conteúdos da página inicial
+async function carregarConteudosPaginaInicial() {
+    try {
+        const response = await fetch('/api/page-content');
+        if (!response.ok) throw new Error('Erro ao carregar conteúdos');
+
+        const conteudos = await response.json();
+
+        // Atualizar Hero
+        const heroTitle = document.getElementById('heroTitle');
+        const heroSubtitle = document.getElementById('heroSubtitle');
+        if (heroTitle && conteudos.hero?.title) heroTitle.textContent = conteudos.hero.title;
+        if (heroSubtitle && conteudos.hero?.content) heroSubtitle.textContent = conteudos.hero.content;
+
+        // Atualizar Sobre
+        const sobreTitle = document.getElementById('sobreTitle');
+        const sobreContent = document.getElementById('sobreContent');
+        if (sobreTitle && conteudos.sobre?.title) sobreTitle.textContent = conteudos.sobre.title;
+        if (sobreContent && conteudos.sobre?.content) sobreContent.textContent = conteudos.sobre.content;
+
+        // Atualizar Mensagem
+        const mensagemTitle = document.getElementById('mensagemTitle');
+        const mensagemContent = document.getElementById('mensagemContent');
+        if (mensagemTitle && conteudos.mensagem?.title) mensagemTitle.textContent = conteudos.mensagem.title;
+        if (mensagemContent && conteudos.mensagem?.content) mensagemContent.textContent = conteudos.mensagem.content;
+
+        // Atualizar Título dos Ministérios
+        const ministeriosTitle = document.getElementById('ministeriosTitle');
+        if (ministeriosTitle && conteudos.ministerios?.title) ministeriosTitle.textContent = conteudos.ministerios.title;
+
+    } catch (error) {
+        console.error('Erro ao carregar conteúdos da página inicial:', error);
+        // Mantém o conteúdo padrão em caso de erro
+    }
+}
+
+// Carregar ministérios dinamicamente
+async function carregarMinisterios() {
+    try {
+        const response = await fetch('/api/ministerios');
+        if (!response.ok) throw new Error('Erro ao carregar ministérios');
+
+        const ministerios = await response.json();
+        const container = document.getElementById('ministeriosContainer');
+
+        if (ministerios.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Nenhum ministry disponível.</p>';
+            return;
+        }
+
+        container.innerHTML = ministerios.map(ministerio => `
+            <div class="ministerio">
+                <div class="ministerio-icone"><i class="${ministerio.icone || 'fas fa-church'}"></i></div>
+                <h4>${ministerio.titulo}</h4>
+                <p>${ministerio.descricao || ''}</p>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Erro ao carregar ministérios:', error);
+        document.getElementById('ministeriosContainer').innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Erro ao carregar ministérios.</p>';
+    }
+}
+
+// Carregar cultos semanais dinamicamente
+async function carregarCultos() {
+    try {
+        const response = await fetch('/api/cultos');
+        if (!response.ok) throw new Error('Erro ao carregar cultos');
+
+        const cultos = await response.json();
+        const container = document.getElementById('cultosContainer');
+
+        if (!container) return;
+
+        if (cultos.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Nenhum culto disponível.</p>';
+            return;
+        }
+
+        container.innerHTML = cultos.map(culto => `
+            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
+                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
+                    <i class="fas fa-music"></i>
+                </div>
+                <h4>${culto.titulo}</h4>
+                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                    ${culto.horario}
+                </p>
+                <p>${culto.local || 'Local a definir'}</p>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Erro ao carregar cultos:', error);
+        const container = document.getElementById('cultosContainer');
+        if (container) {
+            container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Erro ao carregar cultos.</p>';
         }
     }
 }

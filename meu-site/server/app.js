@@ -44,6 +44,43 @@ db.serialize(() => {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS page_content (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            section TEXT UNIQUE NOT NULL,
+            title TEXT,
+            content TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS ministerios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            descricao TEXT,
+            icone TEXT DEFAULT 'fas fa-church',
+            ordem INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS cultos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            horario TEXT,
+            local TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Inicializar cultos padrão se não existirem
+    db.run("INSERT OR IGNORE INTO cultos (id, titulo, horario, local) VALUES (1, 'Culto de Adoração', '18:30', 'Salão Principal - MAANAIN')");
+    db.run("INSERT OR IGNORE INTO cultos (id, titulo, horario, local) VALUES (2, 'Escola Bíblica Dominical', '08:30', 'Sala de Ensino - MAANAIN')");
+    db.run("INSERT OR IGNORE INTO cultos (id, titulo, horario, local) VALUES (3, 'Culto de Ensino', '09:45', 'Salão Principal - MAANAIN')");
+    db.run("INSERT OR IGNORE INTO cultos (id, titulo, horario, local) VALUES (4, 'Culto de Oração', '19:30', 'Salão Principal - MAANAIN')");
 });
 
 // ✅ REGISTER
@@ -288,6 +325,147 @@ app.delete('/api/admin/eventos/:id', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Evento não encontrado' });
         res.json({ message: 'Evento excluído' });
+    });
+});
+
+// CRUD CONTEÚDOS DA PÁGINA INICIAL
+app.get('/api/admin/page-content', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    db.all("SELECT * FROM page_content ORDER BY section", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.put('/api/admin/page-content/:section', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { section } = req.params;
+    const { title, content } = req.body;
+
+    db.run("INSERT OR REPLACE INTO page_content (section, title, content, updated_at) VALUES (?, ?, ?, datetime('now'))",
+        [section, title, content], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Conteúdo atualizado' });
+    });
+});
+
+// Endpoint público para obter conteúdos
+app.get('/api/page-content', (req, res) => {
+    db.all("SELECT section, title, content FROM page_content", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const contentMap = {};
+        rows.forEach(row => {
+            contentMap[row.section] = { title: row.title, content: row.content };
+        });
+        res.json(contentMap);
+    });
+});
+
+// CRUD MINISTÉRIOS
+app.get('/api/admin/ministerios', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    db.all("SELECT * FROM ministerios ORDER BY ordem ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/admin/ministerios', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { titulo, descricao, icone } = req.body;
+    if (!titulo) {
+        return res.status(400).json({ error: 'Título obrigatório' });
+    }
+
+    db.run("INSERT INTO ministerios (titulo, descricao, icone) VALUES (?, ?, ?)",
+        [titulo, descricao || '', icone || 'fas fa-church'], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: this.lastID, titulo, descricao, icone });
+    });
+});
+
+app.put('/api/admin/ministerios/:id', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+    const { titulo, descricao, icone, ordem } = req.body;
+
+    db.run("UPDATE ministerios SET titulo = ?, descricao = ?, icone = ?, ordem = ? WHERE id = ?",
+        [titulo, descricao, icone, ordem, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Ministério não encontrado' });
+        res.json({ message: 'Ministério atualizado' });
+    });
+});
+
+app.delete('/api/admin/ministerios/:id', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+
+    db.run("DELETE FROM ministerios WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Ministério não encontrado' });
+        res.json({ message: 'Ministério excluído' });
+    });
+});
+
+// Endpoint público para ministérios
+app.get('/api/ministerios', (req, res) => {
+    db.all("SELECT id, titulo, descricao, icone FROM ministerios ORDER BY ordem ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// CRUD CULTOS SEMANAIS (Admin)
+app.get('/api/admin/cultos', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    db.all("SELECT * FROM cultos ORDER BY id ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.get('/api/cultos', (req, res) => {
+    db.all("SELECT id, titulo, horario, local FROM cultos ORDER BY id ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.put('/api/admin/cultos/:id', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+    const { titulo, horario, local } = req.body;
+
+    db.run("UPDATE cultos SET titulo = ?, horario = ?, local = ?, updated_at = datetime('now') WHERE id = ?",
+        [titulo, horario, local, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Culto não encontrado' });
+        res.json({ message: 'Culto atualizado' });
     });
 });
 
