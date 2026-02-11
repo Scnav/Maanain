@@ -177,6 +177,135 @@ app.get('/api/admin/stats', (req, res) => {
     });
 });
 
+// CRUD NOTÍCIAS
+app.get('/api/admin/noticias', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    db.all("SELECT * FROM noticias ORDER BY created_at DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/admin/noticias', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { titulo, conteudo } = req.body;
+    if (!titulo || !conteudo) {
+        return res.status(400).json({ error: 'Título e conteúdo obrigatórios' });
+    }
+
+    db.run("INSERT INTO noticias (titulo, conteudo) VALUES (?, ?)", [titulo, conteudo], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: this.lastID, titulo, conteudo, created_at: new Date().toISOString() });
+    });
+});
+
+app.put('/api/admin/noticias/:id', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+    const { titulo, conteudo } = req.body;
+
+    db.run("UPDATE noticias SET titulo = ?, conteudo = ? WHERE id = ?", [titulo, conteudo, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Notícia não encontrada' });
+        res.json({ message: 'Notícia atualizada' });
+    });
+});
+
+app.delete('/api/admin/noticias/:id', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+
+    db.run("DELETE FROM noticias WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Notícia não encontrada' });
+        res.json({ message: 'Notícia excluída' });
+    });
+});
+
+// CRUD EVENTOS
+app.get('/api/admin/eventos', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    db.all("SELECT * FROM eventos ORDER BY created_at DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/admin/eventos', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { titulo, data, local } = req.body;
+    if (!titulo || !data) {
+        return res.status(400).json({ error: 'Título e data obrigatórios' });
+    }
+
+    db.run("INSERT INTO eventos (titulo, data, local) VALUES (?, ?, ?)", [titulo, data, local || null], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: this.lastID, titulo, data, local, created_at: new Date().toISOString() });
+    });
+});
+
+app.put('/api/admin/eventos/:id', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+    const { titulo, data, local } = req.body;
+
+    db.run("UPDATE eventos SET titulo = ?, data = ?, local = ? WHERE id = ?", [titulo, data, local, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Evento não encontrado' });
+        res.json({ message: 'Evento atualizado' });
+    });
+});
+
+app.delete('/api/admin/eventos/:id', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+
+    db.run("DELETE FROM eventos WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Evento não encontrado' });
+        res.json({ message: 'Evento excluído' });
+    });
+});
+
+
+// ✅ ENDPOINTS PÚBLICOS
+app.get('/api/noticias', (req, res) => {
+    db.all("SELECT id, titulo, conteudo, created_at FROM noticias ORDER BY created_at DESC LIMIT 10", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.get('/api/eventos', (req, res) => {
+    db.all("SELECT id, titulo, data, local, created_at FROM eventos WHERE data >= datetime('now') ORDER BY data ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
 
 // ✅ Static files (SEMPRE POR ÚLTIMO)
 app.use("/", express.static(path.join(__dirname, "../public")));
