@@ -118,10 +118,62 @@ app.get('/api/admin/users', (req, res) => {
     if (req.headers['x-admin-token'] !== 'maanain2026') {
         return res.status(403).json({ error: 'Token inválido' });
     }
-    
+
     db.all("SELECT id, username, email, role FROM users ORDER BY id DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
+    });
+});
+
+app.put('/api/admin/users/:id/role', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!['frequentador', 'membro', 'conselho', 'admin'].includes(role)) {
+        return res.status(400).json({ error: 'Cargo inválido' });
+    }
+
+    db.run("UPDATE users SET role = ? WHERE id = ?", [role, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
+        res.json({ message: 'Cargo atualizado' });
+    });
+});
+
+app.delete('/api/admin/users/:id', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    const { id } = req.params;
+
+    db.run("DELETE FROM users WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
+        res.json({ message: 'Usuário excluído' });
+    });
+});
+
+app.get('/api/admin/stats', (req, res) => {
+    if (req.headers['x-admin-token'] !== 'maanain2026') {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    db.all("SELECT role, COUNT(*) as count FROM users GROUP BY role", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const stats = {
+            total: rows.reduce((sum, r) => sum + r.count, 0),
+            frequentadores: rows.find(r => r.role === 'frequentador')?.count || 0,
+            membros: rows.find(r => r.role === 'membro')?.count || 0,
+            conselho: rows.find(r => r.role === 'conselho')?.count || 0,
+            admins: rows.find(r => r.role === 'admin')?.count || 0
+        };
+        res.json(stats);
     });
 });
 
