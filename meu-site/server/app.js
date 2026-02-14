@@ -75,12 +75,6 @@ db.serialize(() => {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
-
-    // Inicializar cultos padrão se não existirem
-    db.run("INSERT OR IGNORE INTO cultos (id, titulo, horario, local) VALUES (1, 'Culto de Adoração', '18:30', 'Salão Principal - MAANAIN')");
-    db.run("INSERT OR IGNORE INTO cultos (id, titulo, horario, local) VALUES (2, 'Escola Bíblica Dominical', '08:30', 'Sala de Ensino - MAANAIN')");
-    db.run("INSERT OR IGNORE INTO cultos (id, titulo, horario, local) VALUES (3, 'Culto de Ensino', '09:45', 'Salão Principal - MAANAIN')");
-    db.run("INSERT OR IGNORE INTO cultos (id, titulo, horario, local) VALUES (4, 'Culto de Oração', '19:30', 'Salão Principal - MAANAIN')");
 });
 
 // ✅ REGISTER
@@ -412,7 +406,6 @@ app.get('/api/cultos', (req, res) => {
 });
 
 app.put('/api/admin/cultos/:id', verifyAdmin, (req, res) => {
-
     const { id } = req.params;
     const { titulo, horario, local } = req.body;
 
@@ -421,6 +414,29 @@ app.put('/api/admin/cultos/:id', verifyAdmin, (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Culto não encontrado' });
         res.json({ message: 'Culto atualizado' });
+    });
+});
+
+app.post('/api/admin/cultos', verifyAdmin, (req, res) => {
+    const { titulo, horario, local } = req.body;
+    if (!titulo) {
+        return res.status(400).json({ error: 'Título obrigatório' });
+    }
+
+    db.run("INSERT INTO cultos (titulo, horario, local) VALUES (?, ?, ?)",
+        [titulo, horario || '', local || ''], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: this.lastID, titulo, horario, local });
+    });
+});
+
+app.delete('/api/admin/cultos/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+
+    db.run("DELETE FROM cultos WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Culto não encontrado' });
+        res.json({ message: 'Culto excluído' });
     });
 });
 

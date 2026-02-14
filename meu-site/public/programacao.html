@@ -26,56 +26,9 @@
             <p>Conheça todos os nossos encontros semanais e especiais</p>
         </div>
 
-        <!-- CARDS DE PROGRAMAÇÃO -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
-            
-            <!-- SÁBADO -->
-            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
-                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
-                    <i class="fas fa-music"></i>
-                </div>
-                <h4>Culto de Adoração</h4>
-                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
-                    Sábado • 18:30
-                </p>
-                <p>Salão Principal - MAANAIN</p>
-            </div>
-
-            <!-- DOMINGO EBD -->
-            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
-                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
-                    <i class="fas fa-book-open"></i>
-                </div>
-                <h4>Escola Bíblica Dominical</h4>
-                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
-                    Domingo • 08:30
-                </p>
-                <p>Sala de Ensino - MAANAIN</p>
-            </div>
-
-            <!-- DOMINGO CULT O -->
-            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
-                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
-                    <i class="fas fa-church"></i>
-                </div>
-                <h4>Culto de Ensino</h4>
-                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
-                    Domingo • 09:45
-                </p>
-                <p>Salão Principal - MAANAIN</p>
-            </div>
-
-            <!-- QUARTA ORAÇÃO -->
-            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
-                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
-                    <i class="fas fa-hands-praying"></i>
-                </div>
-                <h4>Culto de Oração</h4>
-                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
-                    Quarta-feira • 19:30
-                </p>
-                <p>Salão Principal - MAANAIN</p>
-            </div>
+        <!-- CARDS DE PROGRAMAÇÃO - CARREGADOS DINAMICAMENTE -->
+        <div id="cultosContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
+            <!-- Cultos serão carregados dinamicamente do banco de dados -->
         </div>
 
         <!-- EVENTOS ESPECIAIS -->
