@@ -40,6 +40,22 @@
         </div>
     </section>
 
+    <!-- Modal de Inscrição -->
+    <div id="modalInscricao" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="background: white; max-width: 500px; margin: 100px auto; padding: 2rem; border-radius: 20px; text-align: center;">
+            <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Inscrever-se no Evento</h3>
+            <p id="eventoTitulo" style="font-weight: 600; margin-bottom: 1.5rem;"></p>
+            <form id="formInscricao">
+                <input type="hidden" id="eventoId">
+                <input type="text" id="inscritoNome" placeholder="Seu nome" required style="width: 100%; padding: 1rem; margin-bottom: 1rem; border: 2px solid #ddd; border-radius: 10px;">
+                <input type="email" id="inscritoEmail" placeholder="Seu email" style="width: 100%; padding: 1rem; margin-bottom: 1rem; border: 2px solid #ddd; border-radius: 10px;">
+                <input type="tel" id="inscritoTelefone" placeholder="Seu telefone" style="width: 100%; padding: 1rem; margin-bottom: 1rem; border: 2px solid #ddd; border-radius: 10px;">
+                <button type="submit" style="background: var(--verde-principal); color: white; border: none; padding: 1rem 2rem; border-radius: 10px; font-size: 1rem; cursor: pointer; margin-right: 0.5rem;">Confirmar Inscrição</button>
+                <button type="button" onclick="fecharModal()" style="background: #ccc; color: #333; border: none; padding: 1rem 2rem; border-radius: 10px; font-size: 1rem; cursor: pointer;">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
     <!-- FOOTER (IGUAL AO INDEX) -->
     <footer class="footer">
         <p>MAANAIN © 2026 – Toda glória a Deus</p>

@@ -175,6 +175,11 @@
 
                 <div class="loading" id="loadingEventos">🔄 Carregando eventos...</div>
                 <div id="listaEventos"></div>
+
+                <!-- Inscrições em Eventos -->
+                <h3 style="color: var(--verde-principal); margin: 3rem 0 1rem 0; border-bottom: 2px solid var(--verde-principal); padding-bottom: 0.5rem;">📋 Inscrições em Eventos</h3>
+                <div class="loading" id="loadingInscricoes">🔄 Carregando inscrições...</div>
+                <div id="listaInscricoes" style="display: none;"></div>
             </section>
         </main>
     </div>
@@ -193,6 +198,7 @@
     </script>
     <script src="js/admin.js"></script>
     <script src="js/admin_cultos.js"></script>
+    <script src="js/admin_inscricoes.js"></script>
     <script>
     window.onload = function() {
         // Carregar estatísticas ao iniciar

@@ -75,6 +75,19 @@ db.serialize(() => {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+
+    // Tabela de inscrições em eventos
+    db.run(`
+        CREATE TABLE IF NOT EXISTS inscricoes_eventos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            evento_id INTEGER NOT NULL,
+            nome TEXT NOT NULL,
+            email TEXT,
+            telefone TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (evento_id) REFERENCES eventos(id)
+        )
+    `);
 });
 
 // ✅ REGISTER
@@ -298,6 +311,55 @@ app.delete('/api/admin/eventos/:id', verifyAdmin, (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Evento não encontrado' });
         res.json({ message: 'Evento excluído' });
+    });
+});
+
+// INSCRIÇÕES EM EVENTOS (público)
+app.post('/api/inscricoes', (req, res) => {
+    const { evento_id, nome, email, telefone } = req.body;
+    
+    if (!evento_id || !nome) {
+        return res.status(400).json({ error: 'Evento e nome são obrigatórios' });
+    }
+
+    db.run("INSERT INTO inscricoes_eventos (evento_id, nome, email, telefone) VALUES (?, ?, ?, ?)",
+        [evento_id, nome, email || null, telefone || null], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ message: 'Inscrição realizada com sucesso!', id: this.lastID });
+    });
+});
+
+// Listar inscrições de um evento (público)
+app.get('/api/inscricoes/:evento_id', (req, res) => {
+    const { evento_id } = req.params;
+    
+    db.all("SELECT * FROM inscricoes_eventos WHERE evento_id = ? ORDER BY created_at DESC", [evento_id], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Listar todas as inscrições (admin)
+app.get('/api/admin/inscricoes', verifyAdmin, (req, res) => {
+    db.all(`
+        SELECT i.*, e.titulo as evento_titulo 
+        FROM inscricoes_eventos i 
+        LEFT JOIN eventos e ON i.evento_id = e.id 
+        ORDER BY i.created_at DESC
+    `, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Excluir inscrição (admin)
+app.delete('/api/admin/inscricoes/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    
+    db.run("DELETE FROM inscricoes_eventos WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Inscrição não encontrada' });
+        res.json({ message: 'Inscrição excluída' });
     });
 });
 

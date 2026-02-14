@@ -222,6 +222,7 @@ async function carregarEventos() {
                             ${new Date(evento.data).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                         <p>${evento.local || 'Local a definir'}</p>
+                        <button onclick="abrirInscricao(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" style="background: var(--verde-principal); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; margin-top: 1rem;">📝 Inscrever-se</button>
                     </div>
                 `).join('');
             }
@@ -339,4 +340,45 @@ async function carregarCultos() {
             container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Erro ao carregar cultos.</p>';
         }
     }
+}
+
+// Funções para inscrição em eventos
+function abrirInscricao(eventoId, eventoTitulo) {
+    document.getElementById('eventoId').value = eventoId;
+    document.getElementById('eventoTitulo').textContent = eventoTitulo;
+    document.getElementById('modalInscricao').style.display = 'block';
+}
+
+function fecharModal() {
+    document.getElementById('modalInscricao').style.display = 'none';
+    document.getElementById('formInscricao').reset();
+}
+
+// Enviar inscrição
+const formInscricao = document.getElementById('formInscricao');
+if (formInscricao) {
+    formInscricao.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const evento_id = document.getElementById('eventoId').value;
+        const nome = document.getElementById('inscritoNome').value;
+        const email = document.getElementById('inscritoEmail').value;
+        const telefone = document.getElementById('inscritoTelefone').value;
+
+        try {
+            const response = await fetch('/api/inscricoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ evento_id, nome, email, telefone })
+            });
+            const data = await response.json();
+            if (data.error) {
+                alert('❌ ' + data.error);
+            } else {
+                alert('✅ ' + data.message);
+                fecharModal();
+            }
+        } catch (err) {
+            alert('❌ Erro ao fazer inscrição');
+        }
+    });
 }
