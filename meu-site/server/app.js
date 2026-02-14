@@ -150,11 +150,33 @@ app.post("/api/login", (req, res) => {
     );
 });
 
-// ✅ ADMIN ROUTES
-app.get('/api/admin/users', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
+// Middleware de autenticação admin
+const verifyAdmin = (req, res, next) => {
+    const authHeader = req.headers['x-admin-token'];
+    const userData = req.headers['x-user-data'];
+    
+    // Verificar se tem token admin ou dados de usuário
+    if (authHeader === 'maanain2026') {
+        return next(); // Token direto (para compatibilidade)
     }
+    
+    // Verificar se tem dados de usuário válidos
+    if (userData) {
+        try {
+            const user = JSON.parse(Buffer.from(userData, 'base64').toString('utf-8'));
+            if (user && user.role === 'admin') {
+                return next();
+            }
+        } catch (e) {
+            // Invalid user data
+        }
+    }
+    
+    return res.status(403).json({ error: 'Acesso não autorizado' });
+};
+
+// ✅ ADMIN ROUTES
+app.get('/api/admin/users', verifyAdmin, (req, res) => {
 
     db.all("SELECT id, username, email, role FROM users ORDER BY id DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -162,11 +184,7 @@ app.get('/api/admin/users', (req, res) => {
     });
 });
 
-app.put('/api/admin/users/:id/role', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.put('/api/admin/users/:id/role', verifyAdmin, (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
 
@@ -181,11 +199,7 @@ app.put('/api/admin/users/:id/role', (req, res) => {
     });
 });
 
-app.delete('/api/admin/users/:id', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.delete('/api/admin/users/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
 
     db.run("DELETE FROM users WHERE id = ?", [id], function(err) {
@@ -195,10 +209,7 @@ app.delete('/api/admin/users/:id', (req, res) => {
     });
 });
 
-app.get('/api/admin/stats', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
+app.get('/api/admin/stats', verifyAdmin, (req, res) => {
 
     db.all("SELECT role, COUNT(*) as count FROM users GROUP BY role", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -215,22 +226,14 @@ app.get('/api/admin/stats', (req, res) => {
 });
 
 // CRUD NOTÍCIAS
-app.get('/api/admin/noticias', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.get('/api/admin/noticias', verifyAdmin, (req, res) => {
     db.all("SELECT * FROM noticias ORDER BY created_at DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
 });
 
-app.post('/api/admin/noticias', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.post('/api/admin/noticias', verifyAdmin, (req, res) => {
     const { titulo, conteudo } = req.body;
     if (!titulo || !conteudo) {
         return res.status(400).json({ error: 'Título e conteúdo obrigatórios' });
@@ -242,11 +245,7 @@ app.post('/api/admin/noticias', (req, res) => {
     });
 });
 
-app.put('/api/admin/noticias/:id', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.put('/api/admin/noticias/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
     const { titulo, conteudo } = req.body;
 
@@ -257,11 +256,7 @@ app.put('/api/admin/noticias/:id', (req, res) => {
     });
 });
 
-app.delete('/api/admin/noticias/:id', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.delete('/api/admin/noticias/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
 
     db.run("DELETE FROM noticias WHERE id = ?", [id], function(err) {
@@ -272,22 +267,14 @@ app.delete('/api/admin/noticias/:id', (req, res) => {
 });
 
 // CRUD EVENTOS
-app.get('/api/admin/eventos', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.get('/api/admin/eventos', verifyAdmin, (req, res) => {
     db.all("SELECT * FROM eventos ORDER BY created_at DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
 });
 
-app.post('/api/admin/eventos', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.post('/api/admin/eventos', verifyAdmin, (req, res) => {
     const { titulo, data, local } = req.body;
     if (!titulo || !data) {
         return res.status(400).json({ error: 'Título e data obrigatórios' });
@@ -299,11 +286,7 @@ app.post('/api/admin/eventos', (req, res) => {
     });
 });
 
-app.put('/api/admin/eventos/:id', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.put('/api/admin/eventos/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
     const { titulo, data, local } = req.body;
 
@@ -314,11 +297,7 @@ app.put('/api/admin/eventos/:id', (req, res) => {
     });
 });
 
-app.delete('/api/admin/eventos/:id', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.delete('/api/admin/eventos/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
 
     db.run("DELETE FROM eventos WHERE id = ?", [id], function(err) {
@@ -329,10 +308,7 @@ app.delete('/api/admin/eventos/:id', (req, res) => {
 });
 
 // CRUD CONTEÚDOS DA PÁGINA INICIAL
-app.get('/api/admin/page-content', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
+app.get('/api/admin/page-content', verifyAdmin, (req, res) => {
 
     db.all("SELECT * FROM page_content ORDER BY section", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -368,10 +344,7 @@ app.get('/api/page-content', (req, res) => {
 });
 
 // CRUD MINISTÉRIOS
-app.get('/api/admin/ministerios', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
+app.get('/api/admin/ministerios', verifyAdmin, (req, res) => {
 
     db.all("SELECT * FROM ministerios ORDER BY ordem ASC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -379,11 +352,7 @@ app.get('/api/admin/ministerios', (req, res) => {
     });
 });
 
-app.post('/api/admin/ministerios', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.post('/api/admin/ministerios', verifyAdmin, (req, res) => {
     const { titulo, descricao, icone } = req.body;
     if (!titulo) {
         return res.status(400).json({ error: 'Título obrigatório' });
@@ -396,11 +365,7 @@ app.post('/api/admin/ministerios', (req, res) => {
     });
 });
 
-app.put('/api/admin/ministerios/:id', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.put('/api/admin/ministerios/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
     const { titulo, descricao, icone, ordem } = req.body;
 
@@ -412,11 +377,7 @@ app.put('/api/admin/ministerios/:id', (req, res) => {
     });
 });
 
-app.delete('/api/admin/ministerios/:id', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.delete('/api/admin/ministerios/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
 
     db.run("DELETE FROM ministerios WHERE id = ?", [id], function(err) {
@@ -435,10 +396,7 @@ app.get('/api/ministerios', (req, res) => {
 });
 
 // CRUD CULTOS SEMANAIS (Admin)
-app.get('/api/admin/cultos', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
+app.get('/api/admin/cultos', verifyAdmin, (req, res) => {
 
     db.all("SELECT * FROM cultos ORDER BY id ASC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -453,10 +411,7 @@ app.get('/api/cultos', (req, res) => {
     });
 });
 
-app.put('/api/admin/cultos/:id', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
+app.put('/api/admin/cultos/:id', verifyAdmin, (req, res) => {
 
     const { id } = req.params;
     const { titulo, horario, local } = req.body;

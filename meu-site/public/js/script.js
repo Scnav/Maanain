@@ -91,7 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     localStorage.setItem('maanain_user', JSON.stringify(data.user));
                     usuarioLogado = data.user;
                     atualizarHeader();
-                    setTimeout(() => window.location.href = 'index.html', 500);
+                    // Forçar recarregamento completo para atualizar o header
+                    window.location.href = 'index.html';
                 }
             })
             .catch(err => alert("❌ " + err.message));

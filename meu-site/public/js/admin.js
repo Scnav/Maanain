@@ -1,5 +1,9 @@
 // Sidebar Navigation
 document.addEventListener('DOMContentLoaded', function() {
+    // Obter dados do usuário logado
+    const userData = localStorage.getItem('maanain_user');
+    window.MAANAIN_ADMIN_USER = userData ? JSON.parse(userData) : null;
+    
     carregarEstatisticas();
     carregarUsuarios();
 
@@ -20,11 +24,41 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
+// Função helper para obter headers de autenticação
+function getAdminHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    
+    // Primeiro tenta usar dados do usuário se estiver logado como admin
+    if (window.MAANAIN_ADMIN_USER && window.MAANAIN_ADMIN_USER.role === 'admin') {
+        const userBase64 = btoa(JSON.stringify(window.MAANAIN_ADMIN_USER));
+        headers['x-user-data'] = userBase64;
+    }
+    
+    // Fallback: usar token fixo para compatibilidade
+    headers['x-admin-token'] = 'maanain2026';
+    
+    return headers;
+}
+
+// Toast notification
+function mostrarToast(mensagem, tipo = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${tipo}`;
+    toast.textContent = mensagem;
+    toast.style.background = tipo === 'success' ? '#28a745' : '#dc3545';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.style.transform = 'translateX(0)', 10);
+    setTimeout(() => {
+        toast.style.transform = 'translateX(400px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 // Carregar Estatísticas
 async function carregarEstatisticas() {
     try {
         const response = await fetch('/api/admin/stats', {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         if (!response.ok) throw new Error('Erro ao carregar estatísticas');
         const stats = await response.json();
@@ -43,7 +77,7 @@ async function carregarEstatisticas() {
 async function carregarUsuarios() {
     try {
         const response = await fetch('/api/admin/users', {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         if (!response.ok) throw new Error('Erro ao carregar usuários');
         const usuarios = await response.json();
@@ -102,10 +136,7 @@ async function setarCargo(userId, cargo) {
     try {
         const response = await fetch(`/api/admin/users/${userId}/role`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-admin-token': 'maanain2026'
-            },
+            headers: getAdminHeaders(),
             body: JSON.stringify({ role: cargo })
         });
 
@@ -133,7 +164,7 @@ async function excluirUsuario(id) {
     try {
         const response = await fetch(`/api/admin/users/${id}`, {
             method: 'DELETE',
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
 
         if (!response.ok) throw new Error('Erro ao excluir usuário');
@@ -156,7 +187,7 @@ document.getElementById('btnCancelarNoticia').addEventListener('click', () => oc
 async function carregarNoticias() {
     try {
         const response = await fetch('/api/admin/noticias', {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         if (!response.ok) throw new Error('Erro ao carregar notícias');
         const noticias = await response.json();
@@ -226,8 +257,8 @@ async function salvarNoticia() {
         const response = await fetch(url, {
             method,
             headers: {
-                'Content-Type': 'application/json',
-                'x-admin-token': 'maanain2026'
+                
+
             },
             body: JSON.stringify({ titulo, conteudo })
         });
@@ -246,7 +277,7 @@ async function salvarNoticia() {
 async function editarNoticia(id) {
     try {
         const response = await fetch(`/api/admin/noticias`, {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         const noticias = await response.json();
         const noticia = noticias.find(n => n.id == id);
@@ -263,7 +294,7 @@ async function excluirNoticia(id) {
     try {
         const response = await fetch(`/api/admin/noticias/${id}`, {
             method: 'DELETE',
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
 
         if (!response.ok) throw new Error('Erro ao excluir notícia');
@@ -284,7 +315,7 @@ document.getElementById('btnCancelarEvento').addEventListener('click', () => ocu
 async function carregarEventos() {
     try {
         const response = await fetch('/api/admin/eventos', {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         if (!response.ok) throw new Error('Erro ao carregar eventos');
         const eventos = await response.json();
@@ -359,8 +390,8 @@ async function salvarEvento() {
         const response = await fetch(url, {
             method,
             headers: {
-                'Content-Type': 'application/json',
-                'x-admin-token': 'maanain2026'
+                
+
             },
             body: JSON.stringify({ titulo, data, local })
         });
@@ -379,7 +410,7 @@ async function salvarEvento() {
 async function editarEvento(id) {
     try {
         const response = await fetch(`/api/admin/eventos`, {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         const eventos = await response.json();
         const evento = eventos.find(e => e.id == id);
@@ -396,7 +427,7 @@ async function excluirEvento(id) {
     try {
         const response = await fetch(`/api/admin/eventos/${id}`, {
             method: 'DELETE',
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
 
         if (!response.ok) throw new Error('Erro ao excluir evento');
@@ -413,7 +444,7 @@ async function excluirEvento(id) {
 async function carregarCultos() {
     try {
         const response = await fetch('/api/cultos', {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         if (!response.ok) throw new Error('Erro ao carregar cultos');
         const cultos = await response.json();
@@ -456,8 +487,8 @@ async function salvarCulto(dia) {
         const response = await fetch(`/api/admin/cultos/${id}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
-                'x-admin-token': 'maanain2026'
+                
+
             },
             body: JSON.stringify({ titulo, horario, local })
         });
@@ -496,7 +527,7 @@ document.getElementById('btnCancelarMinisterio').addEventListener('click', () =>
 async function carregarMinisterios() {
     try {
         const response = await fetch('/api/admin/ministerios', {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         if (!response.ok) throw new Error('Erro ao carregar ministérios');
         const ministerios = await response.json();
@@ -581,8 +612,8 @@ async function salvarMinisterio() {
         const response = await fetch(url, {
             method,
             headers: {
-                'Content-Type': 'application/json',
-                'x-admin-token': 'maanain2026'
+                
+
             },
             body: JSON.stringify({ titulo, descricao, icone })
         });
@@ -601,7 +632,7 @@ async function salvarMinisterio() {
 async function editarMinisterio(id) {
     try {
         const response = await fetch('/api/admin/ministerios', {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         const ministerios = await response.json();
         const ministerio = ministerios.find(m => m.id == id);
@@ -618,7 +649,7 @@ async function excluirMinisterio(id) {
     try {
         const response = await fetch(`/api/admin/ministerios/${id}`, {
             method: 'DELETE',
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
 
         if (!response.ok) throw new Error('Erro ao excluir ministry');
@@ -635,7 +666,7 @@ async function excluirMinisterio(id) {
 async function carregarConteudos() {
     try {
         const response = await fetch('/api/admin/page-content', {
-            headers: { 'x-admin-token': 'maanain2026' }
+            headers: getAdminHeaders()
         });
         if (!response.ok) throw new Error('Erro ao carregar conteúdos');
         const conteudos = await response.json();
@@ -724,8 +755,8 @@ async function salvarConteudo(section) {
         const response = await fetch(`/api/admin/page-content/${section}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
-                'x-admin-token': 'maanain2026'
+                
+
             },
             body: JSON.stringify({ title, content })
         });
@@ -751,3 +782,4 @@ function mostrarToast(msg, type = 'info') {
         setTimeout(() => toast.remove(), 300);
     }, 2500);
 }
+

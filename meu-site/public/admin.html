@@ -238,6 +238,25 @@
         </main>
     </div>
 
+    <script>
+    // Verificar se o usuário é admin antes de carregar a página
+    const userData = localStorage.getItem('maanain_user');
+    if (!userData) {
+        window.location.href = 'login.html';
+    } else {
+        const user = JSON.parse(userData);
+        if (user.role !== 'admin') {
+            window.location.href = 'index.html';
+        }
+    }
+    </script>
     <script src="js/admin.js"></script>
+    <script>
+    window.onload = function() {
+        // Carregar estatísticas ao iniciar
+        if (typeof carregarEstatisticas === 'function') carregarEstatisticas();
+        if (typeof carregarUsuarios === 'function') carregarUsuarios();
+    };
+    </script>
 </body>
 </html>
