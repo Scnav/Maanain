@@ -694,23 +694,6 @@ async function carregarConteudos() {
             </div>
 
             <div style="margin-bottom: 2rem;">
-                <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Mensagens</h3>
-                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título da Mensagem:</label>
-                    <input type="text" id="mensagem-title" value="${conteudos.mensagem?.title || 'Domingo'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Conteúdo da Mensagem:</label>
-                    <input type="text" id="mensagem-content" value="${conteudos.mensagem?.content || 'A Fé que Move Montanhas'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Link do Vídeo (YouTube/Vídeo):</label>
-                    <input type="text" id="mensagem-link" value="${conteudos.mensagem?.link || ''}" placeholder="https://youtube.com/watch?v=..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
-                </div>
-                <button onclick="salvarConteudo('mensagem')" class="btn-editar-cargo">💾 Salvar Mensagem</button>
-            </div>
-
-            <div style="margin-bottom: 2rem;">
                 <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Título dos Ministérios</h3>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>

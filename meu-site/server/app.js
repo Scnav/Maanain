@@ -56,6 +56,18 @@ db.serialize(() => {
         )
     `);
 
+    // Tabela de mensagens
+    db.run(`
+        CREATE TABLE IF NOT EXISTS mensagens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            conteudo TEXT,
+            video_url TEXT,
+            data_publicacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+            ativa INTEGER DEFAULT 1
+        )
+    `);
+
     db.run(`
         CREATE TABLE IF NOT EXISTS ministerios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -455,11 +467,20 @@ app.put('/api/admin/page-content/:section', (req, res) => {
     const { section } = req.params;
     const { title, content, link } = req.body;
 
-    db.run("INSERT OR REPLACE INTO page_content (section, title, content, link, updated_at) VALUES (?, ?, ?, ?, datetime('now'))",
-        [section, title, content, link || null], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Conteúdo atualizado' });
-    });
+    // Verificar se link foi fornecido e não é vazio
+    if (link) {
+        db.run("INSERT OR REPLACE INTO page_content (section, title, content, link, updated_at) VALUES (?, ?, ?, ?, datetime('now'))",
+            [section, title, content, link], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Conteúdo atualizado' });
+        });
+    } else {
+        db.run("INSERT OR REPLACE INTO page_content (section, title, content, updated_at) VALUES (?, ?, ?, datetime('now'))",
+            [section, title, content], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Conteúdo atualizado' });
+        });
+    }
 });
 
 // Endpoint público para obter conteúdos
@@ -471,6 +492,60 @@ app.get('/api/page-content', (req, res) => {
             contentMap[row.section] = { title: row.title, content: row.content, link: row.link };
         });
         res.json(contentMap);
+    });
+});
+
+// CRUD MENSAGENS
+// Listar todas as mensagens (público - só ativas)
+app.get('/api/mensagens', (req, res) => {
+    db.all("SELECT * FROM mensagens WHERE ativa = 1 ORDER BY data_publicacao DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Listar todas as mensagens (admin)
+app.get('/api/admin/mensagens', verifyAdmin, (req, res) => {
+    db.all("SELECT * FROM mensagens ORDER BY data_publicacao DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Criar mensagem
+app.post('/api/admin/mensagens', verifyAdmin, (req, res) => {
+    const { titulo, conteudo, video_url, ativa } = req.body;
+    
+    if (!titulo) {
+        return res.status(400).json({ error: 'Título é obrigatório' });
+    }
+
+    db.run("INSERT INTO mensagens (titulo, conteudo, video_url, ativa) VALUES (?, ?, ?, ?)",
+        [titulo, conteudo || null, video_url || null, ativa !== undefined ? ativa : 1], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ message: 'Mensagem criada!', id: this.lastID });
+    });
+});
+
+// Atualizar mensagem
+app.put('/api/admin/mensagens/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    const { titulo, conteudo, video_url, ativa } = req.body;
+
+    db.run("UPDATE mensagens SET titulo = ?, conteudo = ?, video_url = ?, ativa = ? WHERE id = ?",
+        [titulo, conteudo, video_url, ativa, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Mensagem atualizada!' });
+    });
+});
+
+// Excluir mensagem
+app.delete('/api/admin/mensagens/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+
+    db.run("DELETE FROM mensagens WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Mensagem excluída!' });
     });
 });
 

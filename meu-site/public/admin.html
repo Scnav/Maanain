@@ -31,6 +31,7 @@
                 <h3>Conteúdo</h3>
                 <a class="sidebar-link" data-section="pagina-inicial"><i>🏠</i> Página Inicial</a>
                 <a class="sidebar-link" data-section="ministerios"><i>⛪</i> Ministérios</a>
+                <a class="sidebar-link" data-section="mensagens"><i>🎤</i> Último Culto</a>
                 <a class="sidebar-link" data-section="noticias"><i>📰</i> Notícias</a>
                 <a class="sidebar-link" data-section="programacao"><i>📅</i> Programação</a>
         </nav>
@@ -94,6 +95,40 @@
 
                 <div class="loading" id="loadingMinisterios">🔄 Carregando ministérios...</div>
                 <div id="listaMinisterios" class="ministerios-grid-admin"></div>
+            </section>
+
+            <!-- Último Culto -->
+            <section id="mensagens" class="content-section">
+                <h2 class="section-title">🎤 Gerenciar Último Culto</h2>
+                <button id="btnNovaMensagem" class="btn-editar-cargo" style="margin-bottom: 2rem;" onclick="abrirFormMensagem()">➕ Nova Mensagem</button>
+
+                <div id="formMensagem" style="display: none; background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+                    <h3 id="formMensagemTitle">Nova Mensagem</h3>
+                    <input type="hidden" id="mensagemId">
+                    <div style="margin-bottom: 1rem;">
+                        <label>Título:</label>
+                        <input type="text" id="mensagemTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Conteúdo:</label>
+                        <textarea id="mensagemConteudo" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>URL do Vídeo:</label>
+                        <input type="text" id="mensagemVideo" placeholder="https://youtube.com/watch?v=..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>
+                            <input type="checkbox" id="mensagemAtiva" checked>
+                            Ativa (visível na página)
+                        </label>
+                    </div>
+                    <button onclick="salvarMensagem()" class="btn-editar-cargo">💾 Salvar</button>
+                    <button onclick="fecharFormMensagem()" class="btn-editar-cargo" style="background: #6c757d;">Cancelar</button>
+                </div>
+
+                <div class="loading" id="loadingMensagens">🔄 Carregando mensagens...</div>
+                <div id="listaMensagens"></div>
             </section>
 
             <!-- Notícias -->
@@ -201,6 +236,7 @@
     <script src="js/admin.js"></script>
     <script src="js/admin_cultos.js"></script>
     <script src="js/admin_inscricoes.js"></script>
+    <script src="js/admin_mensagens.js"></script>
     <script>
     window.onload = function() {
         // Carregar estatísticas ao iniciar
