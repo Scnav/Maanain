@@ -51,6 +51,7 @@ db.serialize(() => {
             section TEXT UNIQUE NOT NULL,
             title TEXT,
             content TEXT,
+            link TEXT,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
@@ -155,6 +156,80 @@ app.post("/api/login", (req, res) => {
             });
         }
     );
+});
+
+// ✅ REDEFINIÇÃO DE SENHA
+// Gerar código aleatório de 6 dígitos
+function gerarCodigo() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Solicitar código de redefinição
+app.post('/api/solicitar-redefinicao', (req, res) => {
+    const { username } = req.body;
+    
+    if (!username) {
+        return res.json({ success: false, message: 'Nome de usuário obrigatório' });
+    }
+    
+    db.get('SELECT id, email FROM users WHERE username = ?', [username], (err, row) => {
+        if (err || !row) {
+            return res.json({ success: false, message: 'Usuário não encontrado' });
+        }
+        
+        // Gerar código de verificação
+        const codigo = gerarCodigo();
+        
+        // Armazenar código temporariamente (em memória - em produção seria no banco com expiração)
+        global.codigosRedefinicao = global.codigosRedefinicao || {};
+        global.codigosRedefinicao[username] = {
+            codigo: codigo,
+            expiracao: Date.now() + 15 * 60 * 1000 // 15 minutos
+        };
+        
+        console.log('Código de redefinição para ' + username + ': ' + codigo);
+        
+        res.json({ 
+            success: true, 
+            message: 'Código enviado!',
+            codigo: codigo // Em produção, enviar por email
+        });
+    });
+});
+
+// Redefinir senha
+app.post('/api/redefinir-senha', async (req, res) => {
+    const { username, novaSenha } = req.body;
+    
+    if (!username || !novaSenha) {
+        return res.json({ success: false, message: 'Dados obrigatórios' });
+    }
+    
+    // Verificar se o código foi validado recentemente
+    const registroCodigo = global.codigosRedefinicao?.[username];
+    if (!registroCodigo) {
+        return res.json({ success: false, message: 'Código expirado ou não solicitado' });
+    }
+    
+    if (Date.now() > registroCodigo.expiracao) {
+        delete global.codigosRedefinicao[username];
+        return res.json({ success: false, message: 'Código expirado' });
+    }
+    
+    try {
+        const passwordHash = await bcrypt.hash(novaSenha, 10);
+        
+        db.run('UPDATE users SET password_hash = ? WHERE username = ?', [passwordHash, username], function(err) {
+            if (err) {
+                return res.json({ success: false, message: 'Erro ao atualizar senha' });
+            }
+            
+            delete global.codigosRedefinicao[username];
+            res.json({ success: true, message: 'Senha atualizada com sucesso!' });
+        });
+    } catch (err) {
+        res.json({ success: false, message: 'Erro ao processar senha' });
+    }
 });
 
 // Middleware de autenticação admin
@@ -378,10 +453,10 @@ app.put('/api/admin/page-content/:section', (req, res) => {
     }
 
     const { section } = req.params;
-    const { title, content } = req.body;
+    const { title, content, link } = req.body;
 
-    db.run("INSERT OR REPLACE INTO page_content (section, title, content, updated_at) VALUES (?, ?, ?, datetime('now'))",
-        [section, title, content], function(err) {
+    db.run("INSERT OR REPLACE INTO page_content (section, title, content, link, updated_at) VALUES (?, ?, ?, ?, datetime('now'))",
+        [section, title, content, link || null], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Conteúdo atualizado' });
     });
@@ -389,11 +464,11 @@ app.put('/api/admin/page-content/:section', (req, res) => {
 
 // Endpoint público para obter conteúdos
 app.get('/api/page-content', (req, res) => {
-    db.all("SELECT section, title, content FROM page_content", (err, rows) => {
+    db.all("SELECT section, title, content, link FROM page_content", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         const contentMap = {};
         rows.forEach(row => {
-            contentMap[row.section] = { title: row.title, content: row.content };
+            contentMap[row.section] = { title: row.title, content: row.content, link: row.link };
         });
         res.json(contentMap);
     });

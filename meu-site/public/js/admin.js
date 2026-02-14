@@ -16,12 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
         });
     });
-
-    document.getElementById('logout').onclick = (e) => {
-        e.preventDefault();
-        localStorage.removeItem('maanainAdmin');
-        if (confirm('Sair do painel?')) window.location.href = 'index.html';
-    };
 });
 
 // Função helper para obter headers de autenticação
@@ -709,6 +703,10 @@ async function carregarConteudos() {
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Conteúdo da Mensagem:</label>
                     <input type="text" id="mensagem-content" value="${conteudos.mensagem?.content || 'A Fé que Move Montanhas'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                 </div>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Link do Vídeo (YouTube/Vídeo):</label>
+                    <input type="text" id="mensagem-link" value="${conteudos.mensagem?.link || ''}" placeholder="https://youtube.com/watch?v=..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
                 <button onclick="salvarConteudo('mensagem')" class="btn-editar-cargo">💾 Salvar Mensagem</button>
             </div>
 
@@ -736,29 +734,30 @@ async function carregarConteudos() {
 
 async function salvarConteudo(section) {
     try {
-        let title, content;
+        let title, content, link;
 
         if (section === 'hero') {
             title = document.getElementById('hero-title').value;
             content = document.getElementById('hero-subtitle').value;
+            link = null;
         } else if (section === 'sobre') {
             title = document.getElementById('sobre-title').value;
             content = document.getElementById('sobre-content').value;
+            link = null;
         } else if (section === 'mensagem') {
             title = document.getElementById('mensagem-title').value;
             content = document.getElementById('mensagem-content').value;
+            link = document.getElementById('mensagem-link').value;
         } else if (section === 'ministerios') {
             title = document.getElementById('ministerios-title').value;
             content = '';
+            link = null;
         }
 
         const response = await fetch(`/api/admin/page-content/${section}`, {
             method: 'PUT',
-            headers: {
-                
-
-            },
-            body: JSON.stringify({ title, content })
+            headers: getAdminHeaders(),
+            body: JSON.stringify({ title, content, link })
         });
 
         if (!response.ok) throw new Error('Erro ao salvar conteúdo');

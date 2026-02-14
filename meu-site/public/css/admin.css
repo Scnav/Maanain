@@ -12,9 +12,9 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 .header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
 .header .subtitle { opacity: 0.9; font-size: 1.1rem; }
 .header .back-btn {
-    float: right; background: rgba(255,255,255,0.2); color: white;
+    background: rgba(255,255,255,0.2); color: white;
     padding: 0.8rem 1.5rem; text-decoration: none; border-radius: 25px;
-    transition: all 0.3s;
+    transition: all 0.3s; white-space: nowrap;
 }
 .header .back-btn:hover { background: rgba(255,255,255,0.3); }
 

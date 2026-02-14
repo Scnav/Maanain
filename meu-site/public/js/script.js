@@ -150,6 +150,11 @@ document.addEventListener("DOMContentLoaded", () => {
         carregarMinisterios();
     }
 
+    // Carregar conteúdos da bíblía (mensagens)
+    if (document.getElementById('mensagensContainer')) {
+        carregarMensagensBiblia();
+    }
+
     // Inicializa
     carregarUsuario();
 });
@@ -339,6 +344,51 @@ async function carregarCultos() {
         if (container) {
             container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Erro ao carregar cultos.</p>';
         }
+    }
+}
+
+// Carregar mensagens na página da bíblía
+async function carregarMensagensBiblia() {
+    try {
+        const response = await fetch('/api/page-content');
+        const conteudos = await response.json();
+        
+        const container = document.getElementById('mensagensContainer');
+        if (!container) return;
+        
+        // Encontrar conteúdo de mensagem
+        const msg = conteudos.find(c => c.section === 'mensagem');
+        
+        // Criar cards de mensagens
+        const cards = [
+            {
+                icon: 'fa-book-bible',
+                titulo: 'Devocional Diário',
+                descricao: 'Leitura e reflexão do dia para começar bem sua jornada espiritual.'
+            },
+            {
+                icon: 'fa-graduation-cap',
+                titulo: 'Estudos Semanais',
+                descricao: 'Prepare-se para a Escola Bíblica Dominical com nossos estudos.'
+            },
+            {
+                icon: 'fa-podcast',
+                titulo: msg?.title || 'Mensagens',
+                descricao: msg?.content || 'Ouvi ou leia as pregações dos últimos domingos.',
+                link: msg?.link || null
+            }
+        ];
+        
+        container.innerHTML = cards.map(card => `
+            <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
+                <i class="fas ${card.icon}" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
+                <h3>${card.titulo}</h3>
+                <p>${card.descricao}</p>
+                ${card.link ? `<a href="${card.link}" target="_blank" style="display: inline-block; margin-top: 1rem; padding: 0.8rem 1.5rem; background: var(--verde-principal); color: white; border-radius: 8px; text-decoration: none;"><i class="fas fa-play"></i> Assistir</a>` : ''}
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Erro ao carregar mensagens:', error);
     }
 }
 

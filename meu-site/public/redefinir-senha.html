@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redefinir Senha - MAANAIN</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <h1>MAANAIN</h1>
+        <p class="header-subtitle">Igreja Evangélica da Cidade</p>
+        <nav class="nav">
+            <a href="index.html">Início</a>
+            <a href="programacao.html">Programação</a>
+            <a href="biblia.html">Bíblia</a>
+            <a href="login.html">Entrar</a>
+        </nav>
+    </header>
+
+    <!-- FORMULÁRIO DE REDEFINIÇÃO DE SENHA -->
+    <section class="section">
+        <div class="form-section">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-key" style="font-size: 4rem; color: var(--verde-principal);"></i>
+            </div>
+            
+            <h2>Redefinir Senha</h2>
+            <p id="instrucao" style="text-align: center; color: var(--cinza-escuro); margin-bottom: 2rem;">
+                Digite seu nome de usuário para receber um código de redefinição
+            </p>
+
+            <!-- Etapa 1: Solicitar código -->
+            <form id="solicitarCodigoForm" style="display: flex; flex-direction: column;">
+                <label style="font-weight: 600; color: var(--verde-principal); margin-bottom: 0.5rem;">
+                    Nome de usuário
+                </label>
+                <input type="text" id="username" placeholder="Digite seu login" required>
+                <button type="submit" style="margin-top: 1rem;">Enviar Código</button>
+            </form>
+
+            <!-- Etapa 2: Verificar código (inicialmente oculto) -->
+            <form id="verificarCodigoForm" style="display: none; flex-direction: column;">
+                <label style="font-weight: 600; color: var(--verde-principal); margin-bottom: 0.5rem;">
+                    Código de verificação
+                </label>
+                <input type="text" id="codigo" placeholder="Digite o código de 6 dígitos" maxlength="6" required>
+                
+                <label style="font-weight: 600; color: var(--verde-principal); margin-bottom: 0.5rem; margin-top: 1rem;">
+                    Nova senha
+                </label>
+                <input type="password" id="novaSenha" placeholder="Digite a nova senha" required>
+                
+                <label style="font-weight: 600; color: var(--verde-principal); margin-bottom: 0.5rem; margin-top: 1rem;">
+                    Confirmar senha
+                </label>
+                <input type="password" id="confirmarSenha" placeholder="Confirme a nova senha" required>
+                
+                <button type="submit" style="margin-top: 1rem;">Redefinir Senha</button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem;">
+                <a href="login.html" style="color: var(--dourado); font-weight: 600;">← Voltar ao Login</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>MAANAIN © 2026 – Toda glória a Deus</p>
+    </footer>
+
+    <script>
+        let codigoVerificacao = '';
+        let usuarioAtual = '';
+
+        // Etapa 1: Solicitar código
+        document.getElementById('solicitarCodigoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+
+            try {
+                const response = await fetch('/api/solicitar-redefinicao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    usuarioAtual = username;
+                    codigoVerificacao = data.codigo;
+                    document.getElementById('solicitarCodigoForm').style.display = 'none';
+                    document.getElementById('instrucao').textContent = 'Código enviado! Digite o código recibido e crie uma nova senha';
+                    document.getElementById('verificarCodigoForm').style.display = 'flex';
+                    alert('Código de verificação: ' + codigoVerificacao + '\n(Em produção, seria enviado por email)');
+                } else {
+                    alert(data.message || 'Erro ao solicitar código');
+                }
+            } catch (err) {
+                alert('Erro de conexão');
+            }
+        });
+
+        // Etapa 2: Verificar código e redefinir senha
+        document.getElementById('verificarCodigoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const codigo = document.getElementById('codigo').value;
+            const novaSenha = document.getElementById('novaSenha').value;
+            const confirmarSenha = document.getElementById('confirmarSenha').value;
+
+            if (codigo !== codigoVerificacao) {
+                alert('Código incorreto');
+                return;
+            }
+
+            if (novaSenha !== confirmarSenha) {
+                alert('As senhas não coincidem');
+                return;
+            }
+
+            if (novaSenha.length < 4) {
+                alert('A senha deve ter pelo menos 4 caracteres');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/redefinir-senha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usuarioAtual, novaSenha })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Senha redefinida com sucesso!');
+                    window.location.href = 'login.html';
+                } else {
+                    alert(data.message || 'Erro ao redefinir senha');
+                }
+            } catch (err) {
+                alert('Erro de conexão');
+            }
+        });
+    </script>
+</body>
+</html>
