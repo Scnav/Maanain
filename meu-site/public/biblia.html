@@ -26,17 +26,19 @@
             <p>Devocionais, estudos e mensagens para edificação</p>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
-            <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
-                <i class="fas fa-book-bible" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
-                <h3>Devocional Diário</h3>
-                <p>Leitura e reflexão do dia para começar bem sua jornada espiritual.</p>
-            </div>
+        <div id="topicosBibliaContainer" style="margin-top: 3rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
+                    <i class="fas fa-book-bible" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
+                    <h3>Devocional Diário</h3>
+                    <p>Leitura e reflexão do dia para começar bem sua jornada espiritual.</p>
+                </div>
 
-            <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
-                <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
-                <h3>Estudos Semanais</h3>
-                <p>Prepare-se para a Escola Bíblica Dominical com nossos estudos.</p>
+                <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
+                    <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
+                    <h3>Estudos Semanais</h3>
+                    <p>Prepare-se para a Escola Bíblica Dominical com nossos estudos.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -46,5 +48,13 @@
     </footer>
 
     <script src="js/script.js"></script>
+    <script>
+        // Carregar tópicos bíblicos ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof carregarTopicosBiblia === 'function') {
+                carregarTopicosBiblia();
+            }
+        });
+    </script>
 </body>
 </html>

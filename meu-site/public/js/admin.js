@@ -509,6 +509,8 @@ document.querySelectorAll('.sidebar-link[data-section]').forEach(link => {
             setTimeout(carregarConteudos, 100);
         } else if (section === 'ministerios') {
             setTimeout(carregarMinisterios, 100);
+        } else if (section === 'biblia') {
+            setTimeout(carregarTopicosBiblia, 100);
         }
     });
 });

@@ -101,6 +101,21 @@ db.serialize(() => {
             FOREIGN KEY (evento_id) REFERENCES eventos(id)
         )
     `);
+
+    // Tabela de tópicos bíblicos
+    db.run(`
+        CREATE TABLE IF NOT EXISTS topicos_biblia (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            descricao TEXT,
+            conteudo TEXT,
+            categoria TEXT DEFAULT 'geral',
+            icone TEXT DEFAULT 'fas fa-book-bible',
+            ordem INTEGER DEFAULT 0,
+            ativo INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
 });
 
 // ✅ REGISTER
@@ -649,6 +664,62 @@ app.delete('/api/admin/cultos/:id', verifyAdmin, (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Culto não encontrado' });
         res.json({ message: 'Culto excluído' });
+    });
+});
+
+// CRUD TÓPICOS BÍBLICOS (Admin)
+app.get('/api/admin/topicos-biblia', verifyAdmin, (req, res) => {
+    db.all("SELECT * FROM topicos_biblia ORDER BY ordem ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Listar tópicos ativos (público)
+app.get('/api/topicos-biblia', (req, res) => {
+    db.all("SELECT id, titulo, descricao, conteudo, categoria, icone FROM topicos_biblia WHERE ativo = 1 ORDER BY ordem ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Criar tópico bíblico
+app.post('/api/admin/topicos-biblia', verifyAdmin, (req, res) => {
+    const { titulo, descricao, conteudo, categoria, icone, ordem, ativo } = req.body;
+    
+    if (!titulo) {
+        return res.status(400).json({ error: 'Título é obrigatório' });
+    }
+
+    db.run("INSERT INTO topicos_biblia (titulo, descricao, conteudo, categoria, icone, ordem, ativo) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [titulo, descricao || '', conteudo || '', categoria || 'geral', icone || 'fas fa-book-bible', ordem || 0, ativo !== undefined ? ativo : 1], 
+        function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ message: 'Tópico bíblico criado!', id: this.lastID });
+    });
+});
+
+// Atualizar tópico bíblico
+app.put('/api/admin/topicos-biblia/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    const { titulo, descricao, conteudo, categoria, icone, ordem, ativo } = req.body;
+
+    db.run("UPDATE topicos_biblia SET titulo = ?, descricao = ?, conteudo = ?, categoria = ?, icone = ?, ordem = ?, ativo = ? WHERE id = ?",
+        [titulo, descricao, conteudo, categoria, icone, ordem, ativo, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Tópico não encontrado' });
+        res.json({ message: 'Tópico bíblico atualizado!' });
+    });
+});
+
+// Excluir tópico bíblico
+app.delete('/api/admin/topicos-biblia/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+
+    db.run("DELETE FROM topicos_biblia WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Tópico não encontrado' });
+        res.json({ message: 'Tópico bíblico excluído!' });
     });
 });
 

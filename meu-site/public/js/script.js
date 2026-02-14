@@ -369,6 +369,36 @@ async function carregarMensagensHome() {
     }
 }
 
+// Carregar tópicos bíblicos na página bíblia
+async function carregarTopicosBiblia() {
+    try {
+        const response = await fetch('/api/topicos-biblia');
+        const topicos = await response.json();
+        
+        const container = document.getElementById('topicosBibliaContainer');
+        if (!container) return;
+        
+        if (topicos.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Nenhum tópico bíblico disponível.</p>';
+            return;
+        }
+        
+        container.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                ${topicos.map(topico => `
+                    <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
+                        <i class="${topico.icone || 'fas fa-book-bible'}" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
+                        <h3>${topico.titulo}</h3>
+                        ${topico.descricao ? `<p>${topico.descricao}</p>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Erro ao carregar tópicos bíblicos:', error);
+    }
+}
+
 // Funções para inscrição em eventos
 function abrirInscricao(eventoId, eventoTitulo) {
     document.getElementById('eventoId').value = eventoId;
