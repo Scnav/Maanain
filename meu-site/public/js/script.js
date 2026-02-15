@@ -193,24 +193,39 @@ async function carregarNoticias() {
 // Função para carregar eventos
 async function carregarEventos() {
     try {
-        const response = await fetch('/api/eventos');
-        if (!response.ok) throw new Error('Erro ao carregar eventos');
-
-        const eventos = await response.json();
+        // Buscar eventos especiais e cultos semanais em paralelo
+        const [eventosResp, cultosResp] = await Promise.all([
+            fetch('/api/eventos'),
+            fetch('/api/cultos')
+        ]);
+        
+        if (!eventosResp.ok || !cultosResp.ok) throw new Error('Erro ao carregar eventos');
+        
+        const eventos = await eventosResp.json();
+        const cultos = await cultosResp.json();
 
         // Carregar eventos no index (resumo)
         const containerIndex = document.getElementById('eventosContainer');
         if (containerIndex) {
-            if (eventos.length === 0) {
-                containerIndex.innerHTML = '<p>Nenhum evento programado.</p>';
-            } else {
-                // Mantém o evento padrão e adiciona os dinâmicos
-                let html = '<p><strong>Culto de Domingo</strong><br>09:00 - Salão Principal</p>';
-
-                eventos.slice(0, 3).forEach(evento => {
+            let html = '';
+            
+            // Adicionar cultos semanais primeiro
+            if (cultos.length > 0) {
+                cultos.slice(0, 2).forEach(culto => {
+                    html += `<p><strong>${culto.titulo}</strong><br>${culto.horario} - ${culto.local}</p>`;
+                });
+            }
+            
+            // Adicionar eventos especiais
+            if (eventos.length > 0) {
+                eventos.slice(0, 2).forEach(evento => {
                     html += `<p><strong>${evento.titulo}</strong><br>${new Date(evento.data).toLocaleDateString('pt-BR')} ${evento.local ? '- ' + evento.local : ''}</p>`;
                 });
-
+            }
+            
+            if (html === '') {
+                containerIndex.innerHTML = '<p>Nenhum evento programado.</p>';
+            } else {
                 containerIndex.innerHTML = html;
             }
         }

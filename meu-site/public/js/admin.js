@@ -251,8 +251,8 @@ async function salvarNoticia() {
         const response = await fetch(url, {
             method,
             headers: {
-                
-
+                'Content-Type': 'application/json',
+                ...getAdminHeaders()
             },
             body: JSON.stringify({ titulo, conteudo })
         });
@@ -384,8 +384,8 @@ async function salvarEvento() {
         const response = await fetch(url, {
             method,
             headers: {
-                
-
+                'Content-Type': 'application/json',
+                ...getAdminHeaders()
             },
             body: JSON.stringify({ titulo, data, local })
         });
@@ -481,8 +481,8 @@ async function salvarCulto(dia) {
         const response = await fetch(`/api/admin/cultos/${id}`, {
             method: 'PUT',
             headers: {
-                
-
+                'Content-Type': 'application/json',
+                ...getAdminHeaders()
             },
             body: JSON.stringify({ titulo, horario, local })
         });
@@ -608,8 +608,8 @@ async function salvarMinisterio() {
         const response = await fetch(url, {
             method,
             headers: {
-                
-
+                'Content-Type': 'application/json',
+                ...getAdminHeaders()
             },
             body: JSON.stringify({ titulo, descricao, icone })
         });
