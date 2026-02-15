@@ -3,9 +3,37 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
 
 const PORT = 3000;
 const DB_PATH = path.join(__dirname, "db.sqlite3");
+const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
+
+// Variável global para verificar se o SQLite está pronto
+let bibliaSQLiteReady = false;
+
+// Conexão com banco da Bíblia (FTS5)
+const bibliaDb = new sqlite3.Database(BIBLIA_DB_PATH);
+
+// Carregar dados da Bíblia (fallback para Compatibilidade)
+let bibliaData = null;
+try {
+    const bibliaPath = path.join(__dirname, "biblia.json");
+    if (fs.existsSync(bibliaPath)) {
+        bibliaData = JSON.parse(fs.readFileSync(bibliaPath, 'utf8'));
+        console.log(`✅ Bíblia carregada: ${bibliaData.livros.length} livros`);
+    }
+} catch (err) {
+    console.error('Erro ao carregar bíblia:', err.message);
+}
+
+// Verificar se o banco da bíblia está disponível
+bibliaDb.get("SELECT COUNT(*) as total FROM livros", (err, row) => {
+    if (!err && row && row.total > 0) {
+        bibliaSQLiteReady = true;
+        console.log(`✅ Bíblia SQLite carregada: ${row.total} livros`);
+    }
+});
 
 const app = express();
 const db = new sqlite3.Database(DB_PATH);
@@ -737,6 +765,420 @@ app.get('/api/eventos', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
+});
+
+// ========== BÍBLIA API ==========
+
+// Mapeamento de IDs para nomes completos
+const NOMES_LIVROS = {
+    1: 'Gênesis', 2: 'Êxodo', 3: 'Levítico', 4: 'Números', 5: 'Deuteronômio',
+    6: 'Josué', 7: 'Juízes', 8: 'Rute', 9: '1 Samuel', 10: '2 Samuel',
+    11: '1 Reis', 12: '2 Reis', 13: '1 Crônicas', 14: '2 Crônicas', 15: 'Esdras',
+    16: 'Neemias', 17: 'Ester', 18: 'Jó', 19: 'Salmos', 20: 'Provérbios',
+    21: 'Eclesiastes', 22: 'Cânticos', 23: 'Isaías', 24: 'Jeremias', 25: 'Lamentações',
+    26: 'Ezequiel', 27: 'Daniel', 28: 'Oséias', 29: 'Joel', 30: 'Amós',
+    31: 'Obadias', 32: ' Jonas', 33: 'Miquéias', 34: 'Naum', 35: 'Habacuque',
+    36: 'Sofonias', 37: 'Ageu', 38: 'Zacarias', 39: 'Malaquias', 40: 'Mateus',
+    41: 'Marcos', 42: 'Lucas', 43: 'João', 44: 'Atos', 45: 'Romanos',
+    46: '1 Coríntios', 47: '2 Coríntios', 48: 'Gálatas', 49: 'Efésios', 50: 'Filipenses',
+    51: 'Colossenses', 52: '1 Tessalonicenses', 53: '2 Tessalonicenses', 54: '1 Timóteo', 55: '2 Timóteo',
+    56: 'Tito', 57: 'Filemom', 58: 'Hebreus', 59: 'Tiago', 60: '1 Pedro',
+    61: '2 Pedro', 62: '1 João', 63: '2 João', 64: '3 João', 65: 'Judas',
+    66: 'Apocalipse'
+};
+
+// Mapeamento de IDs para abreviações
+const ABREVIACOES_LIVROS = {
+    1: 'genesis', 2: 'exodo', 3: 'levitico', 4: 'numeros', 5: 'deuteronomio',
+    6: 'josue', 7: 'juizes', 8: 'rute', 9: '1samuel', 10: '2samuel',
+    11: '1reis', 12: '2reis', 13: '1cronicas', 14: '2cronicas', 15: 'esdras',
+    16: 'neemias', 17: 'ester', 18: 'jo', 19: 'salmos', 20: 'proverbios',
+    21: 'eclesiastes', 22: 'canticos', 23: 'isaias', 24: 'jeremias', 25: 'lamentacoes',
+    26: 'ezequiel', 27: 'daniel', 28: 'oseias', 29: 'joel', 30: 'amos',
+    31: 'obadias', 32: 'jonas', 33: 'miqueias', 34: 'naum', 35: 'habacuque',
+    36: 'sofonias', 37: 'ageu', 38: 'zacarias', 39: 'malaquias', 40: 'mateus',
+    41: 'marcos', 42: 'lucas', 43: 'joao', 44: 'atos', 45: 'romanos',
+    46: '1corintios', 47: '2corintios', 48: 'galatas', 49: 'efesios', 50: 'filipenses',
+    51: 'colossenses', 52: '1tessalonicenses', 53: '2tessalonicenses', 54: '1timoteo', 55: '2timoteo',
+    56: 'tito', 57: 'filemom', 58: 'hebreus', 59: 'tiago', 60: '1pedro',
+    61: '2pedro', 62: '1joao', 63: '2joao', 64: '3joao', 65: 'judas', 66: 'apocalipse'
+};
+
+// Contagem de capítulos por livro
+const CAPITULOS_LIVRO = {
+    1: 50, 2: 40, 3: 27, 4: 36, 5: 34, 6: 24, 7: 21, 8: 4, 9: 31, 10: 24,
+    11: 22, 12: 25, 13: 29, 14: 36, 15: 10, 16: 13, 17: 10, 18: 42, 19: 150, 20: 31,
+    21: 12, 22: 8, 23: 66, 24: 52, 25: 5, 26: 48, 27: 12, 28: 14, 29: 3, 30: 9,
+    31: 1, 32: 4, 33: 7, 34: 3, 35: 3, 36: 3, 37: 2, 38: 14, 39: 4, 40: 28,
+    41: 16, 42: 24, 43: 21, 44: 28, 45: 16, 46: 16, 47: 13, 48: 6, 49: 6, 50: 4,
+    51: 4, 52: 5, 53: 3, 54: 6, 55: 4, 56: 3, 57: 1, 58: 13, 59: 5, 60: 5,
+    61: 3, 62: 5, 63: 1, 64: 1, 65: 1, 66: 22
+};
+
+// Listar todos os livros da Bíblia
+app.get('/api/biblia/livros', (req, res) => {
+    if (bibliaSQLiteReady) {
+        // Usar SQLite - retornar array de objetos com id, nome, abreviacao, capitulos
+        const livros = [];
+        for (let id = 1; id <= 66; id++) {
+            livros.push({
+                id: id,
+                nome: NOMES_LIVROS[id],
+                abreviacao: ABREVIACOES_LIVROS[id],
+                capitulos: CAPITULOS_LIVRO[id]
+            });
+        }
+        res.json(livros);
+    } else if (bibliaData) {
+        // Fallback para JSON
+        const livros = bibliaData.livros.map(livro => ({
+            id: livro.id,
+            nome: livro.nome,
+            abreviacao: livro.abreviacao,
+            capitulos: livro.capitulos.length
+        }));
+        res.json(livros);
+    } else {
+        res.status(500).json({ error: 'Dados da bíblia não carregados' });
+    }
+});
+
+// Obter livro específico com todos os capítulos
+app.get('/api/biblia/livro/:idOuAbrev', (req, res) => {
+    const { idOuAbrev } = req.params;
+    
+    if (bibliaSQLiteReady) {
+        // Primeiro, encontrar o ID do livro
+        let livroId = null;
+        let nomeLivro = null;
+        
+        // Verificar se é um ID numérico
+        const idNum = parseInt(idOuAbrev);
+        if (!isNaN(idNum) && idNum >= 1 && idNum <= 66) {
+            livroId = idNum;
+            nomeLivro = NOMES_LIVROS[idNum];
+        } else {
+            // Procurar por abreviação ou nome
+            const busca = idOuAbrev.toLowerCase();
+            for (const [id, abreviacao] of Object.entries(ABREVIACOES_LIVROS)) {
+                if (abreviacao === busca || NOMES_LIVROS[parseInt(id)].toLowerCase().includes(busca)) {
+                    livroId = parseInt(id);
+                    nomeLivro = NOMES_LIVROS[id];
+                    break;
+                }
+            }
+        }
+        
+        if (!livroId) {
+            return res.status(404).json({ error: 'Livro não encontrado' });
+        }
+        
+        // Gerar array de capítulos
+        const capitulos = [];
+        for (let i = 1; i <= CAPITULOS_LIVRO[livroId]; i++) {
+            capitulos.push({ numero: i });
+        }
+        
+        res.json({
+            id: livroId,
+            nome: nomeLivro,
+            abreviacao: ABREVIACOES_LIVROS[livroId],
+            capitulos: capitulos
+        });
+    } else if (bibliaData) {
+        const livro = bibliaData.livros.find(l => 
+            l.id == idOuAbrev || 
+            l.abreviacao.toLowerCase() === idOuAbrev.toLowerCase() ||
+            l.nome.toLowerCase().includes(idOuAbrev.toLowerCase())
+        );
+        
+        if (!livro) {
+            return res.status(404).json({ error: 'Livro não encontrado' });
+        }
+        
+        res.json({
+            id: livro.id,
+            nome: livro.nome,
+            abreviacao: livro.abreviacao,
+            capitulos: livro.capitulos.map(c => ({ numero: c.numero, versos: c.versos.length }))
+        });
+    } else {
+        res.status(500).json({ error: 'Dados da bíblia não carregados' });
+    }
+});
+
+// Obter capítulo específico
+app.get('/api/biblia/:livro/:capitulo', (req, res) => {
+    const { livro, capitulo } = req.params;
+    const capituloNum = parseInt(capitulo);
+    
+    if (bibliaSQLiteReady) {
+        // Mapa de abreviações para nomes de livros
+        const abreviacoes = {
+            'genesis': 1, 'gen': 1, 'gn': 1,
+            'exodo': 2, 'ex': 2, 'exo': 2,
+            'levitico': 3, 'lv': 3, 'lev': 3,
+            'numeros': 4, 'nm': 4, 'num': 4,
+            'deuteronomio': 5, 'dt': 5, 'deut': 5,
+            'josue': 6, 'js': 6, 'jos': 6,
+            'juizes': 7, 'jz': 7, 'juiz': 7,
+            'rute': 8, 'rt': 8, 'rute': 8,
+            '1samuel': 9, '1 sm': 9, '1sam': 9,
+            '2samuel': 10, '2 sm': 10, '2sam': 10,
+            '1reis': 11, '1 rs': 11, '1reis': 11,
+            '2reis': 12, '2 rs': 12, '2reis': 12,
+            '1cronicas': 13, '1 cr': 13, '1cr': 13,
+            '2cronicas': 14, '2 cr': 14, '2cr': 14,
+            'esdras': 15, 'ed': 15, 'esd': 15,
+            'neemias': 16, 'ne': 16, 'neem': 16,
+            'ester': 17, 'et': 17, 'ester': 17,
+            'jo': 18, 'jó': 18, 'job': 18,
+            'salmos': 19, 'sl': 19, 'salm': 19,
+            'proverbios': 20, 'pv': 20, 'prov': 20,
+            'eclesiastes': 21, 'ec': 21, 'ecl': 21,
+            'canticos': 22, 'ct': 22, 'cant': 22,
+            'isaias': 23, 'is': 23, 'isa': 23,
+            'jeremias': 24, 'jr': 24, 'jer': 24,
+            'lamentacoes': 25, 'lm': 25, 'lam': 25,
+            'ezequiel': 26, 'ez': 26, 'ezeq': 26,
+            'daniel': 27, 'dn': 27, 'dan': 27,
+            'oseias': 28, 'os': 28, 'ose': 28,
+            'joel': 29, 'jl': 29, 'joel': 29,
+            'amos': 30, 'am': 30, 'amos': 30,
+            'obadias': 31, 'ob': 31, 'obad': 31,
+            'jonas': 32, 'jn': 32, 'jonas': 32,
+            'miqueias': 33, 'mq': 33, 'miq': 33,
+            'naum': 34, 'na': 34, 'naum': 34,
+            'habacuque': 35, 'hc': 35, 'hab': 35,
+            'sofonias': 36, 'sf': 36, 'sof': 36,
+            'ageu': 37, 'ag': 37, 'ageu': 37,
+            'zacarias': 38, 'zc': 38, 'zac': 38,
+            'malaquias': 39, 'ml': 39, 'mal': 39,
+            'mateus': 40, 'mt': 40, 'mate': 40,
+            'marcos': 41, 'mc': 41, 'mar': 41,
+            'lucas': 42, 'lc': 42, 'luc': 42,
+            'joao': 43, 'jo': 43, 'joao': 43,
+            'atos': 44, 'at': 44, 'atos': 44,
+            'romanos': 45, 'rm': 45, 'rom': 45,
+            '1corintios': 46, '1 co': 46, '1cor': 46,
+            '2corintios': 47, '2 co': 47, '2cor': 47,
+            'galatas': 48, 'gl': 48, 'gal': 48,
+            'efesios': 49, 'ef': 49, 'efes': 49,
+            'filipenses': 50, 'fp': 50, 'fil': 50,
+            'colossenses': 51, 'cl': 51, 'col': 51,
+            '1tessalonicenses': 52, '1 ts': 52, '1 tess': 52,
+            '2tessalonicenses': 53, '2 ts': 53, '2 tess': 53,
+            '1timoteo': 54, '1 tm': 54, '1tim': 54,
+            '2timoteo': 55, '2 tm': 55, '2tim': 55,
+            'tito': 56, 'tt': 56, 'tito': 56,
+            'filemom': 57, 'fm': 57, 'filem': 57,
+            'hebreus': 58, 'hb': 58, 'heb': 58,
+            'tiago': 59, 'tg': 59, 'tiag': 59,
+            '1pedro': 60, '1 pe': 60, '1ped': 60,
+            '2pedro': 61, '2 pe': 61, '2ped': 61,
+            '1joao': 62, '1 jo': 62, '1 joao': 62,
+            '2joao': 63, '2 jo': 63, '2 joao': 63,
+            '3joao': 64, '3 jo': 64, '3 joao': 64,
+            'judas': 65, 'jd': 65, 'judas': 65,
+            'apocalipse': 66, 'ap': 66, 'apoc': 66
+        };
+        
+        const livroBusca = livro.toLowerCase().replace(/\s/g, '');
+        let livroId = abreviacoes[livroBusca];
+        
+        if (!livroId) {
+            // Tentar buscar por nome no banco
+            const nomeBusca = livro.toLowerCase();
+            bibliaDb.get(`
+                SELECT id FROM livros 
+                WHERE LOWER(nome) LIKE ? OR LOWER(nome) LIKE REPLACE(?, 'ã', 'a')
+                LIMIT 1
+            `, [`%${nomeBusca}%`, `%${nomeBusca}%`], (err, row) => {
+                if (err || !row) return res.status(404).json({ error: 'Livro não encontrado' });
+                livroId = row.id;
+                buscarCapitulo(livroId);
+            });
+        } else {
+            buscarCapitulo(livroId);
+        }
+        
+        function buscarCapitulo(livroId) {
+            bibliaDb.get(`SELECT nome FROM livros WHERE id = ?`, [livroId], (err, livroRow) => {
+                if (err || !livroRow) return res.status(404).json({ error: 'Livro não encontrado' });
+                
+                bibliaDb.all(`
+                    SELECT v.versiculo, v.texto
+                    FROM versos v
+                    WHERE v.livro_id = ? AND v.capitulo_numero = ?
+                    ORDER BY v.versiculo
+                `, [livroId, capituloNum], (err2, versos) => {
+                    if (err2) return res.status(500).json({ error: err2.message });
+                    if (versos.length === 0) return res.status(404).json({ error: 'Capítulo não encontrado' });
+                    
+                    res.json({
+                        livro: livroRow.nome,
+                        capitulo: capituloNum,
+                        versos: versos.map(v => v.texto)
+                    });
+                });
+            });
+        }
+    } else if (bibliaData) {
+        const livroData = bibliaData.livros.find(l => 
+            l.abreviacao.toLowerCase() === livro.toLowerCase() ||
+            l.nome.toLowerCase().includes(livro.toLowerCase())
+        );
+        
+        if (!livroData) {
+            return res.status(404).json({ error: 'Livro não encontrado' });
+        }
+        
+        const capituloData = livroData.capitulos.find(c => c.numero === capituloNum);
+        
+        if (!capituloData) {
+            return res.status(404).json({ error: 'Capítulo não encontrado' });
+        }
+        
+        res.json({
+            livro: livroData.nome,
+            abreviacao: livroData.abreviacao,
+            capitulo: capituloNum,
+            versos: capituloData.versos
+        });
+    } else {
+        res.status(500).json({ error: 'Dados da bíblia não carregados' });
+    }
+});
+
+// Busca na Bíblia com paginação (FTS5)
+app.get('/api/biblia/busca', (req, res) => {
+    const { q, limite = 20, offset = 0 } = req.query;
+    
+    if (!q || q.length < 2) {
+        return res.status(400).json({ error: 'Termo de busca deve ter pelo menos 2 caracteres' });
+    }
+    
+    if (bibliaSQLiteReady) {
+        // Usar FTS5 para busca
+        const termo = q + '*'; // Adicionar wildcard para prefix search
+        
+        // Primeiro, contar total de resultados
+        bibliaDb.get(`
+            SELECT COUNT(*) as total
+            FROM versos_fts
+            WHERE versos_fts MATCH ?
+        `, [termo], (err, countRow) => {
+            if (err) {
+                console.error('Erro na busca FTS5:', err.message);
+                return res.status(500).json({ error: err.message });
+            }
+            
+            const total = countRow.total || 0;
+            
+            // Buscar resultados com paginação
+            bibliaDb.all(`
+                SELECT v.versiculo, v.texto, v.capitulo_numero, l.nome as livro_nome
+                FROM versos v
+                JOIN livros l ON l.id = v.livro_id
+                JOIN versos_fts ON versos_fts.rowid = v.id
+                WHERE versos_fts MATCH ?
+                ORDER BY v.livro_id, v.capitulo_numero, v.versiculo
+                LIMIT ? OFFSET ?
+            `, [termo, parseInt(limite), parseInt(offset)], (err2, rows) => {
+                if (err2) return res.status(500).json({ error: err2.message });
+                
+                const resultados = rows.map(r => ({
+                    livro: r.livro_nome,
+                    abreviacao: (ABREVIACOES_LIVROS[r.livro_id] || r.livro_nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')).replace(/\s/g, ''),
+                    capitulo: r.capitulo_numero,
+                    verso: r.versiculo,
+                    texto: r.texto
+                }));
+                
+                res.json({
+                    total,
+                    limite: parseInt(limite),
+                    offset: parseInt(offset),
+                    resultados
+                });
+            });
+        });
+    } else if (bibliaData) {
+        // Fallback para busca em memória
+        const termo = q.toLowerCase();
+        const resultados = [];
+        let total = 0;
+        
+        for (const livro of bibliaData.livros) {
+            for (const capitulo of livro.capitulos) {
+                for (let i = 0; i < capitulo.versos.length; i++) {
+                    if (capitulo.versos[i].toLowerCase().includes(termo)) {
+                        total++;
+                        if (total > offset && resultados.length < parseInt(limite)) {
+                            resultados.push({
+                                livro: livro.nome,
+                                abreviacao: livro.abreviacao,
+                                capitulo: capitulo.numero,
+                                verso: i + 1,
+                                texto: capitulo.versos[i]
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        res.json({
+            total,
+            limite: parseInt(limite),
+            offset: parseInt(offset),
+            resultados
+        });
+    } else {
+        res.status(500).json({ error: 'Dados da bíblia não carregados' });
+    }
+});
+
+// Autocomplete para busca
+app.get('/api/biblia/autocomplete', (req, res) => {
+    const { q } = req.query;
+    
+    if (!q || q.length < 1) {
+        return res.json([]);
+    }
+    
+    if (bibliaSQLiteReady) {
+        // Buscar livros pelo nome
+        bibliaDb.all(`
+            SELECT nome
+            FROM livros
+            WHERE LOWER(nome) LIKE LOWER(?)
+            LIMIT 10
+        `, [`%${q}%`], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            const sugestoes = rows.map(r => ({
+                tipo: 'livro',
+                nome: r.nome
+            }));
+            
+            res.json(sugestoes);
+        });
+    } else if (bibliaData) {
+        // Fallback para JSON
+        const termo = q.toLowerCase();
+        const sugestoes = [];
+        
+        for (const livro of bibliaData.livros) {
+            if (livro.nome.toLowerCase().includes(termo) || livro.abreviacao.toLowerCase().includes(termo)) {
+                sugestoes.push({ tipo: 'livro', nome: livro.nome, abreviacao: livro.abreviacao });
+            }
+        }
+        
+        res.json(sugestoes.slice(0, 10));
+    } else {
+        res.json([]);
+    }
 });
 
 // ✅ Static files (SEMPRE POR ÚLTIMO)

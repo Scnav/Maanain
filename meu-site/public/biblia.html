@@ -2,12 +2,292 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bíblia - MAANAIN</title>
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Estilos específicos para a seção de leitura bíblica */
+        .biblia-leitura {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--sombra);
+            margin-top: 2rem;
+        }
+        
+        .biblia-search {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .biblia-search input, 
+        .biblia-search select {
+            padding: 0.8rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        
+        .biblia-search input:focus,
+        .biblia-search select:focus {
+            outline: none;
+            border-color: var(--verde-principal);
+        }
+        
+        .biblia-search input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .biblia-search button {
+            background: var(--verde-principal);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .biblia-search button:hover {
+            background: var(--verde-claro);
+            transform: translateY(-2px);
+        }
+        
+        .autocomplete-container {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .autocomplete-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .autocomplete-results.show {
+            display: block;
+        }
+        
+        .autocomplete-item {
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .autocomplete-item:hover {
+            background: var(--verde-superclaro);
+        }
+        
+        .autocomplete-item strong {
+            color: var(--verde-principal);
+        }
+        
+        /* Seletor de livro e capítulo */
+        .biblia-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .biblia-selector select {
+            flex: 1;
+            min-width: 150px;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        .biblia-selector select:focus {
+            outline: none;
+            border-color: var(--verde-principal);
+        }
+        
+        /* Área de leitura */
+        .biblia-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+        
+        .biblia-content .verso {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        
+        .biblia-content .verso:hover {
+            background: var(--verde-superclaro);
+        }
+        
+        .biblia-content .verso-numero {
+            color: var(--dourado);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        /* Busca results */
+        .biblia-results {
+            margin-top: 2rem;
+        }
+        
+        .biblia-result-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .biblia-result-item:hover {
+            background: var(--verde-superclaro);
+            transform: translateX(5px);
+        }
+        
+        .biblia-result-item .reference {
+            color: var(--verde-principal);
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .biblia-result-item .texto-destaque {
+            color: var(--cinza-escuro);
+        }
+        
+        .biblia-result-item mark {
+            background: #fff3cd;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        
+        /* Navegação de capítulos */
+        .biblia-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .biblia-nav button {
+            background: var(--verde-principal);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .biblia-nav button:hover:not(:disabled) {
+            background: var(--verde-claro);
+        }
+        
+        .biblia-nav button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* Paginação */
+        .biblia-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        
+        .biblia-pagination button {
+            background: white;
+            border: 2px solid var(--verde-principal);
+            color: var(--verde-principal);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .biblia-pagination button:hover,
+        .biblia-pagination button.active {
+            background: var(--verde-principal);
+            color: white;
+        }
+        
+        /* Loading */
+        .biblia-loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .biblia-loading i {
+            font-size: 2rem;
+            color: var(--verde-principal);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Tabs */
+        .biblia-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .biblia-tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .biblia-tab:hover {
+            color: var(--verde-principal);
+        }
+        
+        .biblia-tab.active {
+            color: var(--verde-principal);
+            border-bottom-color: var(--verde-principal);
+            font-weight: bold;
+        }
+        
+        .biblia-section {
+            display: none;
+        }
+        
+        .biblia-section.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <!-- HEADER (será controlado pelo JS) -->
+    <!-- HEADER -->
     <header class="header">
         <h1>MAANAIN</h1>
         <p class="header-subtitle">Igreja Evangélica da Cidade</p>
@@ -22,24 +302,58 @@
     <!-- CONTEÚDO BÍBLIA -->
     <section class="section">
         <div class="hero">
-            <h2>Estudos Bíblicos</h2>
-            <p>Devocionais, estudos e mensagens para edificação</p>
+            <h2>Bíblia Sagrada</h2>
+            <p>Leia, medite e estude a Palavra de Deus</p>
         </div>
 
-        <div id="topicosBibliaContainer" style="margin-top: 3rem;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
-                    <i class="fas fa-book-bible" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
-                    <h3>Devocional Diário</h3>
-                    <p>Leitura e reflexão do dia para começar bem sua jornada espiritual.</p>
-                </div>
+        <!-- Tabs -->
+        <div class="biblia-tabs">
+            <button class="biblia-tab active" data-tab="leitura">📖 Leitura</button>
+            <button class="biblia-tab" data-tab="busca">🔍 Busca</button>
+        </div>
 
-                <div style="background: white; border-radius: 20px; padding: 2rem; box-shadow: var(--sombra); text-align: center;">
-                    <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--verde-principal); margin-bottom: 1rem;"></i>
-                    <h3>Estudos Semanais</h3>
-                    <p>Prepare-se para a Escola Bíblica Dominical com nossos estudos.</p>
-                </div>
+        <!-- Seção de Leitura -->
+        <div id="leitura-section" class="biblia-section active biblia-leitura">
+            <div class="biblia-selector">
+                <select id="livroSelect">
+                    <option value="">Selecione o Livro</option>
+                </select>
+                <select id="capituloSelect" disabled>
+                    <option value="">Selecione o Capítulo</option>
+                </select>
             </div>
+            
+            <div id="bibliaContent" class="biblia-content">
+                <p style="text-align: center; color: #666; font-style: italic;">
+                    Selecione um livro e capítulo para começar a leitura.
+                </p>
+            </div>
+            
+            <div class="biblia-nav">
+                <button id="capituloAnterior" disabled>← Capítulo Anterior</button>
+                <button id="proximoCapitulo" disabled>Próximo Capítulo →</button>
+            </div>
+        </div>
+
+        <!-- Seção de Busca -->
+        <div id="busca-section" class="biblia-section biblia-leitura">
+            <div class="biblia-search">
+                <div class="autocomplete-container">
+                    <input type="text" id="buscaInput" placeholder="Buscar na bíblia...">
+                    <div id="autocompleteResults" class="autocomplete-results"></div>
+                </div>
+                <button id="buscarBtn"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+            
+            <div id="buscaResults" class="biblia-results">
+                <p style="text-align: center; color: #666; font-style: italic;">
+                    Digite um termo para buscar na bíblia.<br>
+                    Exemplos: "amor", "fé"<br>
+                    Ou digite referência: "genesis 1:1", "gn 1:1", "genesis 1 1", "genesis 1" (para todo capítulo)
+                </p>
+            </div>
+            
+            <div id="buscaPagination" class="biblia-pagination"></div>
         </div>
     </section>
 
@@ -49,12 +363,483 @@
 
     <script src="js/script.js"></script>
     <script>
-        // Carregar tópicos bíblicos ao carregar a página
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof carregarTopicosBiblia === 'function') {
-                carregarTopicosBiblia();
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+        
+        // Variáveis globais
+        let bibliaLivros = [];
+        let livroAtual = null;
+        let capituloAtual = null;
+        let buscaOffset = 0;
+        const buscaLimite = 10;
+        let termoBuscaAtual = '';
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Resetar selects ao carregar
+            document.getElementById('livroSelect').value = '';
+            document.getElementById('capituloSelect').value = '';
+            document.getElementById('capituloSelect').disabled = true;
+            document.getElementById('buscaInput').value = '';
+            
+            // Limpar resultados da busca
+            const buscaResults = document.getElementById('buscaResults');
+            if (buscaResults) {
+                buscaResults.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Digite pelo menos 2 caracteres para buscar na bíblia.</p>';
             }
+            const buscaPagination = document.getElementById('buscaPagination');
+            if (buscaPagination) {
+                buscaPagination.innerHTML = '';
+            }
+            
+            await carregarLivros();
+            setupTabs();
+            setupBusca();
+            
+            // Opcional: Carregar última posição lida (comentado para sempre iniciar do início)
+            // const ultimaLeitura = localStorage.getItem('biblia_ultima_leitura');
+            // if (ultimaLeitura) {
+            //     const { livro, capitulo } = JSON.parse(ultimaLeitura);
+            //     document.getElementById('livroSelect').value = livro;
+            //     await carregarCapitulos(livro);
+            //     document.getElementById('capituloSelect').value = capitulo;
+            //     await carregarCapitulo(livro, capitulo);
+            // }
         });
+
+        // Setup tabs
+        function setupTabs() {
+            document.querySelectorAll('.biblia-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    // Atualiza tabs
+                    document.querySelectorAll('.biblia-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Atualiza seções
+                    document.querySelectorAll('.biblia-section').forEach(s => s.classList.remove('active'));
+                    document.getElementById(`${tabId}-section`).classList.add('active');
+                    
+                    // Resetar tudo ao mudar de aba
+                    if (tabId === 'busca') {
+                        document.getElementById('buscaInput').value = '';
+                        document.getElementById('buscaResults').innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Digite pelo menos 2 caracteres para buscar na bíblia.</p>';
+                        document.getElementById('buscaPagination').innerHTML = '';
+                    } else if (tabId === 'leitura') {
+                        // Resetar selects da leitura
+                        document.getElementById('livroSelect').value = '';
+                        document.getElementById('capituloSelect').value = '';
+                        document.getElementById('capituloSelect').disabled = true;
+                        document.getElementById('leituraContent').innerHTML = '<p style="text-align: center; color: #666;">Selecione um livro e capítulo para ler.</p>';
+                    }
+                });
+            });
+        }
+
+        // Carregar lista de livros
+        async function carregarLivros() {
+            try {
+                const response = await fetch('/api/biblia/livros');
+                bibliaLivros = await response.json();
+                
+                const select = document.getElementById('livroSelect');
+                bibliaLivros.forEach(livro => {
+                    const option = document.createElement('option');
+                    option.value = livro.abreviacao;
+                    option.textContent = livro.nome;
+                    select.appendChild(option);
+                });
+                
+                // Event listener para mudança de livro
+                select.addEventListener('change', async function() {
+                    if (this.value) {
+                        await carregarCapitulos(this.value);
+                        document.getElementById('capituloSelect').disabled = false;
+                    } else {
+                        document.getElementById('capituloSelect').disabled = true;
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao carregar livros:', error);
+            }
+        }
+
+        // Carregar capítulos de um livro
+        async function carregarCapitulos(livroAbrev) {
+            try {
+                const response = await fetch(`/api/biblia/livro/${livroAbrev}`);
+                const livro = await response.json();
+                
+                livroAtual = livro;
+                
+                const select = document.getElementById('capituloSelect');
+                select.innerHTML = '<option value="">Selecione o Capítulo</option>';
+                
+                livro.capitulos.forEach(cap => {
+                    const option = document.createElement('option');
+                    option.value = cap.numero;
+                    option.textContent = `Capítulo ${cap.numero}`;
+                    select.appendChild(option);
+                });
+                
+                // Event listener para mudança de capítulo
+                select.addEventListener('change', async function() {
+                    if (this.value) {
+                        await carregarCapitulo(livroAbrev, this.value);
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao carregar capítulos:', error);
+            }
+        }
+
+        // Carregar um capítulo específico
+        async function carregarCapitulo(livroAbrev, capitulo) {
+            try {
+                const response = await fetch(`/api/biblia/${livroAbrev}/${capitulo}`);
+                const data = await response.json();
+                
+                capituloAtual = capitulo;
+                
+                // Salvar última posição
+                localStorage.setItem('biblia_ultima_leitura', JSON.stringify({
+                    livro: livroAbrev,
+                    capitulo: capitulo
+                }));
+                
+                // Renderizar conteúdo
+                const content = document.getElementById('bibliaContent');
+                let html = `<h3 style="color: var(--verde-principal); margin-bottom: 1.5rem;">${data.livro} ${data.capitulo}</h3>`;
+                
+                data.versos.forEach((verso, index) => {
+                    html += `<div class="verso"><span class="verso-numero">${index + 1}</span>${verso}</div>`;
+                });
+                
+                content.innerHTML = html;
+                
+                // Atualizar botões de navegação
+                const btnAnterior = document.getElementById('capituloAnterior');
+                const btnProximo = document.getElementById('proximoCapitulo');
+                
+                btnAnterior.disabled = capitulo <= 1;
+                btnAnterior.onclick = () => {
+                    if (capitulo > 1) {
+                        document.getElementById('capituloSelect').value = capitulo - 1;
+                        carregarCapitulo(livroAbrev, capitulo - 1);
+                    }
+                };
+                
+                btnProximo.disabled = capitulo >= livroAtual.capitulos.length;
+                btnProximo.onclick = () => {
+                    if (capitulo < livroAtual.capitulos.length) {
+                        document.getElementById('capituloSelect').value = parseInt(capitulo) + 1;
+                        carregarCapitulo(livroAbrev, parseInt(capitulo) + 1);
+                    }
+                };
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Erro ao carregar capítulo:', error);
+            }
+        }
+
+        // Setup busca
+        function setupBusca() {
+            const input = document.getElementById('buscaInput');
+            const autocomplete = document.getElementById('autocompleteResults');
+            let debounceTimer;
+
+            // Autocomplete
+            input.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(async () => {
+                    if (this.value.length >= 1) {
+                        try {
+                            const response = await fetch(`/api/biblia/autocomplete?q=${encodeURIComponent(this.value)}`);
+                            const results = await response.json();
+                            
+                            if (results.length > 0) {
+                                autocomplete.innerHTML = results.map(r => 
+                                    `<div class="autocomplete-item" data-tipo="livro" data-valor="${r.abreviacao}">
+                                        <strong>${r.nome}</strong> (${r.abreviacao})
+                                    </div>`
+                                ).join('');
+                                autocomplete.classList.add('show');
+                                
+                                // Event listeners para autocomplete
+                                autocomplete.querySelectorAll('.autocomplete-item').forEach(item => {
+                                    item.addEventListener('click', function() {
+                                        input.value = this.dataset.valor;
+                                        autocomplete.classList.remove('show');
+                                        realizarBusca();
+                                    });
+                                });
+                            } else {
+                                autocomplete.classList.remove('show');
+                            }
+                        } catch (error) {
+                            console.error('Erro no autocomplete:', error);
+                        }
+                    } else {
+                        autocomplete.classList.remove('show');
+                    }
+                }, 300);
+            });
+
+            // Fechar autocomplete ao clicar fora
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.autocomplete-container')) {
+                    autocomplete.classList.remove('show');
+                }
+            });
+
+            // Botão buscar
+            document.getElementById('buscarBtn').addEventListener('click', realizarBusca);
+            
+            // Enter para buscar
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    realizarBusca();
+                }
+            });
+        }
+
+        // Realizar busca
+        async function realizarBusca() {
+            const termo = document.getElementById('buscaInput').value.trim();
+            if (termo.length < 2) {
+                alert('Digite pelo menos 2 caracteres para buscar');
+                return;
+            }
+            
+            // Verificar se é uma referência (ex: genesis 1:1 ou genesis 1 4 ou gn 1:1)
+            // Formatos aceitos: "livro capítulo:versículo" ou "livro capítulo versículo"
+            const refMatch = termo.match(/^(\w+)\s+(\d+)(?:[:\s](\d+))?$/i);
+            if (refMatch) {
+                const [, livroAbrev, capitulo, versiculo] = refMatch;
+                if (versiculo) {
+                    // Buscar versículo específico (genesis 1:1 ou genesis 1 1)
+                    await buscarPorVersiculo(livroAbrev, parseInt(capitulo), parseInt(versiculo));
+                } else {
+                    // Buscar capítulo inteiro (genesis 1)
+                    await buscarPorCapitulo(livroAbrev, parseInt(capitulo));
+                }
+                return;
+            }
+            
+            termoBuscaAtual = termo;
+            buscaOffset = 0;
+            
+            await executarBusca(termo, 0);
+        }
+        
+        // Buscar por versículo específico
+        async function buscarPorVersiculo(livroAbrev, capitulo, versiculo) {
+            const resultsContainer = document.getElementById('buscaResults');
+            resultsContainer.innerHTML = '<div class="biblia-loading"><i class="fas fa-spinner"></i><p>Buscando...</p></div>';
+            
+            try {
+                // Primeiro buscar o livro
+                const livroResponse = await fetch(`/api/biblia/livro/${livroAbrev}`);
+                if (!livroResponse.ok) {
+                    resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Livro não encontrado.</p>';
+                    return;
+                }
+                const livroData = await livroResponse.json();
+                
+                // Agora buscar o capítulo
+                const capResponse = await fetch(`/api/biblia/${livroData.abreviacao}/${capitulo}`);
+                if (!capResponse.ok) {
+                    resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Capítulo não encontrado.</p>';
+                    return;
+                }
+                const capData = await capResponse.json();
+                
+                // Verificar se o versículo existe
+                if (versiculo > capData.versos.length || versiculo < 1) {
+                    resultsContainer.innerHTML = `<p style="text-align: center; color: #666;">Versículo ${versiculo} não encontrado no capítulo ${capitulo}. O capítulo tem ${capData.versos.length} versículos.</p>`;
+                    return;
+                }
+                
+                const textoVersiculo = capData.versos[versiculo - 1];
+                
+                const html = `
+                    <div class="biblia-result-item" onclick="irParaVerso('${livroData.abreviacao}', ${capitulo}, ${versiculo})">
+                        <div class="reference">${livroData.nome} ${capitulo}:${versiculo}</div>
+                        <div class="texto-destaque">${textoVersiculo}</div>
+                    </div>
+                `;
+                
+                resultsContainer.innerHTML = html;
+                document.getElementById('buscaPagination').innerHTML = '';
+                
+            } catch (error) {
+                console.error('Erro ao buscar versículo:', error);
+                resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Erro ao buscar. Tente novamente.</p>';
+            }
+        }
+        
+        // Buscar por capítulo inteiro
+        async function buscarPorCapitulo(livroAbrev, capitulo) {
+            const resultsContainer = document.getElementById('buscaResults');
+            resultsContainer.innerHTML = '<div class="biblia-loading"><i class="fas fa-spinner"></i><p>Buscando...</p></div>';
+            
+            try {
+                // Primeiro buscar o livro
+                const livroResponse = await fetch(`/api/biblia/livro/${livroAbrev}`);
+                if (!livroResponse.ok) {
+                    resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Livro não encontrado.</p>';
+                    return;
+                }
+                const livroData = await livroResponse.json();
+                
+                // Agora buscar o capítulo
+                const capResponse = await fetch(`/api/biblia/${livroData.abreviacao}/${capitulo}`);
+                if (!capResponse.ok) {
+                    resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Capítulo não encontrado.</p>';
+                    return;
+                }
+                const capData = await capResponse.json();
+                
+                // Mostrar todos os versículos do capítulo
+                let html = `<h3 style="text-align: center; margin-bottom: 1rem;">${livroData.nome} ${capitulo}</h3>`;
+                html += capData.versos.map((verso, index) => `
+                    <div class="biblia-result-item" onclick="irParaVerso('${livroData.abreviacao}', ${capitulo}, ${index + 1})">
+                        <div class="reference">${index + 1}</div>
+                        <div class="texto-destaque">${verso}</div>
+                    </div>
+                `).join('');
+                
+                resultsContainer.innerHTML = html;
+                document.getElementById('buscaPagination').innerHTML = '';
+                
+            } catch (error) {
+                console.error('Erro ao buscar capítulo:', error);
+                resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Erro ao buscar. Tente novamente.</p>';
+            }
+        }
+
+        // Executar busca com paginação
+        async function executarBusca(termo, offset) {
+            const resultsContainer = document.getElementById('buscaResults');
+            const paginationContainer = document.getElementById('buscaPagination');
+            
+            resultsContainer.innerHTML = '<div class="biblia-loading"><i class="fas fa-spinner"></i><p>Buscando...</p></div>';
+            
+            try {
+                console.log('Executando busca:', termo, 'offset:', offset);
+                const url = `/api/biblia/busca?q=${encodeURIComponent(termo)}&limite=${buscaLimite}&offset=${offset}`;
+                console.log('URL:', url);
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Data:', data);
+                
+                if (data.error) {
+                    resultsContainer.innerHTML = `<p style="text-align: center; color: #666;">Erro: ${data.error}</p>`;
+                    return;
+                }
+                
+                if (data.resultados.length === 0) {
+                    resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Nenhum resultado encontrado.</p>';
+                    paginationContainer.innerHTML = '';
+                    return;
+                }
+                
+                // Highlight do termobusca
+                const termoLower = termo.toLowerCase();
+                
+                let html = data.resultados.map(r => {
+                    const textoDestaque = r.texto.replace(
+                        new RegExp(`(${termo})`, 'gi'), 
+                        '<mark>$1</mark>'
+                    );
+                    return `
+                        <div class="biblia-result-item" onclick="irParaVerso('${r.abreviacao}', ${r.capitulo}, ${r.verso})">
+                            <div class="reference">${r.livro} ${r.capitulo}:${r.verso}</div>
+                            <div class="texto-destaque">${textoDestaque}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                resultsContainer.innerHTML = html;
+                
+                // Paginação
+                const totalPaginas = Math.ceil(data.total / buscaLimite);
+                const paginaAtual = Math.floor(offset / buscaLimite) + 1;
+                
+                let paginationHtml = '';
+                
+                // Botão anterior
+                if (paginaAtual > 1) {
+                    paginationHtml += `<button onclick="mudarPagina(${offset - buscaLimite})">← Anterior</button>`;
+                }
+                
+                // Números das páginas
+                for (let i = 1; i <= totalPaginas && i <= 5; i++) {
+                    const pageOffset = (i - 1) * buscaLimite;
+                    paginationHtml += `<button class="${i === paginaAtual ? 'active' : ''}" onclick="mudarPagina(${pageOffset})">${i}</button>`;
+                }
+                
+                // Botão próximo
+                if (paginaAtual < totalPaginas) {
+                    paginationHtml += `<button onclick="mudarPagina(${offset + buscaLimite})">Próxima →</button>`;
+                }
+                
+                paginationContainer.innerHTML = paginationHtml;
+                
+                // Scroll para resultados
+                resultsContainer.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Erro ao buscar:', error);
+                resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Erro ao buscar. Tente novamente.</p>';
+            }
+        }
+
+        // Mudar página
+        function mudarPagina(offset) {
+            buscaOffset = offset;
+            executarBusca(termoBuscaAtual, offset);
+        }
+
+        // Ir para verso específico
+        function irParaVerso(livro, capitulo, verso) {
+            // Mudar para tab de leitura
+            document.querySelector('[data-tab="leitura"]').click();
+            
+            // Selecionar livro
+            document.getElementById('livroSelect').value = livro;
+            carregarCapitulos(livro).then(() => {
+                document.getElementById('capituloSelect').value = capitulo;
+                carregarCapitulo(livro, capitulo).then(() => {
+                    // Scroll para o verso
+                    setTimeout(() => {
+                        const versoElement = document.querySelector(`.verso:nth-child(${verso})`);
+                        if (versoElement) {
+                            versoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            versoElement.style.background = '#fff3cd';
+                            setTimeout(() => {
+                                versoElement.style.background = '';
+                            }, 2000);
+                        }
+                    }, 500);
+                });
+            });
+        }
     </script>
 </body>
 </html>
