@@ -72,6 +72,11 @@ db.serialize(() => {
         )
     `);
 
+    // Adicionar coluna 'link' se não existir (para bancos de dados antigos)
+    db.run(`ALTER TABLE page_content ADD COLUMN link TEXT`, (err) => {
+        // Ignorar erro se a coluna já existe
+    });
+
     // Tabela de mensagens
     db.run(`
         CREATE TABLE IF NOT EXISTS mensagens (
@@ -516,13 +521,21 @@ app.put('/api/admin/page-content/:section', (req, res) => {
 
 // Endpoint público para obter conteúdos
 app.get('/api/page-content', (req, res) => {
-    db.all("SELECT section, title, content, link FROM page_content", (err, rows) => {
+    // Verificar se a coluna 'link' existe
+    db.all("PRAGMA table_info(page_content)", (err, columns) => {
         if (err) return res.status(500).json({ error: err.message });
-        const contentMap = {};
-        rows.forEach(row => {
-            contentMap[row.section] = { title: row.title, content: row.content, link: row.link };
+        
+        const hasLink = columns.some(col => col.name === 'link');
+        const selectFields = hasLink ? 'section, title, content, link' : 'section, title, content';
+        
+        db.all(`SELECT ${selectFields} FROM page_content`, (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            const contentMap = {};
+            rows.forEach(row => {
+                contentMap[row.section] = { title: row.title, content: row.content, link: row.link || '' };
+            });
+            res.json(contentMap);
         });
-        res.json(contentMap);
     });
 });
 

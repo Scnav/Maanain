@@ -2,6 +2,9 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bíblia - MAANAIN</title>
     <link rel="stylesheet" href="css/styles.css">
@@ -306,6 +309,13 @@
             <p>Leia, medite e estude a Palavra de Deus</p>
         </div>
 
+        <!-- Seção de Tópicos em Destaque -->
+        <div id="topicos-destaque" style="margin: 2rem 0;">
+            <div id="topicosBibliaContainer">
+                <p style="text-align: center; color: #666;"><i class="fas fa-spinner fa-spin"></i> Carregando tópicos...</p>
+            </div>
+        </div>
+
         <!-- Tabs -->
         <div class="biblia-tabs">
             <button class="biblia-tab active" data-tab="leitura">📖 Leitura</button>
@@ -361,7 +371,7 @@
         <p>MAANAIN © 2026 – Toda glória a Deus</p>
     </footer>
 
-    <script src="js/script.js"></script>
+    <script src="js/script.js?t=1"></script>
     <script>
         // Registrar Service Worker
         if ('serviceWorker' in navigator) {
@@ -376,14 +386,6 @@
             });
         }
         
-        // Variáveis globais
-        let bibliaLivros = [];
-        let livroAtual = null;
-        let capituloAtual = null;
-        let buscaOffset = 0;
-        const buscaLimite = 10;
-        let termoBuscaAtual = '';
-
         // Inicializar
         document.addEventListener('DOMContentLoaded', async function() {
             // Resetar selects ao carregar
@@ -405,6 +407,11 @@
             await carregarLivros();
             setupTabs();
             setupBusca();
+            
+            // Carregar tópicos bíblicos em destaque
+            if (typeof carregarTopicosBiblia === 'function') {
+                carregarTopicosBiblia();
+            }
             
             // Opcional: Carregar última posição lida (comentado para sempre iniciar do início)
             // const ultimaLeitura = localStorage.getItem('biblia_ultima_leitura');
@@ -431,7 +438,7 @@
                     document.querySelectorAll('.biblia-section').forEach(s => s.classList.remove('active'));
                     document.getElementById(`${tabId}-section`).classList.add('active');
                     
-                    // Resetar tudo ao mudar de aba
+            // Resetar tudo ao mudar de aba
                     if (tabId === 'busca') {
                         document.getElementById('buscaInput').value = '';
                         document.getElementById('buscaResults').innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Digite pelo menos 2 caracteres para buscar na bíblia.</p>';
@@ -441,7 +448,6 @@
                         document.getElementById('livroSelect').value = '';
                         document.getElementById('capituloSelect').value = '';
                         document.getElementById('capituloSelect').disabled = true;
-                        document.getElementById('leituraContent').innerHTML = '<p style="text-align: center; color: #666;">Selecione um livro e capítulo para ler.</p>';
                     }
                 });
             });
