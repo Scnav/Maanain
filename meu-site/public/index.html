@@ -7,6 +7,21 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <!-- YouTube Live Banner -->
+    <div id="youtube-live-banner" style="display: none; background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%); padding: 1rem; text-align: center; cursor: pointer;" onclick="window.open('https://www.youtube.com/watch?v=' + window.currentLiveVideoId, '_blank')">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 1rem; color: white;">
+            <span style="font-size: 2rem; animation: pulse 1s infinite;">🔴</span>
+            <span style="font-size: 1.2rem; font-weight: bold;">🔴 EM LIVE AGORA</span>
+            <span id="youtube-live-title" style="font-size: 1rem;"></span>
+        </div>
+    </div>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+    
     <!-- HEADER -->
     <header class="header">
         <h1>MAANAIN</h1>
@@ -73,6 +88,6 @@
         <p>MAANAIN © 2026 – Toda glória a Deus</p>
     </footer>
 
-    <script src="js/script.js?v=3"></script>
+    <script src="js/script.js?v=5"></script>
 </body>
 </html>

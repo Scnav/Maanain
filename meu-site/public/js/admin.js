@@ -18,9 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Função helper para obter headers de autenticação
-function getAdminHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
+// Função helper para obter headers de autenticação (sem Content-Type para permitir FormData)
+function getAdminHeaders(includeContentType = true) {
+    const headers = {};
     
     // Primeiro tenta usar dados do usuário se estiver logado como admin
     if (window.MAANAIN_ADMIN_USER && window.MAANAIN_ADMIN_USER.role === 'admin') {
@@ -30,6 +30,11 @@ function getAdminHeaders() {
     
     // Fallback: usar token fixo para compatibilidade
     headers['x-admin-token'] = 'maanain2026';
+    
+    // Adicionar Content-Type apenas se necessário (não para FormData)
+    if (includeContentType) {
+        headers['Content-Type'] = 'application/json';
+    }
     
     return headers;
 }
@@ -511,8 +516,56 @@ document.querySelectorAll('.sidebar-link[data-section]').forEach(link => {
             setTimeout(carregarMinisterios, 100);
         } else if (section === 'biblia') {
             setTimeout(carregarTopicosBiblia, 100);
+        } else if (section === 'youtube') {
+            setTimeout(carregarYoutubeConfig, 100);
         }
     });
+});
+
+// ========== YOUTUBE ==========
+async function carregarYoutubeConfig() {
+    try {
+        const response = await fetch('/api/admin/youtube-config', {
+            headers: getAdminHeaders()
+        });
+        
+        if (!response.ok) throw new Error('Erro ao carregar config');
+        
+        const config = await response.json();
+        document.getElementById('youtubeChannelId').value = config.channel_id || '';
+        document.getElementById('youtubeChannelName').value = config.channel_name || '';
+        document.getElementById('youtubeEnabled').checked = config.enabled === 1;
+    } catch (error) {
+        console.error('Erro ao carregar YouTube config:', error);
+    }
+}
+
+document.getElementById('btnSalvarYoutube').addEventListener('click', async () => {
+    const channelId = document.getElementById('youtubeChannelId').value.trim();
+    const channelName = document.getElementById('youtubeChannelName').value.trim();
+    const enabled = document.getElementById('youtubeEnabled').checked;
+    
+    if (!channelId) {
+        document.getElementById('youtubeStatus').innerHTML = '<span style="color: red;">⚠️ O ID do canal é obrigatório</span>';
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/youtube-config', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAdminHeaders()
+            },
+            body: JSON.stringify({ channel_id: channelId, channel_name: channelName, enabled })
+        });
+        
+        if (!response.ok) throw new Error('Erro ao salvar');
+        
+        document.getElementById('youtubeStatus').innerHTML = '<span style="color: green;">✅ Configurações salvas!</span>';
+    } catch (error) {
+        document.getElementById('youtubeStatus').innerHTML = '<span style="color: red;">❌ Erro ao salvar</span>';
+    }
 });
 
 // MINISTÉRIOS

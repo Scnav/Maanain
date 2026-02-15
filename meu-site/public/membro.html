@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área do Membro - MAANAIN</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .membro-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .membro-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .membro-header h1 {
+            color: var(--verde-principal);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .membro-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .topicos-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .topico-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            box-shadow: var(--sombra);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .topico-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .topico-card i {
+            font-size: 3rem;
+            color: var(--dourado);
+            margin-bottom: 1rem;
+        }
+        .topico-card h3 {
+            color: var(--verde-principal);
+            margin-bottom: 0.5rem;
+        }
+        .topico-card p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .conteudo-section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--sombra);
+            margin-top: 2rem;
+            animation: fadeIn 0.3s ease;
+        }
+        .conteudo-section.active {
+            display: block;
+        }
+        .conteudo-section h2 {
+            color: var(--verde-principal);
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+        .conteudo-section p {
+            color: #444;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+        .btn-voltar {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--verde-principal);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+        .btn-voltar:hover {
+            background: var(--verde-escuro);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .credo-list {
+            list-style: none;
+            padding: 0;
+        }
+        .credo-list li {
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .credo-list li:last-child {
+            border-bottom: none;
+        }
+        .credo-list li i {
+            color: var(--dourado);
+            margin-top: 0.3rem;
+        }
+        .aulas-list {
+            display: grid;
+            gap: 1rem;
+        }
+        .aula-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid var(--verde-principal);
+        }
+        .aula-item i {
+            color: var(--verde-principal);
+            font-size: 1.5rem;
+        }
+        .aula-item span {
+            color: #333;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <h1>MAANAIN</h1>
+        <p class="header-subtitle">Igreja Evangélica da Cidade</p>
+        <nav class="nav">
+            <!-- Navegação será inserida via JavaScript -->
+        </nav>
+    </header>
+
+    <main class="membro-container">
+        <div class="membro-header">
+            <h1><i class="fas fa-users"></i> Área do Membro</h1>
+            <p>Recursos exclusivos para membros da Igreja Maanaim</p>
+        </div>
+
+        <div class="topicos-grid" id="topicosGrid">
+            <!-- Cards serão carregados dinamicamente do banco -->
+        </div>
+
+        <!-- Container para conteúdo dinâmico -->
+        <div id="conteudoContainer"></div>
+
+    </main>
+
+    <footer class="footer">
+        <p>MAANAIN © 2026 – Toda glória a Deus</p>
+    </footer>
+
+    <script src="js/script.js?v=8"></script>
+    <script>
+        // Controle de acesso
+        const usuarioLogado = JSON.parse(localStorage.getItem('maanain_user') || 'null');
+        const rolesPermitidos = ['admin', 'conselho', 'membro'];
+        
+        if (!usuarioLogado || !rolesPermitidos.includes(usuarioLogado.role)) {
+            alert('Esta área é exclusiva para membros. Faça login para acessar.');
+            window.location.href = 'login.html';
+        }
+
+        // Carregar cards dinamicamente do banco
+        async function carregarCardsAreaMembro() {
+            try {
+                const response = await fetch('/api/area-membro');
+                const topicos = await response.json();
+                
+                const grid = document.getElementById('topicosGrid');
+                
+                if (!topicos || topicos.length === 0) {
+                    grid.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1/-1;">Nenhum conteúdo disponível no momento.</p>';
+                    return;
+                }
+                
+                // Ordenar por ordem
+                topicos.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+                
+                grid.innerHTML = topicos.map(topico => `
+                    <div class="topico-card" onclick="mostrarConteudo(${topico.id}, '${topico.categoria}')">
+                        <i class="${topico.icone || 'fas fa-file-alt'}"></i>
+                        <h3>${topico.titulo}</h3>
+                        <p>${topico.descricao || 'Clique para acessar'}</p>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Erro ao carregar cards:', error);
+            }
+        }
+
+        // Mostrar conteúdo do card
+        function mostrarConteudo(id, categoria) {
+            const grid = document.getElementById('topicosGrid');
+            const container = document.getElementById('conteudoContainer');
+            
+            // Esconde os tópicos
+            grid.style.display = 'none';
+            
+            // Busca o conteúdo do banco
+            fetch('/api/area-membro')
+                .then(res => res.json())
+                .then(topicos => {
+                    const topico = topicos.find(t => t.id === id);
+                    if (topico) {
+                        // Se tem PDF, mostra o embed do PDF
+                        if (topico.pdf_path) {
+                            container.innerHTML = `
+                                <button class="btn-voltar" onclick="voltarTopicos()">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </button>
+                                <div class="conteudo-section active">
+                                    <h2>${topico.titulo}</h2>
+                                    <embed src="${topico.pdf_path}" type="application/pdf" width="100%" height="600px" style="border-radius: 8px; margin-top: 1rem;">
+                                    <p style="text-align: center; margin-top: 1rem;">
+                                        <a href="${topico.pdf_path}" target="_blank" style="color: var(--verde-principal);">
+                                            <i class="fas fa-external-link-alt"></i> Abrir em nova aba
+                                        </a>
+                                    </p>
+                                </div>
+                            `;
+                        } else if (topico.conteudo) {
+                            // Se tem conteúdo de texto
+                            container.innerHTML = `
+                                <button class="btn-voltar" onclick="voltarTopicos()">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </button>
+                                <div class="conteudo-section active">
+                                    <h2>${topico.titulo}</h2>
+                                    ${topico.conteudo}
+                                </div>
+                            `;
+                        } else {
+                            // Se não tem nada
+                            container.innerHTML = `
+                                <button class="btn-voltar" onclick="voltarTopicos()">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </button>
+                                <div class="conteudo-section active">
+                                    <h2>${topico.titulo}</h2>
+                                    <p style="text-align: center; color: #666; padding: 2rem;">
+                                        <i class="fas fa-file-pdf" style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;"></i><br>
+                                        Em breve este conteúdo estará disponível.
+                                    </p>
+                                </div>
+                            `;
+                        }
+                    }
+                });
+        }
+
+        function voltarTopicos() {
+            // Esconde todos os conteúdos
+            document.getElementById('conteudoContainer').innerHTML = '';
+            
+            // Mostra os tópicos
+            document.getElementById('topicosGrid').style.display = 'grid';
+        }
+
+        // Inicializar
+        carregarCardsAreaMembro();
+    </script>
+</body>
+</html>

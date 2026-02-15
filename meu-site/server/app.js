@@ -26,9 +26,26 @@ bibliaDb.get("SELECT COUNT(*) as total FROM livros", (err, row) => {
 const app = express();
 const db = new sqlite3.Database(DB_PATH);
 
-// Middleware
-app.use(express.json());
-app.use(cors());
+// Middleware - não processar JSON para FormData
+const jsonMiddleware = express.json({ limit: '50mb' });
+app.use((req, res, next) => {
+    if (req.method === 'POST' || req.method === 'PUT') {
+        const contentType = req.headers['content-type'] || '';
+        if (contentType.includes('multipart/form-data')) {
+            // Não usar express.json para FormData, deixe o multer tratar
+            return next();
+        }
+    }
+    jsonMiddleware(req, res, next);
+});
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// CORS - permitir todas as origens para desenvolvimento
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-admin-token', 'x-user-data']
+}));
 
 // ✅ Tabelas
 db.serialize(() => {
@@ -76,6 +93,20 @@ db.serialize(() => {
     db.run(`ALTER TABLE page_content ADD COLUMN link TEXT`, (err) => {
         // Ignorar erro se a coluna já existe
     });
+
+    // Tabela de configurações do YouTube
+    db.run(`
+        CREATE TABLE IF NOT EXISTS youtube_config (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            channel_id TEXT,
+            channel_name TEXT,
+            enabled INTEGER DEFAULT 0,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Inserir configuração padrão se não existir
+    db.run(`INSERT OR IGNORE INTO youtube_config (id, channel_id, channel_name, enabled) VALUES (1, '', '', 0)`, (err) => {});
 
     // Tabela de mensagens
     db.run(`
@@ -137,6 +168,27 @@ db.serialize(() => {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+
+    // Tabela de conteúdos da Área do Membro
+    db.run(`
+        CREATE TABLE IF NOT EXISTS area_membro (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            descricao TEXT,
+            conteudo TEXT,
+            pdf_path TEXT,
+            categoria TEXT NOT NULL,
+            icone TEXT DEFAULT 'fas fa-book',
+            ordem INTEGER DEFAULT 0,
+            ativo INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    
+    // Adicionar coluna pdf_path se não existir (para bancos existentes)
+    db.run("ALTER TABLE area_membro ADD COLUMN pdf_path TEXT", (err) => {
+        // Ignora erro se a coluna já existe
+    });
 });
 
 // ✅ REGISTER
@@ -537,6 +589,71 @@ app.get('/api/page-content', (req, res) => {
             res.json(contentMap);
         });
     });
+});
+
+// ========== YOUTUBE CONFIG ==========
+// Get YouTube config (admin)
+app.get('/api/admin/youtube-config', verifyAdmin, (req, res) => {
+    db.get("SELECT channel_id, channel_name, enabled FROM youtube_config WHERE id = 1", (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(row || { channel_id: '', channel_name: '', enabled: 0 });
+    });
+});
+
+// Update YouTube config (admin)
+app.put('/api/admin/youtube-config', verifyAdmin, (req, res) => {
+    const { channel_id, channel_name, enabled } = req.body;
+    
+    db.run("UPDATE youtube_config SET channel_id = ?, channel_name = ?, enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
+        [channel_id || '', channel_name || '', enabled ? 1 : 0],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Configuração do YouTube atualizada!' });
+        }
+    );
+});
+
+// Get YouTube live status (público)
+app.get('/api/youtube-live', async (req, res) => {
+    try {
+        // Primeiro pega a configuração
+        db.get("SELECT channel_id, enabled FROM youtube_config WHERE id = 1", async (err, config) => {
+            if (err || !config || !config.enabled || !config.channel_id) {
+                return res.json({ isLive: false, video: null });
+            }
+            
+            const channelId = config.channel_id;
+            
+            // Tenta buscar usando a API do YouTube
+            // Usando a API de search para verificar se há live
+            const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=AIzaSyAO6lW-A2Mz7XzKMWAN4g0yK2NKEtKqG8M`;
+            
+            try {
+                const response = await fetch(youtubeApiUrl);
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    const video = data.items[0];
+                    res.json({
+                        isLive: true,
+                        video: {
+                            videoId: video.id.videoId,
+                            title: video.snippet.title,
+                            thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                            channelTitle: video.snippet.channelTitle
+                        }
+                    });
+                } else {
+                    res.json({ isLive: false, video: null });
+                }
+            } catch (apiError) {
+                // Se falhar a API, retorna que não está em live
+                res.json({ isLive: false, video: null });
+            }
+        });
+    } catch (error) {
+        res.json({ isLive: false, video: null });
+    }
 });
 
 // CRUD MENSAGENS
@@ -1089,6 +1206,111 @@ app.get('/api/biblia/autocomplete', (req, res) => {
     } else {
         res.json([]);
     }
+});
+
+// ========== ÁREA DO MEMBRO ==========
+
+// Configuração do multer para upload de PDFs
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const dir = path.join(__dirname, '..', 'public', 'uploads', 'pdfs');
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage, limits: { fileSize: 50 * 1024 * 1024 } });
+
+// CRUD ÁREA DO MEMBRO (Admin)
+app.get('/api/admin/area-membro', verifyAdmin, (req, res) => {
+    db.all("SELECT * FROM area_membro ORDER BY ordem ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Listar tópicos da área do membro (público)
+app.get('/api/area-membro', (req, res) => {
+    db.all("SELECT id, titulo, descricao, conteudo, pdf_path, categoria, icone, ordem FROM area_membro WHERE ativo = 1 ORDER BY ordem ASC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Upload de PDF (via Base64)
+app.post('/api/admin/upload-pdf-base64', verifyAdmin, (req, res) => {
+    try {
+        const { filename, data } = req.body;
+        
+        if (!filename || !data) {
+            return res.status(400).json({ error: 'Nome do arquivo e dados são obrigatórios' });
+        }
+        
+        // Decodificar Base64
+        const buffer = Buffer.from(data, 'base64');
+        
+        // Gerar nome de arquivo único
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = filename.split('.').pop() || 'pdf';
+        const savedFilename = uniqueSuffix + '.' + ext;
+        
+        // Salvar arquivo
+        const dir = path.join(__dirname, '..', 'public', 'uploads', 'pdfs');
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        
+        const filePath = path.join(dir, savedFilename);
+        fs.writeFileSync(filePath, buffer);
+        
+        const pdfPath = '/uploads/pdfs/' + savedFilename;
+        res.json({ path: pdfPath, message: 'Arquivo enviado com sucesso!' });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao salvar arquivo: ' + error.message });
+    }
+});
+
+// Criar tópico da área do membro
+app.post('/api/admin/area-membro', verifyAdmin, (req, res) => {
+    const { titulo, descricao, conteudo, pdfPath, categoria, icone, ordem, ativo } = req.body;
+    
+    db.run("INSERT INTO area_membro (titulo, descricao, conteudo, pdf_path, categoria, icone, ordem, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+        [titulo, descricao || '', conteudo || '', pdfPath || '', categoria, icone || 'fas fa-book', ordem || 0, ativo !== undefined ? ativo : 1], 
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: 'Tópico criado!' });
+        });
+});
+
+// Atualizar tópico da área do membro
+app.put('/api/admin/area-membro/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    const { titulo, descricao, conteudo, pdfPath, categoria, icone, ordem, ativo } = req.body;
+    
+    db.run("UPDATE area_membro SET titulo = ?, descricao = ?, conteudo = ?, pdf_path = ?, categoria = ?, icone = ?, ordem = ?, ativo = ? WHERE id = ?",
+        [titulo, descricao || '', conteudo || '', pdfPath || '', categoria, icone || 'fas fa-book', ordem || 0, ativo !== undefined ? ativo : 1, id],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (this.changes === 0) return res.status(404).json({ error: 'Tópico não encontrado' });
+            res.json({ message: 'Tópico atualizado!' });
+        });
+});
+
+// Excluir tópico da área do membro
+app.delete('/api/admin/area-membro/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    
+    db.run("DELETE FROM area_membro WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Tópico não encontrado' });
+        res.json({ message: 'Tópico excluído!' });
+    });
 });
 
 // ✅ Static files (SEMPRE POR ÚLTIMO)

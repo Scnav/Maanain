@@ -9,6 +9,29 @@ let buscaOffset = 0;
 const buscaLimite = 10;
 let termoBuscaAtual = '';
 
+// ========== YOUTUBE LIVE CHECK ==========
+async function checkYoutubeLive() {
+    try {
+        const response = await fetch('/api/youtube-live');
+        const data = await response.json();
+        
+        if (data.isLive && data.video) {
+            const banner = document.getElementById('youtube-live-banner');
+            if (banner) {
+                banner.style.display = 'block';
+                document.getElementById('youtube-live-title').textContent = '- ' + data.video.title;
+                window.currentLiveVideoId = data.video.videoId;
+            }
+        }
+    } catch (error) {
+        console.log('YouTube live check failed:', error);
+    }
+}
+
+// Verificar a cada 60 segundos
+checkYoutubeLive();
+setInterval(checkYoutubeLive, 60000);
+
 document.addEventListener("DOMContentLoaded", () => {
     let usuarioLogado = null;
 
@@ -21,7 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let abasVisiveis;
         if (usuarioLogado?.role === 'admin') {
-            abasVisiveis = ['inicio', 'programacao', 'biblia', 'admin'];
+            abasVisiveis = ['inicio', 'programacao', 'biblia', 'membro', 'admin'];
+        } else if (usuarioLogado?.role === 'membro' || usuarioLogado?.role === 'conselho') {
+            abasVisiveis = ['inicio', 'programacao', 'biblia', 'membro'];
         } else if (usuarioLogado?.role === 'frequentador') {
             abasVisiveis = ['inicio', 'programacao', 'biblia'];
         } else {
@@ -33,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
             'inicio': { href: 'index.html', texto: 'Início' },
             'programacao': { href: 'programacao.html', texto: 'Programação' },
             'biblia': { href: 'biblia.html', texto: 'Bíblia' },
+            'membro': { href: 'membro.html', texto: 'Área do Membro' },
             'admin': { href: 'admin.html', texto: 'Admin' },
             'entrar': { href: 'login.html', texto: 'Entrar' }
         };

@@ -32,9 +32,11 @@
                 <a class="sidebar-link" data-section="pagina-inicial"><i>🏠</i> Página Inicial</a>
                 <a class="sidebar-link" data-section="ministerios"><i>⛪</i> Ministérios</a>
                 <a class="sidebar-link" data-section="biblia"><i>📖</i> Bíblia</a>
+                <a class="sidebar-link" data-section="area-membro"><i>👥</i> Área do Membro</a>
                 <a class="sidebar-link" data-section="mensagens"><i>🎤</i> Último Culto</a>
                 <a class="sidebar-link" data-section="noticias"><i>📰</i> Notícias</a>
                 <a class="sidebar-link" data-section="programacao"><i>📅</i> Programação</a>
+                <a class="sidebar-link" data-section="youtube"><i>📺</i> YouTube Live</a>
         </nav>
 
         <main class="main-content">
@@ -148,6 +150,62 @@
 
                 <div class="loading" id="loadingTopicos">🔄 Carregando tópicos...</div>
                 <div id="listaTopicos"></div>
+            </section>
+
+            <!-- Área do Membro -->
+            <section id="area-membro" class="content-section">
+                <h2 class="section-title">👥 Gerenciar Área do Membro</h2>
+                <button id="btnNovoAreaMembro" class="btn-editar-cargo" style="margin-bottom: 2rem;">
+                    <i class="fas fa-plus"></i> Novo Tópico
+                </button>
+
+                <div id="areaMembroModal" style="display: none; background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+                    <form id="areaMembroForm">
+                    <h3 id="areaMembroModalTitle">Novo Tópico</h3>
+                    <input type="hidden" id="areaMembroId">
+                    <div style="margin-bottom: 1rem;">
+                        <label>Título:</label>
+                        <input type="text" id="areaMembroTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Descrição:</label>
+                        <textarea id="areaMembroDescricao" rows="2" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Conteúdo:</label>
+                        <textarea id="areaMembroConteudo" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Arquivo PDF (opcional):</label>
+                        <input type="file" id="areaMembroArquivo" accept=".pdf" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <small style="color: #666;">Se enviar um PDF, ele será mostrado aos membros ao invés do conteúdo de texto.</small>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Categoria:</label>
+                        <select id="areaMembroCategoria" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            <option value="pacto">Pacto de Membros</option>
+                            <option value="credo">Credo Apostólico</option>
+                            <option value="aulas">Aulas</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Ícone (FontAwesome):</label>
+                        <input type="text" id="areaMembroIcone" placeholder="fas fa-book" value="fas fa-book" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Ordem:</label>
+                        <input type="number" id="areaMembroOrdem" value="0" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    </form>
+                    <button id="btnSalvarAreaMembro" class="btn-editar-cargo">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                    <button id="btnCancelarAreaMembro" style="background: #6c757d; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+
+                <div id="areaMembroContainer"></div>
             </section>
 
             <!-- Último Culto -->
@@ -271,6 +329,40 @@
                 <div class="loading" id="loadingInscricoes">🔄 Carregando inscrições...</div>
                 <div id="listaInscricoes" style="display: none;"></div>
             </section>
+
+            <!-- YouTube Live -->
+            <section id="youtube" class="content-section">
+                <h2 class="section-title">📺 Configurar YouTube Live</h2>
+                
+                <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+                    <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Configurações do Canal</h3>
+                    <p style="margin-bottom: 1rem; color: #666;">
+                        Configure o canal do YouTube para monitorar quando estiver em live. 
+                        Quando o canal entrar no ar, uma miniatura será exibida no topo do site.
+                    </p>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">ID do Canal do YouTube:</label>
+                        <input type="text" id="youtubeChannelId" placeholder="Ex: UCxxxxxxx" style="width: 100%; max-width: 400px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <small style="color: #666;">O ID do canal está na URL do YouTube após "channel/"</small>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Nome do Canal:</label>
+                        <input type="text" id="youtubeChannelName" placeholder="Ex: Igreja Maanain" style="width: 100%; max-width: 400px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="youtubeEnabled" style="width: 20px; height: 20px;">
+                            <span style="font-weight: bold;">Ativar monitoramento de live</span>
+                        </label>
+                    </div>
+                    
+                    <button id="btnSalvarYoutube" class="btn-editar-cargo">💾 Salvar Configurações</button>
+                    <div id="youtubeStatus" style="margin-top: 1rem;"></div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -286,8 +378,9 @@
         }
     }
     </script>
-    <script src="js/admin.js?v=4"></script>
+    <script src="js/admin.js?v=5"></script>
     <script src="js/admin_biblia.js?v=1"></script>
+    <script src="js/admin_area_membro.js?v=4"></script>
     <script src="js/admin_cultos.js"></script>
     <script src="js/admin_inscricoes.js"></script>
     <script src="js/admin_mensagens.js"></script>
