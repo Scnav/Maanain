@@ -618,19 +618,43 @@ app.get('/api/youtube-live', async (req, res) => {
     try {
         // Primeiro pega a configuração
         db.get("SELECT channel_id, enabled FROM youtube_config WHERE id = 1", async (err, config) => {
+            console.log('YouTube config from DB:', config);
+            
             if (err || !config || !config.enabled || !config.channel_id) {
+                console.log('YouTube config not found or disabled');
                 return res.json({ isLive: false, video: null });
             }
             
-            const channelId = config.channel_id;
+            let channelId = config.channel_id.trim();
             
-            // Tenta buscar usando a API do YouTube
-            // Usando a API de search para verificar se há live
-            const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=AIzaSyAO6lW-A2Mz7XzKMWAN4g0yK2NKEtKqG8M`;
+            // Detectar se é URL ou @username e converter para ID
+            if (channelId.includes('youtube.com/')) {
+                // Extrair o @username ou ID da URL
+                const match = channelId.match(/@(.[^/]+)|channel\/([^/]+)|c\/([^/]+)/);
+                if (match) {
+                    const identifier = match[1] || match[2] || match[3];
+                    // Se parece ser um ID (começa com UC), usa direto
+                    if (identifier.startsWith('UC')) {
+                        channelId = identifier;
+                    } else {
+                        // É um @username, precisa resolver para ID
+                        console.log('Resolving username:', identifier);
+                        // Por enquanto, retornamos que não está em live
+                        // (implementar resolução de username requer API adicional)
+                        return res.json({ isLive: false, video: null, message: 'Use o ID do canal (começa com UC)' });
+                    }
+                }
+            }
+            
+            console.log('Checking live for channel:', channelId);
+            
+            // Usando a API do YouTube com a API Key
+            const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
             
             try {
                 const response = await fetch(youtubeApiUrl);
                 const data = await response.json();
+                console.log('YouTube API response:', data);
                 
                 if (data.items && data.items.length > 0) {
                     const video = data.items[0];
@@ -647,7 +671,7 @@ app.get('/api/youtube-live', async (req, res) => {
                     res.json({ isLive: false, video: null });
                 }
             } catch (apiError) {
-                // Se falhar a API, retorna que não está em live
+                console.error('YouTube API error:', apiError);
                 res.json({ isLive: false, video: null });
             }
         });

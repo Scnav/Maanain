@@ -16,11 +16,20 @@ async function checkYoutubeLive() {
         const data = await response.json();
         
         if (data.isLive && data.video) {
-            const banner = document.getElementById('youtube-live-banner');
-            if (banner) {
-                banner.style.display = 'block';
-                document.getElementById('youtube-live-title').textContent = '- ' + data.video.title;
-                window.currentLiveVideoId = data.video.videoId;
+            // Mostrar a miniatura clicável
+            const container = document.getElementById('youtube-live-container');
+            const link = document.getElementById('youtube-live-link');
+            const thumbnail = document.getElementById('youtube-live-thumbnail');
+            const info = document.getElementById('youtube-live-info');
+            
+            if (container && link && thumbnail) {
+                container.style.display = 'block';
+                // Usar thumbnail de alta qualidade
+                thumbnail.src = data.video.thumbnail || `https://img.youtube.com/vi/${data.video.videoId}/hqdefault.jpg`;
+                // Link para o vídeo no YouTube
+                link.href = `https://www.youtube.com/watch?v=${data.video.videoId}`;
+                // Título da live
+                info.textContent = '🔴 ASSISTINDO: ' + data.video.title;
             }
         }
     } catch (error) {
