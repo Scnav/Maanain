@@ -15,18 +15,6 @@ let bibliaSQLiteReady = false;
 // Conexão com banco da Bíblia (FTS5)
 const bibliaDb = new sqlite3.Database(BIBLIA_DB_PATH);
 
-// Carregar dados da Bíblia (fallback para Compatibilidade)
-let bibliaData = null;
-try {
-    const bibliaPath = path.join(__dirname, "biblia.json");
-    if (fs.existsSync(bibliaPath)) {
-        bibliaData = JSON.parse(fs.readFileSync(bibliaPath, 'utf8'));
-        console.log(`✅ Bíblia carregada: ${bibliaData.livros.length} livros`);
-    }
-} catch (err) {
-    console.error('Erro ao carregar bíblia:', err.message);
-}
-
 // Verificar se o banco da bíblia está disponível
 bibliaDb.get("SELECT COUNT(*) as total FROM livros", (err, row) => {
     if (!err && row && row.total > 0) {
@@ -829,17 +817,8 @@ app.get('/api/biblia/livros', (req, res) => {
             });
         }
         res.json(livros);
-    } else if (bibliaData) {
-        // Fallback para JSON
-        const livros = bibliaData.livros.map(livro => ({
-            id: livro.id,
-            nome: livro.nome,
-            abreviacao: livro.abreviacao,
-            capitulos: livro.capitulos.length
-        }));
-        res.json(livros);
     } else {
-        res.status(500).json({ error: 'Dados da bíblia não carregados' });
+        res.status(500).json({ error: 'Banco de dados da bíblia não encontrado' });
     }
 });
 
@@ -885,25 +864,8 @@ app.get('/api/biblia/livro/:idOuAbrev', (req, res) => {
             abreviacao: ABREVIACOES_LIVROS[livroId],
             capitulos: capitulos
         });
-    } else if (bibliaData) {
-        const livro = bibliaData.livros.find(l => 
-            l.id == idOuAbrev || 
-            l.abreviacao.toLowerCase() === idOuAbrev.toLowerCase() ||
-            l.nome.toLowerCase().includes(idOuAbrev.toLowerCase())
-        );
-        
-        if (!livro) {
-            return res.status(404).json({ error: 'Livro não encontrado' });
-        }
-        
-        res.json({
-            id: livro.id,
-            nome: livro.nome,
-            abreviacao: livro.abreviacao,
-            capitulos: livro.capitulos.map(c => ({ numero: c.numero, versos: c.versos.length }))
-        });
     } else {
-        res.status(500).json({ error: 'Dados da bíblia não carregados' });
+        res.status(500).json({ error: 'Banco de dados da bíblia não encontrado' });
     }
 });
 
@@ -1023,30 +985,8 @@ app.get('/api/biblia/:livro/:capitulo', (req, res) => {
                 });
             });
         }
-    } else if (bibliaData) {
-        const livroData = bibliaData.livros.find(l => 
-            l.abreviacao.toLowerCase() === livro.toLowerCase() ||
-            l.nome.toLowerCase().includes(livro.toLowerCase())
-        );
-        
-        if (!livroData) {
-            return res.status(404).json({ error: 'Livro não encontrado' });
-        }
-        
-        const capituloData = livroData.capitulos.find(c => c.numero === capituloNum);
-        
-        if (!capituloData) {
-            return res.status(404).json({ error: 'Capítulo não encontrado' });
-        }
-        
-        res.json({
-            livro: livroData.nome,
-            abreviacao: livroData.abreviacao,
-            capitulo: capituloNum,
-            versos: capituloData.versos
-        });
     } else {
-        res.status(500).json({ error: 'Dados da bíblia não carregados' });
+        res.status(500).json({ error: 'Banco de dados da bíblia não encontrado' });
     }
 });
 
@@ -1103,39 +1043,8 @@ app.get('/api/biblia/busca', (req, res) => {
                 });
             });
         });
-    } else if (bibliaData) {
-        // Fallback para busca em memória
-        const termo = q.toLowerCase();
-        const resultados = [];
-        let total = 0;
-        
-        for (const livro of bibliaData.livros) {
-            for (const capitulo of livro.capitulos) {
-                for (let i = 0; i < capitulo.versos.length; i++) {
-                    if (capitulo.versos[i].toLowerCase().includes(termo)) {
-                        total++;
-                        if (total > offset && resultados.length < parseInt(limite)) {
-                            resultados.push({
-                                livro: livro.nome,
-                                abreviacao: livro.abreviacao,
-                                capitulo: capitulo.numero,
-                                verso: i + 1,
-                                texto: capitulo.versos[i]
-                            });
-                        }
-                    }
-                }
-            }
-        }
-        
-        res.json({
-            total,
-            limite: parseInt(limite),
-            offset: parseInt(offset),
-            resultados
-        });
     } else {
-        res.status(500).json({ error: 'Dados da bíblia não carregados' });
+        res.status(500).json({ error: 'Banco de dados da bíblia não encontrado' });
     }
 });
 
@@ -1164,18 +1073,6 @@ app.get('/api/biblia/autocomplete', (req, res) => {
             
             res.json(sugestoes);
         });
-    } else if (bibliaData) {
-        // Fallback para JSON
-        const termo = q.toLowerCase();
-        const sugestoes = [];
-        
-        for (const livro of bibliaData.livros) {
-            if (livro.nome.toLowerCase().includes(termo) || livro.abreviacao.toLowerCase().includes(termo)) {
-                sugestoes.push({ tipo: 'livro', nome: livro.nome, abreviacao: livro.abreviacao });
-            }
-        }
-        
-        res.json(sugestoes.slice(0, 10));
     } else {
         res.json([]);
     }
