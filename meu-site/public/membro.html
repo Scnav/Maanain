@@ -209,7 +209,13 @@
                         <h3>${topico.titulo}</h3>
                         <p>${topico.descricao || 'Clique para acessar'}</p>
                     </div>
-                `).join('');
+                `).join('') + `
+                    <div class="topico-card" onclick="window.location.href='aulas.html'" style="background: linear-gradient(135deg, #1a5c1a, #2d8a2d);">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>AULAS</h3>
+                        <p>Vídeo aulas e estudos</p>
+                    </div>
+                `;
                 
             } catch (error) {
                 console.error('Erro ao carregar cards:', error);

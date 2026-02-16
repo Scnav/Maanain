@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>MAANAIN Aulas</title>
+    <style>
+        :root {
+            --verde-principal: #2d5a3a;
+            --verde-claro: #4a8a5f;
+            --verde-superclaro: #e8f5e8;
+            --dourado: #f4c430;
+        }
+        
+        .sidebar { width: 240px; }
+        .main-content { margin-left: 240px; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+        .thumbnail-hover { transition: all 0.2s; }
+        .thumbnail-hover:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(45, 90, 58, 0.4); }
+        .video-hero { aspect-ratio: 16/9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50" style="background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));">
+                        <span class="text-xl font-bold text-white">M</span>
+                    </div>
+                    <span class="text-xl font-bold text-white">MAANAIN</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="membro.html" class="bg-white text-green-800 px-5 py-2 rounded-full font-medium hover:bg-gray-100 flex items-center gap-2">
+                    <i class="fas fa-users"></i>
+                    Área do Membro
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar Esquerda (Desktop) -->
+        <div class="sidebar hidden lg:block bg-white border-r h-screen sticky top-16 pt-6 px-4" style="border-color: var(--verde-superclaro);">
+            <div class="space-y-2">
+                <a href="#" onclick="console.log('Clicou inicio'); showPage('inicio')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="inicio" style="border-right: 4px solid #2d5a3a; background: #e8f5e8;">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center" style="background: #e8f5e8; color: #2d5a3a;">🏠</div>
+                    <span class="font-medium" style="color: #2d5a3a;">Início</span>
+                </a>
+                <a href="#" onclick="console.log('Clicou aulas'); showPage('aulas')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="aulas">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">📚</div>
+                    <span class="font-medium">Todas as Aulas</span>
+                </a>
+                <a href="#" onclick="console.log('Clicou estudos'); showPage('estudos')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="estudos">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">📖</div>
+                    <span class="font-medium">Estudos Bíblicos</span>
+                </a>
+                <a href="#" onclick="console.log('Clicou pregcacoes'); showPage('pregcacoes')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="pregcacoes">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">🎤</div>
+                    <span class="font-medium">Pregações</span>
+                </a>
+                <a href="#" onclick="console.log('Clicou cursos'); showPage('cursos')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="cursos">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">🎓</div>
+                    <span class="font-medium">Cursos</span>
+                </a>
+                <a href="#" onclick="console.log('Clicou jovens'); showPage('jovens')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="jovens">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">🔥</div>
+                    <span class="font-medium">Juventude</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <div class="main-content flex-1 min-h-screen">
+            <div class="max-w-7xl mx-auto px-4 py-8">
+                
+                <!-- Página Início -->
+                <div id="page-inicio" class="page active">
+                    <!-- Banner Hero -->
+                    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8 text-center" style="background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));">
+                        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">
+                            📚 Biblioteca de Aulas
+                        </h1>
+                        <p class="text-white/90 text-lg mb-6">
+                            Aprenda com nossos estudos bíblicos, pregações e cursos
+                        </p>
+                    </div>
+                    
+                    <!-- Vídeos em Destaque -->
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">🎬 Aulas em Destaque</h2>
+                    <div id="grid-inicio" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+                        <div class="col-span-full text-center py-8 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                            <p>Carregando...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Categorias -->
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">📂 Browse por Categoria</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div onclick="console.log('Clicou card estudos'); showPage('estudos')" class="thumbnail-hover bg-white rounded-xl shadow-md p-6 text-center cursor-pointer group">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));">
+                                <i class="fas fa-book text-2xl text-white"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900" style="color: var(--verde-principal);">Estudos Bíblicos</h3>
+                            <p class="text-sm text-gray-500 mt-1" id="count-estudos">0 aulas</p>
+                        </div>
+                        <div onclick="console.log('Clicou card pregcacoes'); showPage('pregcacoes')" class="thumbnail-hover bg-white rounded-xl shadow-md p-6 text-center cursor-pointer group">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, var(--verde-claro), var(--verde-principal));">
+                                <i class="fas fa-microphone text-2xl text-white"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900" style="color: var(--verde-principal);">Pregações</h3>
+                            <p class="text-sm text-gray-500 mt-1" id="count-pregcacoes">0 aulas</p>
+                        </div>
+                        <div onclick="console.log('Clicou card cursos'); showPage('cursos')" class="thumbnail-hover bg-white rounded-xl shadow-md p-6 text-center cursor-pointer group">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #f4c430, #d4a017);">
+                                <i class="fas fa-graduation-cap text-2xl text-white"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900" style="color: var(--verde-principal);">Cursos</h3>
+                            <p class="text-sm text-gray-500 mt-1" id="count-cursos">0 aulas</p>
+                        </div>
+                        <div onclick="console.log('Clicou card jovens'); showPage('jovens')" class="thumbnail-hover bg-white rounded-xl shadow-md p-6 text-center cursor-pointer group">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                                <i class="fas fa-fire text-2xl text-white"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900" style="color: var(--verde-principal);">Juventude</h3>
+                            <p class="text-sm text-gray-500 mt-1" id="count-jovens">0 aulas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Página Todas as Aulas -->
+                <div id="page-aulas" class="page">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">📚 Todas as Aulas</h2>
+                    <div id="grid-aulas" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div class="col-span-full text-center py-8 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                            <p>Carregando...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Página Categoria Genérica -->
+                <div id="page-categoria" class="page">
+                    <h2 id="categoria-titulo" class="text-2xl font-bold text-gray-900 mb-6">Categoria</h2>
+                    <div id="grid-categoria" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    </div>
+                </div>
+
+                <!-- Página Player de Vídeo -->
+                <div id="page-player" class="page">
+                    <!-- Player de Vídeo -->
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+                        <div class="video-hero bg-black flex items-center justify-center relative">
+                            <iframe id="mainVideo" class="w-full h-full absolute inset-0" src="" title="Video Aula" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <div class="p-6">
+                            <h1 id="mainVideoTitle" class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Selecione uma aula</h1>
+                            <div class="flex flex-wrap items-center text-sm text-gray-500 mb-4 gap-2">
+                                <span id="mainVideoAuthor"><i class="fas fa-user"></i> MAANAIN</span>
+                                <span>•</span>
+                                <span id="mainVideoViews">0 visualizações</span>
+                            </div>
+                            <button onclick="console.log('Clicou botao voltar'); showPage('inicio')" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Voltar ao Início</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allVideos = [];
+        const cores = ['from-[#2d5a3a] to-[#4a8a5f]', 'from-[#4a8a5f] to-[#2d5a3a]', 'from-[#2d5a3a] to-[#f4c430]', 'from-[#4a8a5f] to-[#2d5a3a]'];
+        
+        // Mostrar página
+        function showPage(pageId) {
+            console.log('showPage chamada com pageId:', pageId);
+            
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            
+            // Atualizar sidebar
+            const pageLinks = document.querySelectorAll('.page-link');
+            console.log('Encontrados page-links:', pageLinks.length);
+            
+            pageLinks.forEach(link => {
+                console.log('Processando link:', link.dataset.page);
+                
+                link.style.background = '';
+                link.style.borderRight = 'none';
+                const icon = link.querySelector('div');
+                const text = link.querySelector('span');
+                if (icon) {
+                    icon.style.background = '';
+                    icon.style.color = '';
+                }
+                if (text) {
+                    text.style.color = '';
+                }
+                
+                if (link.dataset.page === pageId) {
+                    console.log('Aplicando estilo em:', link.dataset.page);
+                    link.style.background = '#e8f5e8';
+                    link.style.borderRight = '4px solid #2d5a3a';
+                    if (icon) {
+                        icon.style.background = '#e8f5e8';
+                        icon.style.color = '#2d5a3a';
+                    }
+                    if (text) {
+                        text.style.color = '#2d5a3a';
+                    }
+                }
+            });
+            
+            window.scrollTo(0, 0);
+        }
+        
+        // Carregar vídeos
+        async function loadVideos() {
+            try {
+                const response = await fetch('/api/aulas');
+                allVideos = await response.json();
+                
+                // Contadores
+                document.getElementById('count-estudos').textContent = allVideos.filter(v => v.categoria === 'estudos').length + ' aulas';
+                document.getElementById('count-pregcacoes').textContent = allVideos.filter(v => v.categoria === 'pregcacoes').length + ' aulas';
+                document.getElementById('count-cursos').textContent = allVideos.filter(v => v.categoria === 'cursos').length + ' aulas';
+                document.getElementById('count-jovens').textContent = allVideos.filter(v => v.categoria === 'jovens').length + ' aulas';
+                
+                // Renderizar
+                renderVideos(allVideos.slice(0, 8), 'grid-inicio');
+                renderVideos(allVideos, 'grid-aulas');
+                
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+        
+        // Mostrar vídeo
+        function showVideo(video) {
+            const videoId = extractVideoId(video.video_url);
+            document.getElementById('mainVideo').src = 'https://www.youtube.com/embed/' + videoId + '?rel=0';
+            document.getElementById('mainVideoTitle').textContent = video.titulo;
+            document.getElementById('mainVideoAuthor').innerHTML = '<i class="fas fa-user"></i> ' + (video.autor || 'MAANAIN');
+            document.getElementById('mainVideoViews').textContent = (video.visualizacoes || 0) + ' visualizações';
+            incrementViews(video.id);
+            showPage('player');
+        }
+        
+        function showVideoById(id) {
+            const video = allVideos.find(v => v.id === id);
+            if (video) showVideo(video);
+        }
+        
+        // Renderizar grid
+        function renderVideos(videos, gridId) {
+            const grid = document.getElementById(gridId);
+            if (videos.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500"><i class="fas fa-video-slash text-3xl mb-2"></i><p>Nenhuma aula disponível.</p></div>';
+                return;
+            }
+            
+            grid.innerHTML = videos.map(video => {
+                const videoId = extractVideoId(video.video_url);
+                const thumbnail = video.thumbnail || 'https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg';
+                const cor = cores[video.id % cores.length];
+                
+                return '<div class="thumbnail-hover bg-white rounded-2xl shadow-md overflow-hidden group cursor-pointer" onclick="showVideoById(' + video.id + ')">' +
+                    '<div class="aspect-video bg-gradient-to-br ' + cor + ' relative">' +
+                    '<img src="' + thumbnail + '" alt="' + video.titulo + '" class="w-full h-full object-cover">' +
+                    '<div class="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">' + (video.duracao || '00:00') + '</div></div>' +
+                    '<div class="p-4"><h3 class="font-semibold text-gray-900 line-clamp-2 mb-2" style="color: var(--verde-principal);">' + video.titulo + '</h3>' +
+                    '<div class="flex items-center text-xs text-gray-500"><span>' + (video.autor || 'MAANAIN') + '</span><span class="mx-2">•</span><span>' + (video.visualizacoes || 0) + ' visualizações</span></div></div></div>';
+            }).join('');
+        }
+        
+        // Mostrar categoria
+        function showCategoria(categoria) {
+            const titulos = { 'estudos': '📖 Estudos Bíblicos', 'pregcacoes': '🎤 Pregações', 'cursos': '🎓 Cursos', 'jovens': '🔥 Juventude' };
+            document.getElementById('categoria-titulo').textContent = titulos[categoria] || categoria;
+            const filtrados = allVideos.filter(v => v.categoria === categoria);
+            renderVideos(filtrados, 'grid-categoria');
+            showPage('categoria');
+        }
+        
+        // Sobrescrever função showPage para categorias
+        const originalShowPage = showPage;
+        showPage = function(pageId) {
+            console.log('showPage sobrescrita chamada com:', pageId);
+            
+            if (['estudos', 'pregcacoes', 'cursos', 'jovens'].includes(pageId)) {
+                showCategoria(pageId);
+                
+                // Atualizar estilo da sidebar para categorias também
+                document.querySelectorAll('.page-link').forEach(link => {
+                    link.style.background = '';
+                    link.style.borderRight = 'none';
+                    const icon = link.querySelector('div');
+                    const text = link.querySelector('span');
+                    if (icon) {
+                        icon.style.background = '';
+                        icon.style.color = '';
+                    }
+                    if (text) {
+                        text.style.color = '';
+                    }
+                    
+                    if (link.dataset.page === pageId) {
+                        console.log('Aplicando estilo em categoria:', link.dataset.page);
+                        link.style.background = '#e8f5e8';
+                        link.style.borderRight = '4px solid #2d5a3a';
+                        if (icon) {
+                            icon.style.background = '#e8f5e8';
+                            icon.style.color = '#2d5a3a';
+                        }
+                        if (text) {
+                            text.style.color = '#2d5a3a';
+                        }
+                    }
+                });
+            } else {
+                originalShowPage(pageId);
+            }
+        };
+        
+        async function incrementViews(id) {
+            try { await fetch('/api/aulas/' + id + '/views', { method: 'POST' }); } catch (e) {}
+        }
+        
+        function extractVideoId(url) {
+            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            return match ? match[1] : '';
+        }
+        
+        loadVideos();
+    </script>
+</body>
+</html>

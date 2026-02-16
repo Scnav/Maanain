@@ -10,9 +10,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.sidebar-link[data-section]').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
+            const sectionId = this.dataset.section;
+            console.log('Clique no menu:', sectionId);
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-            document.getElementById(this.dataset.section).classList.add('active');
+            
+            const target = document.getElementById(sectionId);
+            console.log('Elemento alvo:', target);
+            console.log('Tem classe active antes:', target?.classList.contains('active'));
+            
+            if (target) target.classList.add('active');
             this.classList.add('active');
         });
     });
@@ -518,6 +525,11 @@ document.querySelectorAll('.sidebar-link[data-section]').forEach(link => {
             setTimeout(carregarTopicosBiblia, 100);
         } else if (section === 'youtube') {
             setTimeout(carregarYoutubeConfig, 100);
+        } else if (section === 'aulas') {
+            console.log('Seção aulas clicada - chamando loadAulas');
+            setTimeout(loadAulas, 100);
+        } else if (section === 'area-membro') {
+            setTimeout(carregarAreaMembro, 100);
         }
     });
 });
@@ -572,6 +584,10 @@ document.getElementById('btnSalvarYoutube').addEventListener('click', async () =
 document.getElementById('btnNovoMinisterio').addEventListener('click', () => mostrarFormMinisterio());
 document.getElementById('btnSalvarMinisterio').addEventListener('click', salvarMinisterio);
 document.getElementById('btnCancelarMinisterio').addEventListener('click', () => ocultarFormMinisterio());
+
+// VÍDEO AULAS
+document.getElementById('btnNovaAula').addEventListener('click', () => openModal());
+document.getElementById('aulaForm').addEventListener('submit', saveAula);
 
 async function carregarMinisterios() {
     try {

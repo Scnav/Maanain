@@ -4,7 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - MAANAIN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css">
+    <style>
+        /* Estilo para link ativo na sidebar */
+        .sidebar-link.active {
+            background: linear-gradient(135deg, #dc3545, #c82333) !important;
+            color: white !important;
+            border-right: 4px solid #ffc107;
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -33,6 +42,7 @@
                 <a class="sidebar-link" data-section="ministerios"><i>⛪</i> Ministérios</a>
                 <a class="sidebar-link" data-section="biblia"><i>📖</i> Bíblia</a>
                 <a class="sidebar-link" data-section="area-membro"><i>👥</i> Área do Membro</a>
+                <a class="sidebar-link" data-section="aulas"><i>🎬</i> Vídeo Aulas</a>
                 <a class="sidebar-link" data-section="mensagens"><i>🎤</i> Último Culto</a>
                 <a class="sidebar-link" data-section="noticias"><i>📰</i> Notícias</a>
                 <a class="sidebar-link" data-section="programacao"><i>📅</i> Programação</a>
@@ -208,6 +218,107 @@
                 <div id="areaMembroContainer"></div>
             </section>
 
+            <!-- Vídeo Aulas -->
+            <section id="aulas" class="content-section">
+                <h2 class="section-title">🎬 Gerenciar Vídeo Aulas</h2>
+                <button id="btnNovaAula" class="btn-editar-cargo" style="margin-bottom: 2rem;">
+                    <i class="fas fa-plus"></i> Nova Aula
+                </button>
+                
+                <div class="table-container">
+                    <table class="aulas-table">
+                        <thead>
+                            <tr>
+                                <th>Thumbnail</th>
+                                <th>Título</th>
+                                <th>Autor</th>
+                                <th>Categoria</th>
+                                <th>Duração</th>
+                                <th>Visualizações</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aulasTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center;">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Modal de Aula -->
+            <div id="aulaModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                <div style="background-color: #fff; margin: 5% auto; padding: 2rem; border-radius: 10px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <h3 style="margin-bottom: 1.5rem;"><span id="modalTitle">Nova Aula</span></h3>
+                    <form id="aulaForm">
+                        <input type="hidden" id="aulaId">
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">URL do Vídeo (YouTube) *</label>
+                            <input type="url" id="aulaVideoUrl" required placeholder="https://www.youtube.com/watch?v=..." style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            <small style="color: #666;">Cole a URL do vídeo do YouTube</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título *</label>
+                            <input type="text" id="aulaTitulo" required style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Thumbnail (Capa)</label>
+                            <input type="file" id="aulaThumbnailFile" accept="image/*" style="width: 100%; padding: 0.8rem; border: 2px dashed #ddd; border-radius: 8px; font-size: 1rem; background: #f9f9f9;">
+                            <small style="color: #666;">Ou cole uma URL: <input type="url" id="aulaThumbnail" placeholder="https://..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;"></small>
+                            <div id="aulaThumbnailPreview" style="margin-top: 10px;"></div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Duração</label>
+                                <input type="text" id="aulaDuracao" placeholder="00:00" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Autor/Pastor</label>
+                                <input type="text" id="aulaAutor" placeholder="MAANAIN" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Categoria</label>
+                            <select id="aulaCategoria" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                                <option value="estudos">Estudos Bíblicos</option>
+                                <option value="pregcacoes">Pregações</option>
+                                <option value="cursos">Cursos</option>
+                                <option value="jovens">Juventude</option>
+                                <option value="crianca">Crianças</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Descrição</label>
+                            <textarea id="aulaDescricao" rows="3" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" id="aulaAtivo" checked style="width: 20px; height: 20px;">
+                                <span style="font-weight: 600;">Ativo (visível para membros)</span>
+                            </label>
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem;">
+                            <button type="submit" class="btn-editar-cargo" style="flex: 1;">
+                                <i class="fas fa-save"></i> Salvar
+                            </button>
+                            <button type="button" onclick="closeModal()" class="btn-editar-cargo" style="background: #6c757d; flex: 1;">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <!-- Último Culto -->
             <section id="mensagens" class="content-section">
                 <h2 class="section-title">🎤 Gerenciar Último Culto</h2>
@@ -378,7 +489,8 @@
         }
     }
     </script>
-    <script src="js/admin.js?v=5"></script>
+    <script src="js/admin_aulas.js?v=2"></script>
+    <script src="js/admin.js?v=6"></script>
     <script src="js/admin_biblia.js?v=1"></script>
     <script src="js/admin_area_membro.js?v=4"></script>
     <script src="js/admin_cultos.js"></script>

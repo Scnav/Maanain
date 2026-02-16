@@ -189,6 +189,24 @@ db.serialize(() => {
     db.run("ALTER TABLE area_membro ADD COLUMN pdf_path TEXT", (err) => {
         // Ignora erro se a coluna já existe
     });
+
+    // Tabela de vídeo aulas
+    db.run(`
+        CREATE TABLE IF NOT EXISTS aulas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            descricao TEXT,
+            video_url TEXT NOT NULL,
+            thumbnail TEXT,
+            duracao TEXT DEFAULT '00:00',
+            autor TEXT DEFAULT 'MAANAIN',
+            categoria TEXT DEFAULT 'estudos',
+            visualizacoes INTEGER DEFAULT 0,
+            ativo INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
 });
 
 // ✅ REGISTER
@@ -1334,6 +1352,75 @@ app.delete('/api/admin/area-membro/:id', verifyAdmin, (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Tópico não encontrado' });
         res.json({ message: 'Tópico excluído!' });
+    });
+});
+
+// ========== VÍDEO AULAS ==========
+
+// Listar todas as aulas (público)
+app.get('/api/aulas', (req, res) => {
+    db.all("SELECT * FROM aulas WHERE ativo = 1 ORDER BY created_at DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Listar todas as aulas (admin)
+app.get('/api/admin/aulas', verifyAdmin, (req, res) => {
+    db.all("SELECT * FROM aulas ORDER BY created_at DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Criar aula
+app.post('/api/admin/aulas', verifyAdmin, (req, res) => {
+    const { titulo, descricao, video_url, thumbnail, duracao, autor, categoria, ativo } = req.body;
+    
+    if (!titulo || !video_url) {
+        return res.status(400).json({ error: 'Título e URL do vídeo são obrigatórios' });
+    }
+
+    db.run("INSERT INTO aulas (titulo, descricao, video_url, thumbnail, duracao, autor, categoria, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [titulo, descricao || '', video_url, thumbnail || '', duracao || '00:00', autor || 'MAANAIN', categoria || 'estudos', ativo !== undefined ? ativo : 1],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.status(201).json({ message: 'Aula criada!', id: this.lastID });
+        });
+});
+
+// Atualizar aula
+app.put('/api/admin/aulas/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    const { titulo, descricao, video_url, thumbnail, duracao, autor, categoria, ativo } = req.body;
+
+    db.run("UPDATE aulas SET titulo = ?, descricao = ?, video_url = ?, thumbnail = ?, duracao = ?, autor = ?, categoria = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [titulo, descricao || '', video_url, thumbnail || '', duracao || '00:00', autor || 'MAANAIN', categoria || 'estudos', ativo !== undefined ? ativo : 1, id],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (this.changes === 0) return res.status(404).json({ error: 'Aula não encontrada' });
+            res.json({ message: 'Aula atualizada!' });
+        });
+});
+
+// Excluir aula
+app.delete('/api/admin/aulas/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+
+    db.run("DELETE FROM aulas WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Aula não encontrada' });
+        res.json({ message: 'Aula excluída!' });
+    });
+});
+
+// Incrementar visualizações
+app.post('/api/aulas/:id/views', (req, res) => {
+    const { id } = req.params;
+    
+    db.run("UPDATE aulas SET visualizacoes = visualizacoes + 1 WHERE id = ?", [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Visualização registrada' });
     });
 });
 
