@@ -9,6 +9,13 @@ let buscaOffset = 0;
 const buscaLimite = 10;
 let termoBuscaAtual = '';
 
+// Função para extrair ID do vídeo do YouTube
+function extractVideoId(url) {
+    if (!url) return null;
+    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    return match ? match[1] : null;
+}
+
 // ========== YOUTUBE LIVE CHECK ==========
 async function checkYoutubeLive() {
     try {
@@ -410,18 +417,39 @@ async function carregarMensagensHome() {
         const container = document.getElementById('mensagensHomeContainer');
         if (!container) return;
         
-        if (mensagens.length === 0) {
+        // A API já retorna ordenado por data (mais recente primeiro) e só msgs ativas
+        const msg = mensagens[0]; // Pegar a mais recente
+        
+        if (!msg) {
             container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Nenhuma mensagem disponível.</p>';
             return;
         }
         
-        container.innerHTML = mensagens.map(msg => `
-            <div class="mensagens-card">
-                <h4>${msg.titulo}</h4>
-                <p>${msg.conteudo || 'Mensagem de video'}</p>
-                ${msg.video_url ? `<a href="${msg.video_url}" target="_blank" style="display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: var(--verde-principal); color: white; border-radius: 5px; text-decoration: none;"><i class="fas fa-play"></i> Assistir</a>` : ''}
-            </div>
-        `).join('');
+        // Se tem vídeo, mostrar thumbnail clicável
+        if (msg.video_url) {
+            const videoId = extractVideoId(msg.video_url);
+            const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+            container.innerHTML = `
+                <div class="mensagem-video-container" style="margin-top: 1rem;">
+                    ${thumbnailUrl ? `
+                        <a href="${msg.video_url}" target="_blank" style="display: block; position: relative;">
+                            <img src="${thumbnailUrl}" alt="${msg.titulo}" style="width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,0,0,0.9); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-play" style="color: white; font-size: 1.5rem; margin-left: 4px;"></i>
+                            </div>
+                        </a>
+                    ` : ''}
+                    ${msg.titulo ? `<h5 style="margin-top: 1rem; margin-bottom: 0;">${msg.titulo}</h5>` : ''}
+                </div>
+            `;
+        } else {
+            // Se não tem vídeo, mostrar apenas título
+            container.innerHTML = `
+                <div class="mensagens-card">
+                    <h4>${msg.titulo}</h4>
+                </div>
+            `;
+        }
     } catch (error) {
         console.error('Erro ao carregar mensagens:', error);
     }
