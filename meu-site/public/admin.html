@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Admin - MAANAIN</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/admin.css?v=2">
     <style>
         /* Estilo para link ativo na sidebar */
         .sidebar-link.active {
@@ -14,6 +17,54 @@
             border-right: 4px solid #ffc107;
         }
     </style>
+    <script>
+        // ABRIR EDITOR EM NOVA JANELA
+        function abrirEditorRico(fieldId, conteudoAtual) {
+            localStorage.setItem('current_editor_field', fieldId);
+            const editorWindow = window.open(
+                '/editor.html?field=' + fieldId + '&content=' + encodeURIComponent(conteudoAtual || ''),
+                'Editor',
+                'width=1200,height=800,scrollbars=yes,resizable=yes'
+            );
+            const checkInterval = setInterval(() => {
+                const savedContent = localStorage.getItem('saved_content_' + fieldId);
+                if (savedContent) {
+                    const field = document.getElementById(fieldId);
+                    if (field) field.value = savedContent;
+                    localStorage.removeItem('saved_content_' + fieldId);
+                    clearInterval(checkInterval);
+                }
+            }, 500);
+        }
+        
+        // Verificar conteúdo salvo ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            const fieldId = localStorage.getItem('current_editor_field');
+            if (fieldId) {
+                const savedContent = localStorage.getItem('saved_content_' + fieldId);
+                if (savedContent) {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.value = savedContent;
+                        localStorage.removeItem('saved_content_' + fieldId);
+                    }
+                }
+            }
+        });
+
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registrado:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('SW registro falhou:', error);
+                    });
+            });
+        }
+    </script>
 </head>
 <body>
     <header class="header">
@@ -129,6 +180,7 @@
                     <div style="margin-bottom: 1rem;">
                         <label>Conteúdo:</label>
                         <textarea id="topicoConteudo" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                        <small style="color: #666;">Use: [img]URL[/img], [img-left], [img-right], [img-center]</small>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>Categoria:</label>
@@ -202,6 +254,7 @@
                     <div style="margin-bottom: 1rem;">
                         <label>Conteúdo:</label>
                         <textarea id="areaMembroConteudo" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                        <small style="color: #666;">Use: [img]URL[/img], [img-left], [img-right], [img-center]</small>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>Arquivo PDF (opcional):</label>
@@ -314,7 +367,10 @@
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Descrição</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                Descrição
+                                <button onclick="abrirEditorRico('aulaDescricao', document.getElementById('aulaDescricao').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>
+                            </label>
                             <textarea id="aulaDescricao" rows="3" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; resize: vertical;"></textarea>
                         </div>
                         
@@ -380,8 +436,18 @@
                         <input type="text" id="noticiaTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                     </div>
                     <div style="margin-bottom: 1rem;">
-                        <label>Conteúdo:</label>
+                        <label>
+                            Conteúdo:
+                            <button onclick="abrirEditorRico('noticiaConteudo', document.getElementById('noticiaConteudo').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>
+                        </label>
                         <textarea id="noticiaConteudo" rows="6" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                        <small style="color: #666;">
+                            Para adicionar imagens use:<br>
+                            • [img]URL[/img] - imagem inline<br>
+                            • [img-left]URL[/img-left] - esquerda<br>
+                            • [img-right]URL[/img-right] - direita<br>
+                            • [img-center]URL[/img-center] - centralizada
+                        </small>
                     </div>
                     <button id="btnSalvarNoticia" class="btn-editar-cargo">💾 Salvar</button>
                     <button id="btnCancelarNoticia" style="background: #6c757d; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer;">❌ Cancelar</button>
@@ -504,7 +570,7 @@
     }
     </script>
     <script src="js/admin_aulas.js?v=2"></script>
-    <script src="js/admin.js?v=6"></script>
+    <script src="js/admin.js?v=9"></script>
     <script src="js/admin_biblia.js?v=2"></script>
     <script src="js/admin_area_membro.js?v=5"></script>
     <script src="js/admin_cultos.js"></script>

@@ -16,6 +16,45 @@ function extractVideoId(url) {
     return match ? match[1] : null;
 }
 
+// Função para converter tags de imagem em HTML
+// Formatos suportados:
+// [img]URL[/img] - imagem inline
+// [img-left]URL[/img] - alinhada à esquerda
+// [img-right]URL[/img] - alinhada à direita
+// [img-center]URL[/img] - centralizada
+function parseContentImages(texto) {
+    if (!texto) return '';
+    
+    // Substituir quebras de linha por <br>
+    let html = texto.replace(/\n/g, '<br>');
+    
+    // Imagem centralizada [img-center]URL[/img-center]
+    html = html.replace(/\[img-center\](.*?)\[\/img-center\]/gi, 
+        '<img src="$1" class="content-image content-image-center" alt="Imagem">');
+    
+    // Imagem à esquerda [img-left]URL[/img-left]
+    html = html.replace(/\[img-left\](.*?)\[\/img-left\]/gi, 
+        '<img src="$1" class="content-image content-image-left" alt="Imagem">');
+    
+    // Imagem à direita [img-right]URL[/img-right]
+    html = html.replace(/\[img-right\](.*?)\[\/img-right\]/gi, 
+        '<img src="$1" class="content-image content-image-right" alt="Imagem">');
+    
+    // Imagem inline [img]URL[/img]
+    html = html.replace(/\[img\](.*?)\[\/img\]/gi, 
+        '<img src="$1" class="content-image" alt="Imagem">');
+    
+    return html;
+}
+
+// Função helper para exibir conteúdo com imagens
+function renderContentWithImages(texto, containerId) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.innerHTML = parseContentImages(texto);
+    }
+}
+
 // ========== YOUTUBE LIVE CHECK ==========
 async function checkYoutubeLive() {
     try {
@@ -219,13 +258,17 @@ async function carregarNoticias() {
             return;
         }
 
-        container.innerHTML = noticias.map(noticia => `
-            <div class="noticia-card">
-                <h4>${noticia.titulo}</h4>
-                <p>${noticia.conteudo.length > 150 ? noticia.conteudo.substring(0, 150) + '...' : noticia.conteudo}</p>
-                <div class="noticia-data">${new Date(noticia.created_at).toLocaleDateString('pt-BR')}</div>
-            </div>
-        `).join('');
+        container.innerHTML = noticias.map(noticia => {
+            // Usar parseContentImages para renderizar imagens
+            const conteudoHtml = parseContentImages(noticia.conteudo);
+            return `
+                <div class="noticia-card">
+                    <h4>${noticia.titulo}</h4>
+                    <div class="noticia-conteudo">${conteudoHtml}</div>
+                    <div class="noticia-data">${new Date(noticia.created_at).toLocaleDateString('pt-BR')}</div>
+                </div>
+            `;
+        }).join('');
     } catch (error) {
         console.error('Erro ao carregar notícias:', error);
         document.getElementById('noticiasContainer').innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Erro ao carregar notícias.</p>';
@@ -319,8 +362,10 @@ async function carregarConteudosPaginaInicial() {
         // Atualizar Hero
         const heroTitle = document.getElementById('heroTitle');
         const heroSubtitle = document.getElementById('heroSubtitle');
+        const heroImage = document.getElementById('heroImage');
         if (heroTitle && conteudos.hero?.title) heroTitle.textContent = conteudos.hero.title;
         if (heroSubtitle && conteudos.hero?.content) heroSubtitle.textContent = conteudos.hero.content;
+        if (heroImage && conteudos.hero?.image) heroImage.src = conteudos.hero.image;
 
         // Atualizar Sobre
         const sobreTitle = document.getElementById('sobreTitle');

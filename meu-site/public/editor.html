@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Editor - MAANAIN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 1.8rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn-voltar {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-voltar:hover {
+            background: #5a6268;
+        }
+        
+        .btn-salvar {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-salvar:hover {
+            background: #218838;
+        }
+        
+        .btn-limpar {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-limpar:hover {
+            background: #c82333;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .galeria {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: fit-content;
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+        
+        .galeria h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .galeria p {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .galeria-images {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .galeria-img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .galeria-img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .upload-area {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .upload-area label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .upload-area input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        
+        .editor-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .editor-toolbar {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .toolbar-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .toolbar-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .editor {
+            min-height: 500px;
+            padding: 25px;
+            outline: none;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #333;
+        }
+        
+        .editor:focus {
+            background: #fafafa;
+        }
+        
+        .editor:empty:before {
+            content: attr(placeholder);
+            color: #999;
+            pointer-events: none;
+        }
+        
+        .editor img.inserted-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 10px 0;
+            cursor: move;
+            display: block;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: #667eea;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        
+        .drop-zone.drag-over {
+            background: #667eea;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✏️ Editor MAANAIN</h1>
+            <div class="header-actions">
+                <button onclick="voltar()" class="btn btn-voltar">↩️ Voltar</button>
+                <button onclick="salvar()" class="btn btn-salvar">💾 Salvar</button>
+                <button onclick="limpar()" class="btn btn-limpar">🗑️ Limpar</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- Galeria de Imagens -->
+            <div class="galeria">
+                <h2>🖼️ Galeria de Imagens</h2>
+                <p>Arraste para o editor!</p>
+                <div class="galeria-images" id="galeria">
+                    <!-- Imagens carregadas da API -->
+                </div>
+                
+                <div class="upload-area">
+                    <label>📤 Upload sua imagem:</label>
+                    <input type="file" id="uploadImg" accept="image/*">
+                    <button onclick="uploadImage()" class="btn btn-salvar" style="margin-top: 10px; width: 100%;">⬆️ Enviar</button>
+                </div>
+            </div>
+            
+            <!-- Editor Principal -->
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <button class="toolbar-btn" onclick="formatDoc('bold')" title="Negrito"><b>B</b></button>
+                    <button class="toolbar-btn" onclick="formatDoc('italic')" title="Itálico"><i>I</i></button>
+                    <button class="toolbar-btn" onclick="formatDoc('underline')" title="Sublinhado"><u>U</u></button>
+                    <button class="toolbar-btn" onclick="formatDoc('strikeThrough')" title="Tachado"><s>S</s></button>
+                    <button class="toolbar-btn" onclick="formatDoc('insertUnorderedList')" title="Lista">• Lista</button>
+                    <button class="toolbar-btn" onclick="formatDoc('insertOrderedList')" title="Lista numerada">1. Lista</button>
+                    <button class="toolbar-btn" onclick="formatDoc('h2')" title="Título">Título</button>
+                    <button class="toolbar-btn" onclick="formatDoc('p')" title="Parágrafo">P</button>
+                </div>
+                <div id="editor" class="editor" contenteditable="true" placeholder="Digite seu conteúdo aqui... Arraste imagens da galeria!">
+                    <p>Comece escrevendo seu conteúdo...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registrado:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('SW registro falhou:', error);
+                    });
+            });
+        }
+
+        // Obter parâmetros da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const fieldId = urlParams.get('field');
+        const content = urlParams.get('content');
+        
+        // Carregar conteúdo inicial
+        if (content) {
+            document.getElementById('editor').innerHTML = decodeURIComponent(content);
+        }
+        
+        const editor = document.getElementById('editor');
+        const galeria = document.getElementById('galeria');
+        
+        // Carregar imagens da galeria ao iniciar
+        async function loadGallery() {
+            try {
+                const response = await fetch('/api/gallery');
+                if (!response.ok) throw new Error('Erro ao carregar galeria');
+                const images = await response.json();
+                
+                galeria.innerHTML = '';
+                images.forEach(img => {
+                    const imgEl = document.createElement('img');
+                    imgEl.src = img.url;
+                    imgEl.alt = img.original_name || 'Imagem';
+                    imgEl.className = 'galeria-img';
+                    imgEl.draggable = true;
+                    imgEl.title = 'Arraste para o editor';
+                    galeria.appendChild(imgEl);
+                });
+            } catch (error) {
+                console.error('Erro carregando galeria:', error);
+            }
+        }
+        loadGallery();
+        
+        // Upload de imagem para a galeria
+        async function uploadImage() {
+            const input = document.getElementById('uploadImg');
+            const file = input.files[0];
+            if (!file) {
+                alert('Selecione uma imagem primeiro!');
+                return;
+            }
+            
+            // Converter para base64
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const response = await fetch('/api/admin/gallery', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-admin-token': localStorage.getItem('adminToken') || ''
+                        },
+                        body: JSON.stringify({
+                            image: ev.target.result,
+                            filename: file.name
+                        })
+                    });
+                    
+                    if (!response.ok) throw new Error('Erro ao fazer upload');
+                    
+                    const result = await response.json();
+                    alert('✅ Imagem enviada!');
+                    loadGallery(); // Recarregar galeria
+                    input.value = ''; // Limpar input
+                } catch (error) {
+                    console.error('Erro upload:', error);
+                    alert('❌ Erro ao enviar imagem. Faça login como admin.');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Formatar documento
+        function formatDoc(cmd, value = null) {
+            document.execCommand(cmd, false, value);
+            editor.focus();
+        }
+        
+        // 1. DRAG START das imagens da galeria
+        galeria.addEventListener('dragstart', (e) => {
+            if (e.target.tagName === 'IMG') {
+                e.dataTransfer.setData('text/plain', e.target.src);
+                e.dataTransfer.setData('image-url', e.target.src);
+                e.dataTransfer.effectAllowed = 'copy';
+            }
+        });
+        
+        // 2. DRAG OVER no editor
+        editor.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            editor.style.backgroundColor = '#f0f0f0';
+        });
+        
+        // 3. DRAG LEAVE
+        editor.addEventListener('dragleave', () => {
+            editor.style.backgroundColor = '';
+        });
+        
+        // 4. DROP - Inserir imagem no cursor
+        editor.addEventListener('drop', (e) => {
+            e.preventDefault();
+            editor.style.backgroundColor = '';
+            
+            const imgSrc = e.dataTransfer.getData('image-url') || e.dataTransfer.getData('text/plain');
+            if (imgSrc) {
+                inserirImagem(imgSrc);
+            }
+        });
+        
+        // Inserir imagem no cursor
+        function inserirImagem(src) {
+            const img = document.createElement('img');
+            img.src = src;
+            img.className = 'inserted-img';
+            img.draggable = false;
+            
+            const sel = window.getSelection();
+            if (sel.rangeCount) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(img);
+                range.setStartAfter(img);
+                range.setEndAfter(img);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            } else {
+                editor.appendChild(img);
+            }
+            editor.focus();
+        }
+        
+        // 5. Upload de arquivo (modo temporário sem servidor)
+        document.getElementById('uploadImg').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    // Adicionar à galeria temporária
+                    const img = document.createElement('img');
+                    img.src = ev.target.result;
+                    img.className = 'galeria-img';
+                    img.draggable = true;
+                    img.title = 'Arraste para o editor';
+                    galeria.appendChild(img);
+                    
+                    // Inserir no editor também
+                    inserirImagem(ev.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Salvar e voltar
+        function salvar() {
+            const conteudo = editor.innerHTML;
+            
+            // Salvar no localStorage para recuperação
+            localStorage.setItem('editor_content_' + fieldId, conteudo);
+            
+            // Enviar para a página anterior via localStorage e fechar
+            localStorage.setItem('saved_content_' + fieldId, conteudo);
+            
+            alert('✅ Conteúdo salvo!');
+            voltar();
+        }
+        
+        // Voltar para página anterior
+        function voltar() {
+            // Verificar se há conteúdo salvo e notificar
+            const conteudo = editor.innerHTML;
+            if (conteudo && fieldId) {
+                localStorage.setItem('saved_content_' + fieldId, conteudo);
+            }
+            window.close();
+        }
+        
+        // Limpar editor
+        function limpar() {
+            if (confirm('Tem certeza que deseja limpar todo o conteúdo?')) {
+                editor.innerHTML = '';
+            }
+        }
+        
+        // Verificar se há conteúdo salvo ao carregar (para quando volta do editor)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'saved_content_' + fieldId && e.newValue) {
+                // O conteúdo foi salvo, a página pai irá recuperá-lo
+            }
+        });
+    </script>
+</body>
+</html>

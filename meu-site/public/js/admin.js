@@ -748,6 +748,12 @@ async function carregarConteudos() {
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Subtítulo:</label>
                     <input type="text" id="hero-subtitle" value="${conteudos.hero?.content || 'Uma família na fé'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                 </div>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">URL da Imagem:</label>
+                    <input type="text" id="hero-image" value="${conteudos.hero?.image || ''}" placeholder="https://exemplo.com/imagem.jpg" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <small style="color: #666; display: block; margin-top: 0.5rem;">Cole a URL da imagem (ex: imgbb, google drive, etc)</small>
+                    ${conteudos.hero?.image ? `<img src="${conteudos.hero.image}" style="max-width: 200px; margin-top: 10px; border-radius: 5px;" alt="Preview">` : ''}
+                </div>
                 <button onclick="salvarConteudo('hero')" class="btn-editar-cargo">💾 Salvar Hero</button>
             </div>
 
@@ -758,8 +764,12 @@ async function carregarConteudos() {
                     <input type="text" id="sobre-title" value="${conteudos.sobre?.title || 'Sobre Nós'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                 </div>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Conteúdo:</label>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                        Conteúdo:
+                        <button onclick="abrirEditorRico('sobre-content', document.getElementById('sobre-content').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>
+                    </label>
                     <textarea id="sobre-content" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">${conteudos.sobre?.content || ''}</textarea>
+                    <small style="color: #666;">Use: [img]URL[/img], [img-left], [img-right], [img-center]</small>
                 </div>
                 <button onclick="salvarConteudo('sobre')" class="btn-editar-cargo">💾 Salvar Sobre</button>
             </div>
@@ -788,30 +798,29 @@ async function carregarConteudos() {
 
 async function salvarConteudo(section) {
     try {
-        let title, content, link;
+        let title, content, link, image;
 
         if (section === 'hero') {
             title = document.getElementById('hero-title').value;
             content = document.getElementById('hero-subtitle').value;
             link = null;
+            image = document.getElementById('hero-image').value;
         } else if (section === 'sobre') {
             title = document.getElementById('sobre-title').value;
             content = document.getElementById('sobre-content').value;
             link = null;
-        } else if (section === 'mensagem') {
-            title = document.getElementById('mensagem-title').value;
-            content = document.getElementById('mensagem-content').value;
-            link = document.getElementById('mensagem-link').value;
+            image = null;
         } else if (section === 'ministerios') {
             title = document.getElementById('ministerios-title').value;
             content = '';
             link = null;
+            image = null;
         }
 
         const response = await fetch(`/api/admin/page-content/${section}`, {
             method: 'PUT',
             headers: getAdminHeaders(),
-            body: JSON.stringify({ title, content, link })
+            body: JSON.stringify({ title, content, link, image })
         });
 
         if (!response.ok) throw new Error('Erro ao salvar conteúdo');
@@ -835,4 +844,49 @@ function mostrarToast(msg, type = 'info') {
         setTimeout(() => toast.remove(), 300);
     }, 2500);
 }
+
+// ABRIR EDITOR RICO EM NOVA JANELA
+function abrirEditorRico(fieldId, conteudoAtual) {
+    // Salvar o ID do campo no localStorage
+    localStorage.setItem('current_editor_field', fieldId);
+    
+    // Abrir editor em nova janela/popup
+    const editorWindow = window.open(
+        '/editor.html?field=' + fieldId + '&content=' + encodeURIComponent(conteudoAtual || ''),
+        'EditorRico',
+        'width=1200,height=800,scrollbars=yes,resizable=yes'
+    );
+    
+    // Verificar periodicamente se o conteúdo foi salvo
+    const checkInterval = setInterval(() => {
+        const savedContent = localStorage.getItem('saved_content_' + fieldId);
+        if (savedContent) {
+            // Atualizar o campo de texto
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = savedContent;
+            }
+            // Limpar o flag
+            localStorage.removeItem('saved_content_' + fieldId);
+            clearInterval(checkInterval);
+            mostrarToast('✅ Conteúdo do editor importado!', 'success');
+        }
+    }, 500);
+}
+
+// Verificar se há conteúdo salvo ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    const fieldId = localStorage.getItem('current_editor_field');
+    if (fieldId) {
+        const savedContent = localStorage.getItem('saved_content_' + fieldId);
+        if (savedContent) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = savedContent;
+                localStorage.removeItem('saved_content_' + fieldId);
+                mostrarToast('✅ Conteúdo do editor importado!', 'success');
+            }
+        }
+    }
+});
 

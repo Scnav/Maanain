@@ -4,10 +4,32 @@ const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
+const rateLimit = require("express-rate-limit");
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, "db.sqlite3");
 const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
+
+// Token admin via variável de ambiente (seguro)
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'maanain2026';
+
+// Rate Limiter para login - proteção contra força bruta
+const loginRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // 5 tentativas
+    message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Rate Limiter geral para APIs
+const apiRateLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minuto
+    max: 100, // 100 requisições por minuto
+    message: { error: 'Muitas requisições. Tente novamente mais tarde.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // Variável global para verificar se o SQLite está pronto
 let bibliaSQLiteReady = false;
@@ -47,6 +69,20 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'x-admin-token', 'x-user-data']
 }));
 
+// Middleware para headers de cache
+app.use((req, res, next) => {
+    // APIs não devem ser cacheadas no cliente
+    if (req.path.startsWith('/api/')) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    } else {
+        // Arquivos estáticos podem ser cacheados
+        res.set('Cache-Control', 'public, max-age=3600');
+    }
+    next();
+});
+
 // ✅ Tabelas
 db.serialize(() => {
     db.run(`
@@ -85,12 +121,18 @@ db.serialize(() => {
             title TEXT,
             content TEXT,
             link TEXT,
+            image TEXT,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
 
     // Adicionar coluna 'link' se não existir (para bancos de dados antigos)
     db.run(`ALTER TABLE page_content ADD COLUMN link TEXT`, (err) => {
+        // Ignorar erro se a coluna já existe
+    });
+
+    // Adicionar coluna 'image' se não existir (para bancos de dados antigos)
+    db.run(`ALTER TABLE page_content ADD COLUMN image TEXT`, (err) => {
         // Ignorar erro se a coluna já existe
     });
 
@@ -230,10 +272,21 @@ db.serialize(() => {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+
+    // Tabela de galeria de imagens
+    db.run(`
+        CREATE TABLE IF NOT EXISTS gallery (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            original_name TEXT,
+            url TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
 });
 
 // ✅ REGISTER
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", loginRateLimiter, async (req, res) => {
     const { username, email, password } = req.body;
 
     if (!username || !password) {
@@ -261,7 +314,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 // ✅ LOGIN
-app.post("/api/login", (req, res) => {
+app.post("/api/login", loginRateLimiter, (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -306,7 +359,7 @@ function gerarCodigo() {
 }
 
 // Solicitar código de redefinição
-app.post('/api/solicitar-redefinicao', (req, res) => {
+app.post('/api/solicitar-redefinicao', loginRateLimiter, (req, res) => {
     const { username } = req.body;
     
     if (!username) {
@@ -339,7 +392,7 @@ app.post('/api/solicitar-redefinicao', (req, res) => {
 });
 
 // Redefinir senha
-app.post('/api/redefinir-senha', async (req, res) => {
+app.post('/api/redefinir-senha', loginRateLimiter, async (req, res) => {
     const { username, novaSenha } = req.body;
     
     if (!username || !novaSenha) {
@@ -378,9 +431,9 @@ const verifyAdmin = (req, res, next) => {
     const authHeader = req.headers['x-admin-token'];
     const userData = req.headers['x-user-data'];
     
-    // Verificar se tem token admin ou dados de usuário
-    if (authHeader === 'maanain2026') {
-        return next(); // Token direto (para compatibilidade)
+    // Verificar token admin (de variável de ambiente)
+    if (authHeader === ADMIN_TOKEN) {
+        return next();
     }
     
     // Verificar se tem dados de usuário válidos
@@ -594,12 +647,12 @@ app.put('/api/admin/page-content/:section', (req, res) => {
     }
 
     const { section } = req.params;
-    const { title, content, link } = req.body;
+    const { title, content, link, image } = req.body;
 
     // Verificar se link foi fornecido e não é vazio
-    if (link) {
-        db.run("INSERT OR REPLACE INTO page_content (section, title, content, link, updated_at) VALUES (?, ?, ?, ?, datetime('now'))",
-            [section, title, content, link], function(err) {
+    if (link || image) {
+        db.run("INSERT OR REPLACE INTO page_content (section, title, content, link, image, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'))",
+            [section, title, content, link || null, image || null], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Conteúdo atualizado' });
         });
@@ -614,20 +667,97 @@ app.put('/api/admin/page-content/:section', (req, res) => {
 
 // Endpoint público para obter conteúdos
 app.get('/api/page-content', (req, res) => {
-    // Verificar se a coluna 'link' existe
+    // Verificar se a coluna 'image' existe
     db.all("PRAGMA table_info(page_content)", (err, columns) => {
         if (err) return res.status(500).json({ error: err.message });
         
-        const hasLink = columns.some(col => col.name === 'link');
-        const selectFields = hasLink ? 'section, title, content, link' : 'section, title, content';
+        const hasImage = columns.some(col => col.name === 'image');
+        const selectFields = hasImage ? 'section, title, content, link, image' : 'section, title, content, link';
         
         db.all(`SELECT ${selectFields} FROM page_content`, (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
             const contentMap = {};
             rows.forEach(row => {
-                contentMap[row.section] = { title: row.title, content: row.content, link: row.link || '' };
+                contentMap[row.section] = { 
+                    title: row.title, 
+                    content: row.content, 
+                    link: row.link || '',
+                    image: row.image || ''
+                };
             });
             res.json(contentMap);
+        });
+    });
+});
+
+// ========== GALERIA DE IMAGENS ==========
+// Listar imagens da galeria (público)
+app.get('/api/gallery', (req, res) => {
+    db.all("SELECT * FROM gallery ORDER BY created_at DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Upload de imagem (admin)
+app.post('/api/admin/gallery', verifyAdmin, (req, res) => {
+    // Simples upload via base64 (para evitar dependências extras)
+    const { image, filename } = req.body;
+    
+    if (!image) {
+        return res.status(400).json({ error: 'Imagem é obrigatória' });
+    }
+    
+    // Gerar nome único
+    const ext = filename ? filename.split('.').pop() : 'png';
+    const newFilename = 'gallery_' + Date.now() + '.' + ext;
+    const url = '/uploads/' + newFilename;
+    
+    // Salvar arquivo
+    const uploadsDir = './public/uploads';
+    const fs = require('fs');
+    
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    // Decodificar base64 e salvar
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    fs.writeFile(uploadsDir + '/' + newFilename, buffer, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        // Salvar no banco
+        db.run("INSERT INTO gallery (filename, original_name, url) VALUES (?, ?, ?)",
+            [newFilename, filename || newFilename, url],
+            function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ id: this.lastID, filename: newFilename, url: url, message: 'Imagem salva!' });
+            }
+        );
+    });
+});
+
+// Excluir imagem (admin)
+app.delete('/api/admin/gallery/:id', verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    const fs = require('fs');
+    
+    db.get("SELECT filename FROM gallery WHERE id = ?", [id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Imagem não encontrada' });
+        
+        // Excluir arquivo
+        const filepath = './public/uploads/' + row.filename;
+        if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);
+        }
+        
+        // Excluir do banco
+        db.run("DELETE FROM gallery WHERE id = ?", [id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Imagem excluída!' });
         });
     });
 });

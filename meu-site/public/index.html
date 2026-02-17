@@ -46,7 +46,7 @@
         </div>
         <div class="sobre-foto">
             <!-- SUBSTITUA pela foto real -->
-            <img src="https://images.unsplash.com/photo-1516321310764-9f3c9619fd47?w=400" alt="Familia MAANAIN">
+            <img id="heroImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect fill='%23ddd' width='400' height='300'/%3E%3Ctext fill='%23888' font-family='Arial' font-size='20' x='50%25' y='50%25' text-anchor='middle'%3EFoto da Igreja%3C/text%3E%3C/svg%3E" alt="Familia MAANAIN" loading="lazy">
         </div>
     </section>
 
@@ -54,7 +54,9 @@
     <section class="section ministerios">
         <h3 id="ministeriosTitle">Nossos Ministérios</h3>
         <div id="ministeriosContainer" class="grid-ministerios">
-            <!-- Ministérios serão carregados dinamicamente -->
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
         </div>
     </section>
 
@@ -62,7 +64,8 @@
     <section class="section noticias">
         <h3>Últimas Notícias</h3>
         <div id="noticiasContainer" class="noticias-grid">
-            <!-- Notícias serão carregadas dinamicamente -->
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
         </div>
     </section>
 
@@ -71,13 +74,13 @@
         <div class="evento-card">
             <h4>Próximos Eventos</h4>
             <div id="eventosContainer">
-                <!-- Eventos serão carregados via JavaScript -->
+                <div class="skeleton-card"></div>
             </div>
         </div>
         <div class="mensagens-card">
             <h4>Último Culto</h4>
             <div id="mensagensHomeContainer">
-                <!-- Mensagens serão carregadas aqui -->
+                <div class="skeleton-card"></div>
             </div>
         </div>
     </section>

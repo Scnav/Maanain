@@ -1,43 +1,110 @@
-// Service Worker básico para MAANAIN
-// Este arquivo é necessário para o funcionamento offline (opcional)
+// Service Worker otimizado para MAANAIN
+// Cache-first para estáticos, network-first para APIs
 
-const CACHE_NAME = 'maanain-v1';
-const urlsToCache = [
+const CACHE_NAME = 'maanain-v7';
+const STATIC_CACHE = 'maanain-static-v7';
+const DYNAMIC_CACHE = 'maanain-dynamic-v7';
+
+// Recursos estáticos para cache (cache-first)
+const staticAssets = [
   '/',
   '/index.html',
-  '/css/styles.css'
+  '/css/styles.css',
+  '/css/admin.css',
+  '/js/script.js',
+  '/js/admin.js',
+  '/editor.html',
+  '/login.html',
+  '/register.html',
+  '/biblia.html',
+  '/programacao.html',
+  '/membro.html',
+  '/aulas.html',
+  '/admin.html',
+  '/favicon.ico'
 ];
 
-// Instalação
+// Instalação - cache estático
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches.open(STATIC_CACHE)
       .then(cache => {
-        console.log('Cache aberto');
-        return cache.addAll(urlsToCache);
+        console.log('[SW] Cache estático aberto');
+        return cache.addAll(staticAssets);
       })
+      .then(() => self.skipWaiting())
   );
 });
 
-// Fetch - Rede primeiro, fallback para cache
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request)
-      .catch(() => caches.match(event.request))
-  );
-});
-
-// Ativação
+// Ativação - limpa caches antigos
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then(keys => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
+        keys.filter(key => key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
+          .map(key => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
+
+// Fetch - estratégia híbrida
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // APIs: network-first com cache fallback
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // YouTube: network-first (cache limitado)
+  if (url.hostname.includes('youtube.com') || url.hostname.includes('googlevideo.com')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Estáticos: cache-first
+  event.respondWith(cacheFirst(request));
+});
+
+// Estratégia Cache-First (para estáticos)
+async function cacheFirst(request) {
+  const cachedResponse = await caches.match(request);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+// Estratégia Network-First (para APIs)
+async function networkFirst(request) {
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    return new Response(JSON.stringify({ error: 'Offline' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
