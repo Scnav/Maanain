@@ -148,6 +148,24 @@
                         <label>Ordem:</label>
                         <input type="number" id="topicoOrdem" value="0" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                     </div>
+                    <div style="margin-bottom: 1rem; padding: 1rem; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <label style="color: #007bff; font-weight: bold; display: block; margin-bottom: 0.5rem;">
+                            <i class="fas fa-clock"></i> Agendamento de Publicação
+                        </label>
+                        <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">
+                            Defina quando este tópico ficará visível na página da Bíblia. Deixe em branco para publicar imediatamente.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label>Data de Publicação:</label>
+                                <input type="date" id="topicoDataPublicacao" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                            <div>
+                                <label>Hora de Publicação:</label>
+                                <input type="time" id="topicoHoraPublicacao" value="00:00" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
+                    </div>
                     <div style="margin-bottom: 1rem;">
                         <label>
                             <input type="checkbox" id="topicoAtivo" checked>
@@ -491,8 +509,8 @@
     </script>
     <script src="js/admin_aulas.js?v=2"></script>
     <script src="js/admin.js?v=6"></script>
-    <script src="js/admin_biblia.js?v=1"></script>
-    <script src="js/admin_area_membro.js?v=4"></script>
+    <script src="js/admin_biblia.js?v=2"></script>
+    <script src="js/admin_area_membro.js?v=5"></script>
     <script src="js/admin_cultos.js"></script>
     <script src="js/admin_inscricoes.js"></script>
     <script src="js/admin_mensagens.js"></script>

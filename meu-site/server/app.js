@@ -165,9 +165,32 @@ db.serialize(() => {
             icone TEXT DEFAULT 'fas fa-book-bible',
             ordem INTEGER DEFAULT 0,
             ativo INTEGER DEFAULT 1,
+            data_publicacao TEXT,
+            hora_publicacao TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+    
+    // Adicionar colunas de agendamento se não existirem (com verificação mais robusta)
+    db.run("ALTER TABLE topicos_biblia ADD COLUMN data_publicacao TEXT", (err) => {
+        // Ignora erro se a coluna já existe
+    });
+    db.run("ALTER TABLE topicos_biblia ADD COLUMN hora_publicacao TEXT", (err) => {
+        // Ignora erro se a coluna já existe
+    });
+    
+    // Verificar e criar colunas via PRAGMA se necessário
+    db.all("PRAGMA table_info(topicos_biblia)", (err, rows) => {
+        if (!err && rows) {
+            const columns = rows.map(r => r.name);
+            if (!columns.includes('data_publicacao')) {
+                db.run("ALTER TABLE topicos_biblia ADD COLUMN data_publicacao TEXT");
+            }
+            if (!columns.includes('hora_publicacao')) {
+                db.run("ALTER TABLE topicos_biblia ADD COLUMN hora_publicacao TEXT");
+            }
+        }
+    });
 
     // Tabela de conteúdos da Área do Membro
     db.run(`
@@ -863,26 +886,47 @@ app.get('/api/admin/topicos-biblia', verifyAdmin, (req, res) => {
     });
 });
 
-// Listar tópicos ativos (público)
+// Listar tópicos ativos (público) - apenas publicados ou sem agendamento
 app.get('/api/topicos-biblia', (req, res) => {
-    db.all("SELECT id, titulo, descricao, conteudo, categoria, icone FROM topicos_biblia WHERE ativo = 1 ORDER BY ordem ASC", (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    // Só retorna tópicos onde: não tem agendamento OU data/hora já passou
+    const query = `
+        SELECT id, titulo, descricao, conteudo, categoria, icone 
+        FROM topicos_biblia 
+        WHERE ativo = 1 
+        AND (data_publicacao IS NULL OR data_publicacao = '' 
+             OR (data_publicacao || ' ' || COALESCE(hora_publicacao, '00:00') <= datetime('now', 'localtime')))
+        ORDER BY ordem ASC`;
+    
+    console.log('Query:', query);
+    
+    db.all(query, 
+        (err, rows) => {
+        if (err) {
+            console.error('Erro na query:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log('Tópicos retornados:', rows.length);
         res.json(rows);
     });
 });
 
 // Criar tópico bíblico
 app.post('/api/admin/topicos-biblia', verifyAdmin, (req, res) => {
-    const { titulo, descricao, conteudo, categoria, icone, ordem, ativo } = req.body;
+    const { titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao, hora_publicacao } = req.body;
+    
+    console.log('Recebido data_publicacao:', data_publicacao, 'hora_publicacao:', hora_publicacao);
     
     if (!titulo) {
         return res.status(400).json({ error: 'Título é obrigatório' });
     }
 
-    db.run("INSERT INTO topicos_biblia (titulo, descricao, conteudo, categoria, icone, ordem, ativo) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [titulo, descricao || '', conteudo || '', categoria || 'geral', icone || 'fas fa-book-bible', ordem || 0, ativo !== undefined ? ativo : 1], 
+    db.run("INSERT INTO topicos_biblia (titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao, hora_publicacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [titulo, descricao || '', conteudo || '', categoria || 'geral', icone || 'fas fa-book-bible', ordem || 0, ativo !== undefined ? ativo : 1, data_publicacao || null, hora_publicacao || '00:00'], 
         function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error('Erro ao criar tópico:', err);
+            return res.status(500).json({ error: err.message });
+        }
         res.status(201).json({ message: 'Tópico bíblico criado!', id: this.lastID });
     });
 });
@@ -890,11 +934,16 @@ app.post('/api/admin/topicos-biblia', verifyAdmin, (req, res) => {
 // Atualizar tópico bíblico
 app.put('/api/admin/topicos-biblia/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
-    const { titulo, descricao, conteudo, categoria, icone, ordem, ativo } = req.body;
+    const { titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao, hora_publicacao } = req.body;
+    
+    console.log('Atualizando - data_publicacao:', data_publicacao, 'hora_publicacao:', hora_publicacao);
 
-    db.run("UPDATE topicos_biblia SET titulo = ?, descricao = ?, conteudo = ?, categoria = ?, icone = ?, ordem = ?, ativo = ? WHERE id = ?",
-        [titulo, descricao, conteudo, categoria, icone, ordem, ativo, id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+    db.run("UPDATE topicos_biblia SET titulo = ?, descricao = ?, conteudo = ?, categoria = ?, icone = ?, ordem = ?, ativo = ?, data_publicacao = ?, hora_publicacao = ? WHERE id = ?",
+        [titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao || null, hora_publicacao || '00:00', id], function(err) {
+        if (err) {
+            console.error('Erro ao atualizar:', err);
+            return res.status(500).json({ error: err.message });
+        }
         if (this.changes === 0) return res.status(404).json({ error: 'Tópico não encontrado' });
         res.json({ message: 'Tópico bíblico atualizado!' });
     });

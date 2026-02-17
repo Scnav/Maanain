@@ -159,7 +159,7 @@ async function salvarAreaMembro() {
                 categoria, 
                 icone, 
                 ordem,
-                pdfPath // Enviar caminho do PDF
+                pdfPath
             })
         });
         
