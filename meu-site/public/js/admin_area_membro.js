@@ -24,7 +24,7 @@ async function carregarAreaMembro() {
             return;
         }
         
-        container.innerHTML = topicos.map(topico => `
+        container.innerHTML = '<div class="admin-cards-grid">' + topicos.map(topico => `
             <div class="admin-card">
                 <div class="admin-card-header">
                     <h4>${topico.titulo}</h4>
@@ -40,7 +40,7 @@ async function carregarAreaMembro() {
                     </button>
                 </div>
             </div>
-        `).join('');
+        `).join('') + '</div>';
         
     } catch (error) {
         console.error('Erro ao carregar área membro:', error);
