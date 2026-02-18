@@ -561,6 +561,10 @@ window.realizarBusca = realizarBusca;
 window.irParaVerso = irParaVerso;
 window.mudarPagina = mudarPagina;
 window.carregarCapitulo = carregarCapitulo;
+window.buscarPorVersiculo = buscarPorVersiculo;
+window.buscarPorCapitulo = buscarPorCapitulo;
+window.buscarPorIntervalo = buscarPorIntervalo;
+window.buscarPorIntervaloCapitulos = buscarPorIntervaloCapitulos;
 
 // Clique em tópico bíblico - navegar para a referência
 function clicarTopico(titulo, conteudo, categoria) {
@@ -608,13 +612,53 @@ async function realizarBusca() {
     }
     
     // Verificar se é uma referência bíblica
-    const refMatch = termo.match(/^(\w+)\s+(\d+)(?:[:\s](\d+))?$/i);
+    // Formatos aceitos: 
+    // "livro capítulo:versículo" - genesis 1:1 ou genesis 1:1:5
+    // "livro capítulo versículo" - genesis 1 1
+    // "livro capítulo versículo_inicial versículo_final" - genesis 1 4 7
+    // "livro capítulo" - salmos 23 (apenas capítulo)
+    // "livro capítulo a capítulo" - levitico 16 a 18 (múltiplos capítulos)
+    // "livro capítulo e capítulo" - levitico 22 e 23 (múltiplos capítulos)
+    const refMatch = termo.match(/^(\w+)\s+(\d+)(?:\s+a\s+(\d+)|\s+e\s+(\d+))?(?::(\d+)(?::(\d+))?|\s+(\d+)(?:\s+(\d+))?)?$/i);
     if (refMatch) {
-        const [, livroAbrev, capitulo, versiculo] = refMatch;
-        if (versiculo) {
-            await buscarPorVersiculo(livroAbrev, parseInt(capitulo), parseInt(versiculo));
+        const livroAbrev = refMatch[1];
+        const capitulo = parseInt(refMatch[2]);
+        const termoOriginal = termo.toLowerCase();
+        
+        // PRIORIDADE 1: Verificar se é formato de múltiplos capítulos ("a" ou "e") - antes de verificar versículos!
+        const matchMultiplosCapitulos = termoOriginal.match(/\s+(a|e)\s+(\d+)\s*$/);
+        if (matchMultiplosCapitulos) {
+            const capituloFinal = parseInt(matchMultiplosCapitulos[2]);
+            await buscarPorIntervaloCapitulos(livroAbrev, capitulo, capituloFinal);
+            return;
+        }
+        
+        // PRIORIDADE 2: Verificar qual formato foi usado
+        if (refMatch[4] !== undefined) {
+            // Formato com : (genesis 1:1 ou genesis 1:1:5)
+            const versiculo = parseInt(refMatch[4]);
+            if (refMatch[5] !== undefined) {
+                // Range com dois pontos (genesis 1:1:5)
+                const versiculoFinal = parseInt(refMatch[5]);
+                await buscarPorIntervalo(livroAbrev, capitulo, versiculo, versiculoFinal);
+            } else {
+                // Versículo único (genesis 1:1)
+                await buscarPorVersiculo(livroAbrev, capitulo, versiculo);
+            }
+        } else if (refMatch[6] !== undefined) {
+            // Formato com espaço (genesis 1 4 ou genesis 1 4 7)
+            const versiculoInicial = parseInt(refMatch[6]);
+            if (refMatch[7] !== undefined) {
+                // Range com espaço (genesis 1 4 7)
+                const versiculoFinal = parseInt(refMatch[7]);
+                await buscarPorIntervalo(livroAbrev, capitulo, versiculoInicial, versiculoFinal);
+            } else {
+                // Versículo único (genesis 1 4)
+                await buscarPorVersiculo(livroAbrev, capitulo, versiculoInicial);
+            }
         } else {
-            await buscarPorCapitulo(livroAbrev, parseInt(capitulo));
+            // Apenas capítulo (genesis 1 ou salmos 23)
+            await buscarPorCapitulo(livroAbrev, capitulo);
         }
         return;
     }
@@ -702,6 +746,90 @@ async function buscarPorCapitulo(livroAbrev, capitulo) {
         
     } catch (error) {
         console.error('Erro ao buscar capítulo:', error);
+        resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Erro ao buscar. Tente novamente.</p>';
+    }
+}
+
+// Buscar por intervalo de versículos
+async function buscarPorIntervalo(livroAbrev, capitulo, versiculoInicial, versiculoFinal) {
+    const resultsContainer = document.getElementById('buscaResults');
+    if (!resultsContainer) return;
+    
+    resultsContainer.innerHTML = '<div class="biblia-loading"><i class="fas fa-spinner"></i><p>Buscando...</p></div>';
+    
+    try {
+        const livroResponse = await fetch(`/api/biblia/livro/${livroAbrev}`);
+        if (!livroResponse.ok) {
+            resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Livro não encontrado.</p>';
+            return;
+        }
+        const livroData = await livroResponse.json();
+        
+        const capResponse = await fetch(`/api/biblia/${livroData.abreviacao}/${capitulo}`);
+        if (!capResponse.ok) {
+            resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Capítulo não encontrado.</p>';
+            return;
+        }
+        const capData = await capResponse.json();
+        
+        if (versiculoInicial > capData.versos.length || versiculoFinal > capData.versos.length) {
+            resultsContainer.innerHTML = `<p style="text-align: center; color: #666;">Versículos ${versiculoInicial} a ${versiculoFinal} não encontrados no capítulo ${capitulo}. O capítulo tem ${capData.versos.length} versículos.</p>`;
+            return;
+        }
+        
+        let html = '';
+        for (let i = versiculoInicial - 1; i < versiculoFinal; i++) {
+            html += `<div class="biblia-result-item" onclick="irParaVerso('${livroData.abreviacao}', ${capitulo}, ${i + 1})">
+                <div class="reference">${livroData.nome} ${capitulo}:${i + 1}</div>
+                <div class="texto-destaque">${capData.versos[i]}</div>
+            </div>`;
+        }
+        
+        resultsContainer.innerHTML = html;
+        document.getElementById('buscaPagination').innerHTML = '';
+        
+    } catch (error) {
+        console.error('Erro ao buscar intervalo:', error);
+        resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Erro ao buscar. Tente novamente.</p>';
+    }
+}
+
+// Buscar por intervalo de capítulos (múltiplos capítulos)
+async function buscarPorIntervaloCapitulos(livroAbrev, capituloInicial, capituloFinal) {
+    const resultsContainer = document.getElementById('buscaResults');
+    if (!resultsContainer) return;
+    
+    resultsContainer.innerHTML = '<div class="biblia-loading"><i class="fas fa-spinner"></i><p>Buscando...</p></div>';
+    
+    try {
+        const livroResponse = await fetch(`/api/biblia/livro/${livroAbrev}`);
+        if (!livroResponse.ok) {
+            resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Livro não encontrado.</p>';
+            return;
+        }
+        const livroData = await livroResponse.json();
+        
+        let html = `<h3 style="text-align: center; margin-bottom: 1rem;">${livroData.nome} ${capituloInicial} - ${capituloFinal}</h3>`;
+        
+        for (let cap = capituloInicial; cap <= capituloFinal; cap++) {
+            const capResponse = await fetch(`/api/biblia/${livroData.abreviacao}/${cap}`);
+            if (capResponse.ok) {
+                const capData = await capResponse.json();
+                html += `<h4 style="margin: 1.5rem 0 0.5rem; color: #22c55e;">Capítulo ${cap}</h4>`;
+                html += capData.versos.map((verso, index) => `
+                    <div class="biblia-result-item" onclick="irParaVerso('${livroData.abreviacao}', ${cap}, ${index + 1})">
+                        <div class="reference">${index + 1}</div>
+                        <div class="texto-destaque">${verso}</div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        resultsContainer.innerHTML = html;
+        document.getElementById('buscaPagination').innerHTML = '';
+        
+    } catch (error) {
+        console.error('Erro ao buscar capítulos:', error);
         resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Erro ao buscar. Tente novamente.</p>';
     }
 }
