@@ -143,11 +143,17 @@
                     <input type="hidden" id="ministerioId">
                     <div style="margin-bottom: 1rem;">
                         <label>Título:</label>
-                        <input type="text" id="ministerioTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="text" id="ministerioTitulo" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            <button onclick="abrirEditorRico('ministerioTitulo', document.getElementById('ministerioTitulo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🖼️</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>Descrição:</label>
-                        <textarea id="ministerioDescricao" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <textarea id="ministerioDescricao" rows="3" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                            <button onclick="abrirEditorRico('ministerioDescricao', document.getElementById('ministerioDescricao').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🖼️ Editor</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>Ícone (FontAwesome):</label>
@@ -171,15 +177,24 @@
                     <input type="hidden" id="topicoId">
                     <div style="margin-bottom: 1rem;">
                         <label>Título:</label>
-                        <input type="text" id="topicoTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="text" id="topicoTitulo" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            <button onclick="abrirEditorRico('topicoTitulo', document.getElementById('topicoTitulo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🖼️</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>Descrição:</label>
-                        <textarea id="topicoDescricao" rows="2" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <textarea id="topicoDescricao" rows="2" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                            <button onclick="abrirEditorRico('topicoDescricao', document.getElementById('topicoDescricao').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🖼️ Editor</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>Conteúdo:</label>
-                        <textarea id="topicoConteudo" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <textarea id="topicoConteudo" rows="4" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                            <button onclick="abrirEditorRico('topicoConteudo', document.getElementById('topicoConteudo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🖼️ Editor</button>
+                        </div>
                         <small style="color: #666;">Use: [img]URL[/img], [img-left], [img-right], [img-center]</small>
                     </div>
                     <div style="margin-bottom: 1rem;">
@@ -245,15 +260,24 @@
                     <input type="hidden" id="areaMembroId">
                     <div style="margin-bottom: 1rem;">
                         <label>Título:</label>
-                        <input type="text" id="areaMembroTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="text" id="areaMembroTitulo" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            <button onclick="abrirEditorRico('areaMembroTitulo', document.getElementById('areaMembroTitulo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🖼️</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>Descrição:</label>
-                        <textarea id="areaMembroDescricao" rows="2" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <textarea id="areaMembroDescricao" rows="2" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                            <button onclick="abrirEditorRico('areaMembroDescricao', document.getElementById('areaMembroDescricao').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🖼️ Editor</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>Conteúdo:</label>
-                        <textarea id="areaMembroConteudo" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <textarea id="areaMembroConteudo" rows="4" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                            <button onclick="abrirEditorRico('areaMembroConteudo', document.getElementById('areaMembroConteudo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🖼️ Editor</button>
+                        </div>
                         <small style="color: #666;">Use: [img]URL[/img], [img-left], [img-right], [img-center]</small>
                     </div>
                     <div style="margin-bottom: 1rem;">
@@ -328,19 +352,25 @@
                         
                         <div style="margin-bottom: 1rem;">
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">URL do Vídeo (YouTube) *</label>
-                            <input type="url" id="aulaVideoUrl" required placeholder="https://www.youtube.com/watch?v=..." style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="url" id="aulaVideoUrl" required placeholder="https://www.youtube.com/watch?v=..." style="flex: 1; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                                <button onclick="abrirEditorRico('aulaVideoUrl', document.getElementById('aulaVideoUrl').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                            </div>
                             <small style="color: #666;">Cole a URL do vídeo do YouTube</small>
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título *</label>
-                            <input type="text" id="aulaTitulo" required style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="text" id="aulaTitulo" required style="flex: 1; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                                <button onclick="abrirEditorRico('aulaTitulo', document.getElementById('aulaTitulo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                            </div>
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Thumbnail (Capa)</label>
                             <input type="file" id="aulaThumbnailFile" accept="image/*" style="width: 100%; padding: 0.8rem; border: 2px dashed #ddd; border-radius: 8px; font-size: 1rem; background: #f9f9f9;">
-                            <small style="color: #666;">Ou cole uma URL: <input type="url" id="aulaThumbnail" placeholder="https://..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;"></small>
+                            <small style="color: #666;">Ou cole uma URL: <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;"><input type="url" id="aulaThumbnail" placeholder="https://..." style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"><button onclick="abrirEditorRico('aulaThumbnail', document.getElementById('aulaThumbnail').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button></div></small>
                             <div id="aulaThumbnailPreview" style="margin-top: 10px;"></div>
                         </div>
                         
@@ -403,11 +433,17 @@
                     <input type="hidden" id="mensagemId">
                     <div style="margin-bottom: 1rem;">
                         <label>Título:</label>
-                        <input type="text" id="mensagemTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="text" id="mensagemTitulo" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            <button onclick="abrirEditorRico('mensagemTitulo', document.getElementById('mensagemTitulo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>URL do Vídeo:</label>
-                        <input type="text" id="mensagemVideo" placeholder="https://youtube.com/watch?v=..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="text" id="mensagemVideo" placeholder="https://youtube.com/watch?v=..." style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            <button onclick="abrirEditorRico('mensagemVideo', document.getElementById('mensagemVideo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>
@@ -433,7 +469,10 @@
                     <input type="hidden" id="noticiaId">
                     <div style="margin-bottom: 1rem;">
                         <label>Título:</label>
-                        <input type="text" id="noticiaTitulo" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="text" id="noticiaTitulo" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            <button onclick="abrirEditorRico('noticiaTitulo', document.getElementById('noticiaTitulo').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                        </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <label>

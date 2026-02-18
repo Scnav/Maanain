@@ -275,6 +275,177 @@
                     <input type="file" id="uploadImg" accept="image/*">
                     <button onclick="uploadImage()" class="btn btn-salvar" style="margin-top: 10px; width: 100%;">⬆️ Enviar</button>
                 </div>
+                
+                <!-- Teclado de Emojis -->
+                <div class="upload-area" style="margin-top: 15px;">
+                    <label>😀 Faces & Emoções:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('😊')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😊</button>
+                        <button onclick="inserirEmoji('😄')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😄</button>
+                        <button onclick="inserirEmoji('😃')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😃</button>
+                        <button onclick="inserirEmoji('😀')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😀</button>
+                        <button onclick="inserirEmoji('😁')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😁</button>
+                        <button onclick="inserirEmoji('😅')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😅</button>
+                        <button onclick="inserirEmoji('😂')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😂</button>
+                        <button onclick="inserirEmoji('🤣')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤣</button>
+                        <button onclick="inserirEmoji('😉')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😉</button>
+                        <button onclick="inserirEmoji('😌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😌</button>
+                        <button onclick="inserirEmoji('😍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😍</button>
+                        <button onclick="inserirEmoji('🥰')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🥰</button>
+                        <button onclick="inserirEmoji('😘')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😘</button>
+                        <button onclick="inserirEmoji('😎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😎</button>
+                        <button onclick="inserirEmoji('🤔')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤔</button>
+                        <button onclick="inserirEmoji('🤨')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤨</button>
+                        <button onclick="inserirEmoji('😕')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😕</button>
+                        <button onclick="inserirEmoji('😟')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😟</button>
+                        <button onclick="inserirEmoji('😮')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😮</button>
+                        <button onclick="inserirEmoji('😯')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😯</button>
+                    </div>
+                    <label style="margin-top: 10px; display: block;">❤️ Corações:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('❤️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">❤️</button>
+                        <button onclick="inserirEmoji('🧡')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🧡</button>
+                        <button onclick="inserirEmoji('💛')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💛</button>
+                        <button onclick="inserirEmoji('💚')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💚</button>
+                        <button onclick="inserirEmoji('💙')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💙</button>
+                        <button onclick="inserirEmoji('💜')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💜</button>
+                        <button onclick="inserirEmoji('🖤')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🖤</button>
+                        <button onclick="inserirEmoji('🤍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤍</button>
+                        <button onclick="inserirEmoji('🤎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤎</button>
+                        <button onclick="inserirEmoji('💔')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💔</button>
+                        <button onclick="inserirEmoji('❤️‍🔥')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">❤️‍🔥</button>
+                        <button onclick="inserirEmoji('💕')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💕</button>
+                        <button onclick="inserirEmoji('💞')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💞</button>
+                        <button onclick="inserirEmoji('💗')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💗</button>
+                        <button onclick="inserirEmoji('💖')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💖</button>
+                    </div>
+                    <label style="margin-top: 10px; display: block;">✝️ Religião & Espiritual:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('✝️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✝️</button>
+                        <button onclick="inserirEmoji('☪️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">☪️</button>
+                        <button onclick="inserirEmoji('🕉️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕉️</button>
+                        <button onclick="inserirEmoji('☸️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">☸️</button>
+                        <button onclick="inserirEmoji('✡️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✡️</button>
+                        <button onclick="inserirEmoji('🔯')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🔯</button>
+                        <button onclick="inserirEmoji('🕎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕎</button>
+                        <button onclick="inserirEmoji('☯️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">☯️</button>
+                        <button onclick="inserirEmoji('🙏')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🙏</button>
+                        <button onclick="inserirEmoji('🙌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🙌</button>
+                        <button onclick="inserirEmoji('🧘')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🧘</button>
+                        <button onclick="inserirEmoji('👼')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👼</button>
+                        <button onclick="inserirEmoji('😇')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😇</button>
+                        <button onclick="inserirEmoji('🤩')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤩</button>
+                        <button onclick="inserirEmoji('🥳')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🥳</button>
+                    </div>
+                    <label style="margin-top: 10px; display: block;">🎵 Música & Artes:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('🎵')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎵</button>
+                        <button onclick="inserirEmoji('🎶')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎶</button>
+                        <button onclick="inserirEmoji('🎼')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎼</button>
+                        <button onclick="inserirEmoji('🎸')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎸</button>
+                        <button onclick="inserirEmoji('🎹')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎹</button>
+                        <button onclick="inserirEmoji('🎺')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎺</button>
+                        <button onclick="inserirEmoji('🎻')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎻</button>
+                        <button onclick="inserirEmoji('🥁')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🥁</button>
+                        <button onclick="inserirEmoji('📖')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📖</button>
+                        <button onclick="inserirEmoji('📚')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📚</button>
+                        <button onclick="inserirEmoji('📝')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📝</button>
+                        <button onclick="inserirEmoji('✏️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✏️</button>
+                        <button onclick="inserirEmoji('🎨')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎨</button>
+                        <button onclick="inserirEmoji('🖼️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🖼️</button>
+                        <button onclick="inserirEmoji('📷')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📷</button>
+                    </div>
+                    <label style="margin-top: 10px; display: block;">⛪ Igreja & Ministério:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('⛪')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⛪</button>
+                        <button onclick="inserirEmoji('🛕')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🛕</button>
+                        <button onclick="inserirEmoji('🕌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕌</button>
+                        <button onclick="inserirEmoji('🕍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕍</button>
+                        <button onclick="inserirEmoji('👨‍⚖️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👨‍⚖️</button>
+                        <button onclick="inserirEmoji('👩‍⚖️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👩‍⚖️</button>
+                        <button onclick="inserirEmoji('🎓')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎓</button>
+                        <button onclick="inserirEmoji('👨‍🏫')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👨‍🏫</button>
+                        <button onclick="inserirEmoji('👩‍🏫')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👩‍🏫</button>
+                        <button onclick="inserirEmoji('👏')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👏</button>
+                        <button onclick="inserirEmoji('🙌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🙌</button>
+                        <button onclick="inserirEmoji('🤝')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤝</button>
+                        <button onclick="inserirEmoji('💪')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💪</button>
+                        <button onclick="inserirEmoji('✊')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✊</button>
+                        <button onclick="inserirEmoji('✋')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✋</button>
+                    </div>
+                    <label style="margin-top: 10px; display: block;">✨ Símbolos & Outros:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('✨')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✨</button>
+                        <button onclick="inserirEmoji('🔥')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🔥</button>
+                        <button onclick="inserirEmoji('💫')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💫</button>
+                        <button onclick="inserirEmoji('⭐')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⭐</button>
+                        <button onclick="inserirEmoji('🌟')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌟</button>
+                        <button onclick="inserirEmoji('💯')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💯</button>
+                        <button onclick="inserirEmoji('✅')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✅</button>
+                        <button onclick="inserirEmoji('❇️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">❇️</button>
+                        <button onclick="inserirEmoji('💒')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💒</button>
+                        <button onclick="inserirEmoji('🎪')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎪</button>
+                        <button onclick="inserirEmoji('🎭')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎭</button>
+                        <button onclick="inserirEmoji('🎰')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎰</button>
+                        <button onclick="inserirEmoji('🎯')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎯</button>
+                        <button onclick="inserirEmoji('🏆')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🏆</button>
+                        <button onclick="inserirEmoji('🎗')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎗</button>
+                    </div>
+                    <label style="margin-top: 10px; display: block;">📅 Tempo & Eventos:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('📅')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📅</button>
+                        <button onclick="inserirEmoji('📆')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📆</button>
+                        <button onclick="inserirEmoji('⏰')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⏰</button>
+                        <button onclick="inserirEmoji('⏱️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⏱️</button>
+                        <button onclick="inserirEmoji('⏲️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⏲️</button>
+                        <button onclick="inserirEmoji('🕐')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕐</button>
+                        <button onclick="inserirEmoji('🕑')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕑</button>
+                        <button onclick="inserirEmoji('🕒')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕒</button>
+                        <button onclick="inserirEmoji('🕓')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕓</button>
+                        <button onclick="inserirEmoji('📢')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📢</button>
+                        <button onclick="inserirEmoji('📣')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📣</button>
+                        <button onclick="inserirEmoji('🔔')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🔔</button>
+                        <button onclick="inserirEmoji('📍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📍</button>
+                        <button onclick="inserirEmoji('📌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📌</button>
+                        <button onclick="inserirEmoji('📎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📎</button>
+                    </div>
+                    <label style="margin-top: 10px; display: block;">🌿 Natureza & Animais:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('🌿')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌿</button>
+                        <button onclick="inserirEmoji('🌱')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌱</button>
+                        <button onclick="inserirEmoji('🌳')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌳</button>
+                        <button onclick="inserirEmoji('🌲')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌲</button>
+                        <button onclick="inserirEmoji('🌺')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌺</button>
+                        <button onclick="inserirEmoji('🌸')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌸</button>
+                        <button onclick="inserirEmoji('🌹')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌹</button>
+                        <button onclick="inserirEmoji('🌻')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌻</button>
+                        <button onclick="inserirEmoji('☀️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">☀️</button>
+                        <button onclick="inserirEmoji('🌤️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌤️</button>
+                        <button onclick="inserirEmoji('🌈')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌈</button>
+                        <button onclick="inserirEmoji('🌙')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌙</button>
+                        <button onclick="inserirEmoji('⭐')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⭐</button>
+                        <button onclick="inserirEmoji('🐑')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🐑</button>
+                        <button onclick="inserirEmoji('🕊️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕊️</button>
+                    </div>
+                    <label style="margin-top: 10px; display: block;">👥 Pessoas & Gestos:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
+                        <button onclick="inserirEmoji('👋')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👋</button>
+                        <button onclick="inserirEmoji('🤚')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤚</button>
+                        <button onclick="inserirEmoji('🖐️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🖐️</button>
+                        <button onclick="inserirEmoji('✋')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✋</button>
+                        <button onclick="inserirEmoji('🖖')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🖖</button>
+                        <button onclick="inserirEmoji('👌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👌</button>
+                        <button onclick="inserirEmoji('🤌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤌</button>
+                        <button onclick="inserirEmoji('👈')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👈</button>
+                        <button onclick="inserirEmoji('👉')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👉</button>
+                        <button onclick="inserirEmoji('👆')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👆</button>
+                        <button onclick="inserirEmoji('👇')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👇</button>
+                        <button onclick="inserirEmoji('👍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👍</button>
+                        <button onclick="inserirEmoji('👎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👎</button>
+                        <button onclick="inserirEmoji('🤲')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤲</button>
+                        <button onclick="inserirEmoji('👐')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👐</button>
+                    </div>
+                </div>
             </div>
             
             <!-- Editor Principal -->
@@ -297,6 +468,11 @@
     </div>
 
     <script>
+        // Função para obter token admin
+        function getAdminToken() {
+            return localStorage.getItem('adminToken') || 'maanain2026';
+        }
+        
         // Registrar Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -326,22 +502,70 @@
         // Carregar imagens da galeria ao iniciar
         async function loadGallery() {
             try {
-                const response = await fetch('/api/gallery');
+                const response = await fetch('/api/gallery?_t=' + Date.now());
                 if (!response.ok) throw new Error('Erro ao carregar galeria');
                 const images = await response.json();
                 
                 galeria.innerHTML = '';
+                const timestamp = Date.now();
                 images.forEach(img => {
+                    // Container para imagem e botão
+                    const container = document.createElement('div');
+                    container.style.position = 'relative';
+                    container.style.display = 'inline-block';
+                    container.style.margin = '5px';
+                    
                     const imgEl = document.createElement('img');
-                    imgEl.src = img.url;
+                    imgEl.src = img.url + '?v=' + timestamp;
                     imgEl.alt = img.original_name || 'Imagem';
                     imgEl.className = 'galeria-img';
                     imgEl.draggable = true;
                     imgEl.title = 'Arraste para o editor';
-                    galeria.appendChild(imgEl);
+                    
+                    // Botão de excluir
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.innerHTML = '×';
+                    deleteBtn.style.position = 'absolute';
+                    deleteBtn.style.top = '-5px';
+                    deleteBtn.style.right = '-5px';
+                    deleteBtn.style.background = 'red';
+                    deleteBtn.style.color = 'white';
+                    deleteBtn.style.border = 'none';
+                    deleteBtn.style.borderRadius = '50%';
+                    deleteBtn.style.width = '20px';
+                    deleteBtn.style.height = '20px';
+                    deleteBtn.style.cursor = 'pointer';
+                    deleteBtn.style.fontSize = '14px';
+                    deleteBtn.style.lineHeight = '1';
+                    deleteBtn.title = 'Excluir imagem';
+                    deleteBtn.onclick = () => excluirImagem(img.id, img.url);
+                    
+                    container.appendChild(imgEl);
+                    container.appendChild(deleteBtn);
+                    galeria.appendChild(container);
                 });
             } catch (error) {
                 console.error('Erro carregando galeria:', error);
+            }
+        }
+        
+        // Excluir imagem
+        async function excluirImagem(id, url) {
+            if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
+            
+            try {
+                const response = await fetch('/api/admin/gallery/' + id, {
+                    method: 'DELETE',
+                    headers: { 'x-admin-token': getAdminToken() }
+                });
+                
+                if (!response.ok) throw new Error('Erro ao excluir');
+                
+                alert('✅ Imagem excluída!');
+                loadGallery();
+            } catch (error) {
+                console.error('Erro excluir:', error);
+                alert('❌ Erro ao excluir imagem.');
             }
         }
         loadGallery();
@@ -363,7 +587,7 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'x-admin-token': localStorage.getItem('adminToken') || ''
+                            'x-admin-token': getAdminToken()
                         },
                         body: JSON.stringify({
                             image: ev.target.result,
@@ -389,6 +613,20 @@
         function formatDoc(cmd, value = null) {
             document.execCommand(cmd, false, value);
             editor.focus();
+        }
+        
+        // Inserir emoji no cursor
+        function inserirEmoji(emoji) {
+            editor.focus();
+            const sel = window.getSelection();
+            if (sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(emoji));
+                range.collapse(false);
+            } else {
+                editor.appendChild(document.createTextNode(emoji));
+            }
         }
         
         // 1. DRAG START das imagens da galeria

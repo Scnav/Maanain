@@ -1,15 +1,15 @@
 // Service Worker otimizado para MAANAIN
 // Cache-first para estáticos, network-first para APIs
 
-const CACHE_NAME = 'maanain-v7';
-const STATIC_CACHE = 'maanain-static-v7';
-const DYNAMIC_CACHE = 'maanain-dynamic-v7';
+const CACHE_NAME = 'maanain-v11';
+const STATIC_CACHE = 'maanain-static-v11';
+const DYNAMIC_CACHE = 'maanain-dynamic-v11';
 
 // Recursos estáticos para cache (cache-first)
 const staticAssets = [
   '/',
   '/index.html',
-  '/css/styles.css',
+  '/css/styles.css?v=8',
   '/css/admin.css',
   '/js/script.js',
   '/js/admin.js',
@@ -65,7 +65,24 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Estáticos: cache-first
+  // Estáticos: cache-first (exceto uploads)
+  if (url.pathname.startsWith('/uploads/')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+  
+  // Páginas HTML: sempre buscar do servidor
+  if (url.pathname.endsWith('.html')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+  
+  // JavaScript: sempre buscar do servidor
+  if (url.pathname.endsWith('.js')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+  
   event.respondWith(cacheFirst(request));
 });
 

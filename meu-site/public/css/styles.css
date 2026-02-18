@@ -520,30 +520,37 @@ body.admin-mode .nav a:hover {
 }
 
 /* ========== IMAGENS NO CONTEÚDO ========== */
-.content-image {
-    max-width: 100%;
-    height: auto;
+.conteudo-texto img,
+.noticia-conteudo img,
+.content-image,
+.conteudo-section img {
+    max-width: 100% !important;
+    width: auto !important;
+    height: auto !important;
     border-radius: 8px;
     margin: 1rem 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: block;
 }
 
 .content-image-center {
     display: block;
     margin: 1rem auto;
-    max-width: 80%;
+    max-width: 100%;
 }
 
 .content-image-left {
     float: left;
     margin-right: 1rem;
-    max-width: 40%;
+    margin-bottom: 0.5rem;
+    max-width: 50%;
 }
 
 .content-image-right {
     float: right;
     margin-left: 1rem;
-    max-width: 40%;
+    margin-bottom: 0.5rem;
+    max-width: 50%;
 }
 
 .content-image-left::after,
@@ -553,10 +560,49 @@ body.admin-mode .nav a:hover {
     clear: both;
 }
 
-/* Estilo para conteúdo de notícias */
-.noticia-card .noticia-conteudo {
+/* Responsividade para imagens em telas menores */
+@media (max-width: 768px) {
+    .content-image-center {
+        max-width: 100%;
+    }
+    
+    .content-image-left,
+    .content-image-right {
+        float: none;
+        max-width: 100%;
+        margin: 1rem 0;
+    }
+}
+
+/* Limpar floats após conteúdo com imagens */
+.sobre-texto::after,
+.mensagens-card::after,
+.noticia-conteudo::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Responsividade para imagens em telas menores */
+@media (max-width: 768px) {
+    .content-image-center {
+        max-width: 100%;
+    }
+    
+    .content-image-left,
+    .content-image-right {
+        float: none;
+        max-width: 100%;
+        margin: 1rem 0;
+    }
+}
+
+/* Estilo para conteúdo de notícias e textos em geral */
+.noticia-card .noticia-conteudo,
+.conteudo-texto {
     margin: 1rem 0;
     line-height: 1.6;
+    overflow: hidden; /* Prevenir collapse com floats */
 }
 
 .noticia-card .noticia-conteudo p {

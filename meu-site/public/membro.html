@@ -84,6 +84,13 @@
             color: #444;
             line-height: 1.8;
             font-size: 1.05rem;
+            overflow: hidden; /* Prevenir collapse com floats */
+        }
+        .conteudo-section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
         }
         .btn-voltar {
             display: inline-flex;
@@ -253,14 +260,14 @@
                                 </div>
                             `;
                         } else if (topico.conteudo) {
-                            // Se tem conteúdo de texto
+                            // Se tem conteúdo de texto - usar parseContentImages para renderizar imagens
                             container.innerHTML = `
                                 <button class="btn-voltar" onclick="voltarTopicos()">
                                     <i class="fas fa-arrow-left"></i> Voltar
                                 </button>
                                 <div class="conteudo-section active">
                                     <h2>${topico.titulo}</h2>
-                                    ${topico.conteudo}
+                                    ${parseContentImages(topico.conteudo)}
                                 </div>
                             `;
                         } else {

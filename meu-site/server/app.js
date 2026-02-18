@@ -667,6 +667,11 @@ app.put('/api/admin/page-content/:section', (req, res) => {
 
 // Endpoint público para obter conteúdos
 app.get('/api/page-content', (req, res) => {
+    // Adicionar headers para evitar cache
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     // Verificar se a coluna 'image' existe
     db.all("PRAGMA table_info(page_content)", (err, columns) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -693,6 +698,11 @@ app.get('/api/page-content', (req, res) => {
 // ========== GALERIA DE IMAGENS ==========
 // Listar imagens da galeria (público)
 app.get('/api/gallery', (req, res) => {
+    // Adicionar headers para evitar cache
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     db.all("SELECT * FROM gallery ORDER BY created_at DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
@@ -714,16 +724,22 @@ app.post('/api/admin/gallery', verifyAdmin, (req, res) => {
     const url = '/uploads/' + newFilename;
     
     // Salvar arquivo
-    const uploadsDir = './public/uploads';
+    const uploadsDir = path.join(__dirname, '../public/uploads');
     const fs = require('fs');
     
     if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
     }
     
+    // Log para debug
+    console.log('Upload - image length:', image ? image.length : 0);
+    console.log('Upload - filename:', filename);
+    
     // Decodificar base64 e salvar
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
+    
+    console.log('Upload - buffer length:', buffer.length);
     
     fs.writeFile(uploadsDir + '/' + newFilename, buffer, (err) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -749,7 +765,7 @@ app.delete('/api/admin/gallery/:id', verifyAdmin, (req, res) => {
         if (!row) return res.status(404).json({ error: 'Imagem não encontrada' });
         
         // Excluir arquivo
-        const filepath = './public/uploads/' + row.filename;
+        const filepath = path.join(__dirname, '../public/uploads/', row.filename);
         if (fs.existsSync(filepath)) {
             fs.unlinkSync(filepath);
         }

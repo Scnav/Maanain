@@ -25,6 +25,11 @@ function extractVideoId(url) {
 function parseContentImages(texto) {
     if (!texto) return '';
     
+    // Se o texto já contém tags HTML (como <img, <p>, <div>), retornar diretamente
+    if (texto.includes('<img') || texto.includes('<div') || texto.includes('<p>') || texto.includes('<br')) {
+        return texto;
+    }
+    
     // Substituir quebras de linha por <br>
     let html = texto.replace(/\n/g, '<br>');
     
@@ -354,7 +359,7 @@ async function carregarEventos() {
 // Carregar conteúdos da página inicial
 async function carregarConteudosPaginaInicial() {
     try {
-        const response = await fetch('/api/page-content');
+        const response = await fetch('/api/page-content?_t=' + Date.now());
         if (!response.ok) throw new Error('Erro ao carregar conteúdos');
 
         const conteudos = await response.json();
@@ -371,13 +376,13 @@ async function carregarConteudosPaginaInicial() {
         const sobreTitle = document.getElementById('sobreTitle');
         const sobreContent = document.getElementById('sobreContent');
         if (sobreTitle && conteudos.sobre?.title) sobreTitle.textContent = conteudos.sobre.title;
-        if (sobreContent && conteudos.sobre?.content) sobreContent.textContent = conteudos.sobre.content;
+        if (sobreContent && conteudos.sobre?.content) sobreContent.innerHTML = conteudos.sobre.content;
 
         // Atualizar Mensagem
         const mensagemTitle = document.getElementById('mensagemTitle');
         const mensagemContent = document.getElementById('mensagemContent');
         if (mensagemTitle && conteudos.mensagem?.title) mensagemTitle.textContent = conteudos.mensagem.title;
-        if (mensagemContent && conteudos.mensagem?.content) mensagemContent.textContent = conteudos.mensagem.content;
+        if (mensagemContent && conteudos.mensagem?.content) mensagemContent.innerHTML = conteudos.mensagem.content;
 
         // Atualizar Título dos Ministérios
         const ministeriosTitle = document.getElementById('ministeriosTitle');

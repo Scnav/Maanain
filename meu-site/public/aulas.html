@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <title>MAANAIN Aulas</title>
     <style>
@@ -12,35 +11,448 @@
             --verde-claro: #4a8a5f;
             --verde-superclaro: #e8f5e8;
             --dourado: #f4c430;
+            --bg-gray: #f3f4f6;
         }
         
-        .sidebar { width: 240px; }
-        .main-content { margin-left: 240px; }
-        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
-        .thumbnail-hover { transition: all 0.2s; }
-        .thumbnail-hover:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(45, 90, 58, 0.4); }
-        .video-hero { aspect-ratio: 16/9; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg-gray);
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 80rem;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-box {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-text {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        
+        .site-title {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .btn-member {
+            background: white;
+            color: #166534;
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+        
+        .btn-member:hover {
+            background: #f3f4f6;
+        }
+        
+        /* Layout */
+        .layout {
+            display: flex;
+        }
+        
+        /* Sidebar */
+        .sidebar { 
+            width: 240px; 
+            background: white;
+            border-right: 1px solid var(--verde-superclaro);
+            height: 100vh;
+            position: sticky;
+            top: 4rem;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+        }
+        
+        @media (max-width: 1024px) { 
+            .sidebar { display: none; } 
+            .main-content { margin-left: 0; } 
+        }
+        
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            color: #374151;
+            transition: all 0.2s;
+        }
+        
+        .menu-link:hover {
+            background: #f3f4f6;
+        }
+        
+        .menu-link.active {
+            background: var(--verde-superclaro);
+            border-right: 4px solid var(--verde-principal);
+            color: var(--verde-principal);
+        }
+        
+        .menu-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #e5e7eb;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .menu-link.active .menu-icon {
+            background: var(--verde-superclaro);
+            color: var(--verde-principal);
+        }
+        
+        .menu-text {
+            font-weight: 500;
+        }
+        
+        .menu-link.active .menu-text {
+            color: var(--verde-principal);
+        }
+        
+        /* Main Content */
+        .main-content { 
+            flex: 1;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        
+        .container {
+            max-width: 80rem;
+            margin: 0 auto;
+        }
+        
+        /* Pages */
         .page { display: none; }
         .page.active { display: block; }
+        
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .hero-title {
+            color: white;
+            font-size: 1.875rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .hero-title {
+                font-size: 2.25rem;
+            }
+        }
+        
+        .hero-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Section Titles */
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Grid */
+        .grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        
+        @media (min-width: 640px) {
+            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        
+        @media (min-width: 1280px) {
+            .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(45, 90, 58, 0.4);
+        }
+        
+        .card-thumbnail {
+            aspect-ratio: 16/9;
+            position: relative;
+        }
+        
+        .card-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .card-duration {
+            position: absolute;
+            bottom: 0.5rem;
+            right: 0.5rem;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .card-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: var(--verde-principal);
+        }
+        
+        .card-meta {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        
+        .card-meta span {
+            margin-right: 0.5rem;
+        }
+        
+        /* Category Cards */
+        .category-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .category-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(45, 90, 58, 0.4);
+        }
+        
+        .category-icon {
+            width: 4rem;
+            height: 4rem;
+            margin: 0 auto 0.75rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .category-title {
+            font-weight: 600;
+            color: var(--verde-principal);
+        }
+        
+        .category-count {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        /* Player */
+        .player-container {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .player-video {
+            aspect-ratio: 16/9;
+            background: black;
+        }
+        
+        .player-video iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .player-info {
+            padding: 1.5rem;
+        }
+        
+        .player-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 0.75rem;
+        }
+        
+        @media (min-width: 768px) {
+            .player-title {
+                font-size: 1.875rem;
+            }
+        }
+        
+        .player-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+            gap: 0.5rem;
+        }
+        
+        .player-meta span {
+            margin-right: 0.5rem;
+        }
+        
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #4b5563;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-back:hover {
+            color: #111827;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+        
+        .loading i {
+            font-size: 1.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .loading i::before {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+        
+        .empty-state i {
+            font-size: 1.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Cores de gradiente */
+        .from-green-800 { background: linear-gradient(to bottom right, var(--verde-principal), var(--verde-claro)); }
+        .from-yellow-500 { background: linear-gradient(to bottom right, #f4c430, #d4a017); }
+        .from-red-500 { background: linear-gradient(to bottom right, #ef4444, #dc2626); }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body>
     
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50" style="background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-2">
-                    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));">
-                        <span class="text-xl font-bold text-white">M</span>
-                    </div>
-                    <span class="text-xl font-bold text-white">MAANAIN</span>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo-box">
+                    <span class="logo-text">M</span>
                 </div>
+                <span class="site-title">MAANAIN</span>
             </div>
-            <div class="flex items-center space-x-4">
-                <a href="membro.html" class="bg-white text-green-800 px-5 py-2 rounded-full font-medium hover:bg-gray-100 flex items-center gap-2">
+            <div class="header-right">
+                <a href="membro.html" class="btn-member">
                     <i class="fas fa-users"></i>
                     Área do Membro
                 </a>
@@ -48,102 +460,102 @@
         </div>
     </header>
 
-    <div class="flex">
+    <div class="layout">
         <!-- Sidebar Esquerda (Desktop) -->
-        <div class="sidebar hidden lg:block bg-white border-r h-screen sticky top-16 pt-6 px-4" style="border-color: var(--verde-superclaro);">
-            <div class="space-y-2">
-                <a href="#" onclick="console.log('Clicou inicio'); showPage('inicio')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="inicio" style="border-right: 4px solid #2d5a3a; background: #e8f5e8;">
-                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center" style="background: #e8f5e8; color: #2d5a3a;">🏠</div>
-                    <span class="font-medium" style="color: #2d5a3a;">Início</span>
+        <div class="sidebar hidden lg:block">
+            <div class="sidebar-menu">
+                <a href="#" onclick="console.log('Clicou inicio'); showPage('inicio')" class="menu-link page-link" data-page="inicio">
+                    <div class="menu-icon">🏠</div>
+                    <span class="menu-text">Início</span>
                 </a>
-                <a href="#" onclick="console.log('Clicou aulas'); showPage('aulas')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="aulas">
-                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">📚</div>
-                    <span class="font-medium">Todas as Aulas</span>
+                <a href="#" onclick="console.log('Clicou aulas'); showPage('aulas')" class="menu-link page-link" data-page="aulas">
+                    <div class="menu-icon">📚</div>
+                    <span class="menu-text">Todas as Aulas</span>
                 </a>
-                <a href="#" onclick="console.log('Clicou estudos'); showPage('estudos')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="estudos">
-                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">📖</div>
-                    <span class="font-medium">Estudos Bíblicos</span>
+                <a href="#" onclick="console.log('Clicou estudos'); showPage('estudos')" class="menu-link page-link" data-page="estudos">
+                    <div class="menu-icon">📖</div>
+                    <span class="menu-text">Estudos Bíblicos</span>
                 </a>
-                <a href="#" onclick="console.log('Clicou pregcacoes'); showPage('pregcacoes')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="pregcacoes">
-                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">🎤</div>
-                    <span class="font-medium">Pregações</span>
+                <a href="#" onclick="console.log('Clicou pregcacoes'); showPage('pregcacoes')" class="menu-link page-link" data-page="pregcacoes">
+                    <div class="menu-icon">🎤</div>
+                    <span class="menu-text">Pregações</span>
                 </a>
-                <a href="#" onclick="console.log('Clicou cursos'); showPage('cursos')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="cursos">
-                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">🎓</div>
-                    <span class="font-medium">Cursos</span>
+                <a href="#" onclick="console.log('Clicou cursos'); showPage('cursos')" class="menu-link page-link" data-page="cursos">
+                    <div class="menu-icon">🎓</div>
+                    <span class="menu-text">Cursos</span>
                 </a>
-                <a href="#" onclick="console.log('Clicou jovens'); showPage('jovens')" class="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-100 page-link" data-page="jovens">
-                    <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">🔥</div>
-                    <span class="font-medium">Juventude</span>
+                <a href="#" onclick="console.log('Clicou jovens'); showPage('jovens')" class="menu-link page-link" data-page="jovens">
+                    <div class="menu-icon">🔥</div>
+                    <span class="menu-text">Juventude</span>
                 </a>
             </div>
         </div>
 
         <!-- Conteúdo Principal -->
-        <div class="main-content flex-1 min-h-screen">
-            <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="main-content">
+            <div class="container">
                 
                 <!-- Página Início -->
                 <div id="page-inicio" class="page active">
                     <!-- Banner Hero -->
-                    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8 text-center" style="background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));">
-                        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">
+                    <div class="hero-banner">
+                        <h1 class="hero-title">
                             📚 Biblioteca de Aulas
                         </h1>
-                        <p class="text-white/90 text-lg mb-6">
+                        <p class="hero-subtitle">
                             Aprenda com nossos estudos bíblicos, pregações e cursos
                         </p>
                     </div>
                     
                     <!-- Vídeos em Destaque -->
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">🎬 Aulas em Destaque</h2>
-                    <div id="grid-inicio" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-                        <div class="col-span-full text-center py-8 text-gray-500">
-                            <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                    <h2 class="section-title">🎬 Aulas em Destaque</h2>
+                    <div id="grid-inicio" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" style="margin-bottom: 2rem;">
+                        <div class="col-span-full loading">
+                            <i class="fas fa-spinner"></i>
                             <p>Carregando...</p>
                         </div>
                     </div>
                     
                     <!-- Categorias -->
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">📂 Browse por Categoria</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div onclick="console.log('Clicou card estudos'); showPage('estudos')" class="thumbnail-hover bg-white rounded-xl shadow-md p-6 text-center cursor-pointer group">
-                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, var(--verde-principal), var(--verde-claro));">
+                    <h2 class="section-title">📂 Browse por Categoria</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+                        <div onclick="console.log('Clicou card estudos'); showPage('estudos')" class="category-card">
+                            <div class="category-icon from-green-800">
                                 <i class="fas fa-book text-2xl text-white"></i>
                             </div>
-                            <h3 class="font-semibold text-gray-900" style="color: var(--verde-principal);">Estudos Bíblicos</h3>
-                            <p class="text-sm text-gray-500 mt-1" id="count-estudos">0 aulas</p>
+                            <h3 class="category-title">Estudos Bíblicos</h3>
+                            <p class="category-count" id="count-estudos">0 aulas</p>
                         </div>
-                        <div onclick="console.log('Clicou card pregcacoes'); showPage('pregcacoes')" class="thumbnail-hover bg-white rounded-xl shadow-md p-6 text-center cursor-pointer group">
-                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, var(--verde-claro), var(--verde-principal));">
+                        <div onclick="console.log('Clicou card pregcacoes'); showPage('pregcacoes')" class="category-card">
+                            <div class="category-icon" style="background: linear-gradient(135deg, var(--verde-claro), var(--verde-principal));">
                                 <i class="fas fa-microphone text-2xl text-white"></i>
                             </div>
-                            <h3 class="font-semibold text-gray-900" style="color: var(--verde-principal);">Pregações</h3>
-                            <p class="text-sm text-gray-500 mt-1" id="count-pregcacoes">0 aulas</p>
+                            <h3 class="category-title">Pregações</h3>
+                            <p class="category-count" id="count-pregcacoes">0 aulas</p>
                         </div>
-                        <div onclick="console.log('Clicou card cursos'); showPage('cursos')" class="thumbnail-hover bg-white rounded-xl shadow-md p-6 text-center cursor-pointer group">
-                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #f4c430, #d4a017);">
+                        <div onclick="console.log('Clicou card cursos'); showPage('cursos')" class="category-card">
+                            <div class="category-icon from-yellow-500">
                                 <i class="fas fa-graduation-cap text-2xl text-white"></i>
                             </div>
-                            <h3 class="font-semibold text-gray-900" style="color: var(--verde-principal);">Cursos</h3>
-                            <p class="text-sm text-gray-500 mt-1" id="count-cursos">0 aulas</p>
+                            <h3 class="category-title">Cursos</h3>
+                            <p class="category-count" id="count-cursos">0 aulas</p>
                         </div>
-                        <div onclick="console.log('Clicou card jovens'); showPage('jovens')" class="thumbnail-hover bg-white rounded-xl shadow-md p-6 text-center cursor-pointer group">
-                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                        <div onclick="console.log('Clicou card jovens'); showPage('jovens')" class="category-card">
+                            <div class="category-icon from-red-500">
                                 <i class="fas fa-fire text-2xl text-white"></i>
                             </div>
-                            <h3 class="font-semibold text-gray-900" style="color: var(--verde-principal);">Juventude</h3>
-                            <p class="text-sm text-gray-500 mt-1" id="count-jovens">0 aulas</p>
+                            <h3 class="category-title">Juventude</h3>
+                            <p class="category-count" id="count-jovens">0 aulas</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Página Todas as Aulas -->
                 <div id="page-aulas" class="page">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">📚 Todas as Aulas</h2>
-                    <div id="grid-aulas" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                        <div class="col-span-full text-center py-8 text-gray-500">
-                            <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+                    <h2 class="section-title">📚 Todas as Aulas</h2>
+                    <div id="grid-aulas" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+                        <div class="col-span-full loading">
+                            <i class="fas fa-spinner"></i>
                             <p>Carregando...</p>
                         </div>
                     </div>
@@ -151,26 +563,26 @@
 
                 <!-- Página Categoria Genérica -->
                 <div id="page-categoria" class="page">
-                    <h2 id="categoria-titulo" class="text-2xl font-bold text-gray-900 mb-6">Categoria</h2>
-                    <div id="grid-categoria" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <h2 id="categoria-titulo" class="section-title">Categoria</h2>
+                    <div id="grid-categoria" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
                     </div>
                 </div>
 
                 <!-- Página Player de Vídeo -->
                 <div id="page-player" class="page">
                     <!-- Player de Vídeo -->
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-                        <div class="video-hero bg-black flex items-center justify-center relative">
-                            <iframe id="mainVideo" class="w-full h-full absolute inset-0" src="" title="Video Aula" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <div class="player-container">
+                        <div class="player-video">
+                            <iframe id="mainVideo" src="" title="Video Aula" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         </div>
-                        <div class="p-6">
-                            <h1 id="mainVideoTitle" class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Selecione uma aula</h1>
-                            <div class="flex flex-wrap items-center text-sm text-gray-500 mb-4 gap-2">
+                        <div class="player-info">
+                            <h1 id="mainVideoTitle" class="player-title">Selecione uma aula</h1>
+                            <div class="player-meta">
                                 <span id="mainVideoAuthor"><i class="fas fa-user"></i> MAANAIN</span>
                                 <span>•</span>
                                 <span id="mainVideoViews">0 visualizações</span>
                             </div>
-                            <button onclick="console.log('Clicou botao voltar'); showPage('inicio')" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
+                            <button onclick="console.log('Clicou botao voltar'); showPage('inicio')" class="btn-back">
                                 <i class="fas fa-arrow-left"></i>
                                 <span>Voltar ao Início</span>
                             </button>
@@ -270,7 +682,7 @@
         function renderVideos(videos, gridId) {
             const grid = document.getElementById(gridId);
             if (videos.length === 0) {
-                grid.innerHTML = '<div class="col-span-full text-center py-8 text-gray-500"><i class="fas fa-video-slash text-3xl mb-2"></i><p>Nenhuma aula disponível.</p></div>';
+                grid.innerHTML = '<div class="col-span-full empty-state"><i class="fas fa-video-slash"></i><p>Nenhuma aula disponível.</p></div>';
                 return;
             }
             
@@ -279,12 +691,12 @@
                 const thumbnail = video.thumbnail || 'https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg';
                 const cor = cores[video.id % cores.length];
                 
-                return '<div class="thumbnail-hover bg-white rounded-2xl shadow-md overflow-hidden group cursor-pointer" onclick="showVideoById(' + video.id + ')">' +
-                    '<div class="aspect-video bg-gradient-to-br ' + cor + ' relative">' +
-                    '<img src="' + thumbnail + '" alt="' + video.titulo + '" class="w-full h-full object-cover">' +
-                    '<div class="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">' + (video.duracao || '00:00') + '</div></div>' +
-                    '<div class="p-4"><h3 class="font-semibold text-gray-900 line-clamp-2 mb-2" style="color: var(--verde-principal);">' + video.titulo + '</h3>' +
-                    '<div class="flex items-center text-xs text-gray-500"><span>' + (video.autor || 'MAANAIN') + '</span><span class="mx-2">•</span><span>' + (video.visualizacoes || 0) + ' visualizações</span></div></div></div>';
+                return '<div class="card" onclick="showVideoById(' + video.id + ')">' +
+                    '<div class="card-thumbnail ' + cor + ' relative">' +
+                    '<img src="' + thumbnail + '" alt="' + video.titulo + '">' +
+                    '<div class="card-duration">' + (video.duracao || '00:00') + '</div></div>' +
+                    '<div class="card-body"><h3 class="card-title">' + video.titulo + '</h3>' +
+                    '<div class="card-meta"><span>' + (video.autor || 'MAANAIN') + '</span><span class="mx-2">•</span><span>' + (video.visualizacoes || 0) + ' visualizações</span></div></div></div>';
             }).join('');
         }
         
@@ -306,11 +718,10 @@
                 showCategoria(pageId);
                 
                 // Atualizar estilo da sidebar para categorias também
-                document.querySelectorAll('.page-link').forEach(link => {
-                    link.style.background = '';
-                    link.style.borderRight = 'none';
-                    const icon = link.querySelector('div');
-                    const text = link.querySelector('span');
+                document.querySelectorAll('.menu-link').forEach(link => {
+                    link.classList.remove('active');
+                    const icon = link.querySelector('.menu-icon');
+                    const text = link.querySelector('.menu-text');
                     if (icon) {
                         icon.style.background = '';
                         icon.style.color = '';
@@ -321,8 +732,7 @@
                     
                     if (link.dataset.page === pageId) {
                         console.log('Aplicando estilo em categoria:', link.dataset.page);
-                        link.style.background = '#e8f5e8';
-                        link.style.borderRight = '4px solid #2d5a3a';
+                        link.classList.add('active');
                         if (icon) {
                             icon.style.background = '#e8f5e8';
                             icon.style.color = '#2d5a3a';

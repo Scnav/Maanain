@@ -1,13 +1,16 @@
 {
   "name": "meu-site",
   "version": "1.0.0",
-  "description": "",
+  "description": "Site da Igreja MAANAIN",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/app.js",
+    "dev": "node server/app.js",
+    "build": "echo 'Build completed - files are ready in public/'",
+    "serve": "node server/app.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["church", "website", "maanain"],
+  "author": "MAANAIN",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",

@@ -742,11 +742,17 @@ async function carregarConteudos() {
                 <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Hero Section</h3>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
-                    <input type="text" id="hero-title" value="${conteudos.hero?.title || 'Bem-vindo à MAANAIN'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="text" id="hero-title" value="${conteudos.hero?.title || 'Bem-vindo à MAANAIN'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <button onclick="abrirEditorRico('hero-title', document.getElementById('hero-title').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                    </div>
                 </div>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Subtítulo:</label>
-                    <input type="text" id="hero-subtitle" value="${conteudos.hero?.content || 'Uma família na fé'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="text" id="hero-subtitle" value="${conteudos.hero?.content || 'Uma família na fé'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <button onclick="abrirEditorRico('hero-subtitle', document.getElementById('hero-subtitle').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                    </div>
                 </div>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">URL da Imagem:</label>
@@ -761,7 +767,10 @@ async function carregarConteudos() {
                 <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Sobre Nós</h3>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
-                    <input type="text" id="sobre-title" value="${conteudos.sobre?.title || 'Sobre Nós'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="text" id="sobre-title" value="${conteudos.sobre?.title || 'Sobre Nós'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <button onclick="abrirEditorRico('sobre-title', document.getElementById('sobre-title').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                    </div>
                 </div>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
@@ -778,7 +787,10 @@ async function carregarConteudos() {
                 <h3 style="color: var(--verde-principal); margin-bottom: 1rem;">Título dos Ministérios</h3>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
-                    <input type="text" id="ministerios-title" value="${conteudos.ministerios?.title || 'Nossos Ministérios'}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="text" id="ministerios-title" value="${conteudos.ministerios?.title || 'Nossos Ministérios'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <button onclick="abrirEditorRico('ministerios-title', document.getElementById('ministerios-title').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                    </div>
                 </div>
                 <button onclick="salvarConteudo('ministerios')" class="btn-editar-cargo">💾 Salvar Título</button>
             </div>
