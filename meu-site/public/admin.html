@@ -397,6 +397,17 @@
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Material de Apoio (PDF)</label>
+                            <input type="file" id="aulaPdfFile" accept=".pdf" style="width: 100%; padding: 0.8rem; border: 2px dashed #ddd; border-radius: 8px; font-size: 1rem; background: #f9f9f9;">
+                            <small style="color: #666;">Envie um PDF com material de estudo complementar (opcional)</small>
+                            <div id="aulaPdfPreview" style="margin-top: 10px; padding: 10px; background: #e8f5e8; border-radius: 8px; display: none;">
+                                <i class="fas fa-file-pdf" style="color: #dc3545; margin-right: 5px;"></i>
+                                <span id="aulaPdfName" style="color: #2d5a3a; font-weight: 500;"></span>
+                                <button type="button" onclick="removerAulaPdf()" style="margin-left: 10px; padding: 2px 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Remover</button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                 Descrição
                                 <button onclick="abrirEditorRico('aulaDescricao', document.getElementById('aulaDescricao').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>

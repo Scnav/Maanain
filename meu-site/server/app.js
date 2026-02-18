@@ -263,6 +263,7 @@ db.serialize(() => {
             descricao TEXT,
             video_url TEXT NOT NULL,
             thumbnail TEXT,
+            pdf_path TEXT,
             duracao TEXT DEFAULT '00:00',
             autor TEXT DEFAULT 'MAANAIN',
             categoria TEXT DEFAULT 'estudos',
@@ -272,6 +273,11 @@ db.serialize(() => {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+    
+    // Adicionar coluna pdf_path se não existir (para bancos existentes)
+    db.run("ALTER TABLE aulas ADD COLUMN pdf_path TEXT", (err) => {
+        // Ignora erro se a coluna já existe
+    });
 
     // Tabela de galeria de imagens
     db.run(`
@@ -1482,15 +1488,21 @@ app.get('/api/area-membro', (req, res) => {
 
 // Upload de PDF (via Base64)
 app.post('/api/admin/upload-pdf-base64', verifyAdmin, (req, res) => {
+    console.log('[DEBUG API] upload-pdf-base64 chamado');
+    console.log('[DEBUG API] req.body:', JSON.stringify(req.body).substring(0, 500));
     try {
         const { filename, data } = req.body;
         
         if (!filename || !data) {
+            console.log('[DEBUG API] Erro: Nome do arquivo ou dados faltando');
             return res.status(400).json({ error: 'Nome do arquivo e dados são obrigatórios' });
         }
         
+        console.log('[DEBUG API] Recebendo arquivo:', filename, '- Tamanho dos dados:', data.length);
+        
         // Decodificar Base64
         const buffer = Buffer.from(data, 'base64');
+        console.log('[DEBUG API] Buffer criado, tamanho:', buffer.length);
         
         // Gerar nome de arquivo único
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -1500,15 +1512,19 @@ app.post('/api/admin/upload-pdf-base64', verifyAdmin, (req, res) => {
         // Salvar arquivo
         const dir = path.join(__dirname, '..', 'public', 'uploads', 'pdfs');
         if (!fs.existsSync(dir)) {
+            console.log('[DEBUG API] Criando diretório:', dir);
             fs.mkdirSync(dir, { recursive: true });
         }
         
         const filePath = path.join(dir, savedFilename);
+        console.log('[DEBUG API] Salvando em:', filePath);
         fs.writeFileSync(filePath, buffer);
         
         const pdfPath = '/uploads/pdfs/' + savedFilename;
+        console.log('[DEBUG API] PDF salvo com sucesso, path:', pdfPath);
         res.json({ path: pdfPath, message: 'Arquivo enviado com sucesso!' });
     } catch (error) {
+        console.error('[DEBUG API] Erro ao salvar PDF:', error);
         res.status(500).json({ error: 'Erro ao salvar arquivo: ' + error.message });
     }
 });
@@ -1554,32 +1570,46 @@ app.delete('/api/admin/area-membro/:id', verifyAdmin, (req, res) => {
 
 // Listar todas as aulas (público)
 app.get('/api/aulas', (req, res) => {
+    console.log('[DEBUG API] GET /api/aulas - Buscando aulas ativas');
     db.all("SELECT * FROM aulas WHERE ativo = 1 ORDER BY created_at DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
+        console.log('[DEBUG API] GET /api/aulas - Aulas encontradas:', rows.length);
+        if (rows.length > 0) {
+            console.log('[DEBUG API] GET /api/aulas - Primeira aula:', JSON.stringify(rows[0]));
+        }
         res.json(rows);
     });
 });
 
 // Listar todas as aulas (admin)
 app.get('/api/admin/aulas', verifyAdmin, (req, res) => {
+    console.log('[DEBUG API] GET /api/admin/aulas - Buscando todas as aulas');
     db.all("SELECT * FROM aulas ORDER BY created_at DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
+        console.log('[DEBUG API] GET /api/admin/aulas - Aulas encontradas:', rows.length);
+        if (rows.length > 0) {
+            console.log('[DEBUG API] GET /api/admin/aulas - Primeira aula:', JSON.stringify(rows[0]));
+        }
         res.json(rows);
     });
 });
 
 // Criar aula
 app.post('/api/admin/aulas', verifyAdmin, (req, res) => {
-    const { titulo, descricao, video_url, thumbnail, duracao, autor, categoria, ativo } = req.body;
+    const { titulo, descricao, video_url, thumbnail, pdf_path, duracao, autor, categoria, ativo } = req.body;
+    
+    console.log('[DEBUG API] POST /api/admin/aulas recebido');
+    console.log('[DEBUG API] pdf_path recebido:', pdf_path);
     
     if (!titulo || !video_url) {
         return res.status(400).json({ error: 'Título e URL do vídeo são obrigatórios' });
     }
 
-    db.run("INSERT INTO aulas (titulo, descricao, video_url, thumbnail, duracao, autor, categoria, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [titulo, descricao || '', video_url, thumbnail || '', duracao || '00:00', autor || 'MAANAIN', categoria || 'estudos', ativo !== undefined ? ativo : 1],
+    db.run("INSERT INTO aulas (titulo, descricao, video_url, thumbnail, pdf_path, duracao, autor, categoria, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [titulo, descricao || '', video_url, thumbnail || '', pdf_path || '', duracao || '00:00', autor || 'MAANAIN', categoria || 'estudos', ativo !== undefined ? ativo : 1],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
+            console.log('[DEBUG API] Aula criada com ID:', this.lastID, '- pdf_path:', pdf_path);
             res.status(201).json({ message: 'Aula criada!', id: this.lastID });
         });
 });
@@ -1587,13 +1617,17 @@ app.post('/api/admin/aulas', verifyAdmin, (req, res) => {
 // Atualizar aula
 app.put('/api/admin/aulas/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
-    const { titulo, descricao, video_url, thumbnail, duracao, autor, categoria, ativo } = req.body;
+    const { titulo, descricao, video_url, thumbnail, pdf_path, duracao, autor, categoria, ativo } = req.body;
+    
+    console.log('[DEBUG API] PUT /api/admin/aulas/' + id + ' recebido');
+    console.log('[DEBUG API] pdf_path recebido:', pdf_path);
 
-    db.run("UPDATE aulas SET titulo = ?, descricao = ?, video_url = ?, thumbnail = ?, duracao = ?, autor = ?, categoria = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        [titulo, descricao || '', video_url, thumbnail || '', duracao || '00:00', autor || 'MAANAIN', categoria || 'estudos', ativo !== undefined ? ativo : 1, id],
+    db.run("UPDATE aulas SET titulo = ?, descricao = ?, video_url = ?, thumbnail = ?, pdf_path = ?, duracao = ?, autor = ?, categoria = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [titulo, descricao || '', video_url, thumbnail || '', pdf_path || '', duracao || '00:00', autor || 'MAANAIN', categoria || 'estudos', ativo !== undefined ? ativo : 1, id],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
             if (this.changes === 0) return res.status(404).json({ error: 'Aula não encontrada' });
+            console.log('[DEBUG API] Aula atualizada, ID:', id, '- pdf_path:', pdf_path);
             res.json({ message: 'Aula atualizada!' });
         });
 });

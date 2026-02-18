@@ -438,6 +438,24 @@
         .from-green-800 { background: linear-gradient(to bottom right, var(--verde-principal), var(--verde-claro)); }
         .from-yellow-500 { background: linear-gradient(to bottom right, #f4c430, #d4a017); }
         .from-red-500 { background: linear-gradient(to bottom right, #ef4444, #dc2626); }
+        
+        /* PDF Link */
+        .pdf-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: #dc3545;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .pdf-link:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -582,7 +600,16 @@
                                 <span>•</span>
                                 <span id="mainVideoViews">0 visualizações</span>
                             </div>
-                            <button onclick="console.log('Clicou botao voltar'); showPage('inicio')" class="btn-back">
+                            <div id="mainVideoDesc" class="player-description" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; display: none;">
+                            </div>
+                            <div id="mainVideoPdf" style="margin-top: 1rem; display: none;">
+                                <button onclick="openPdfViewer()" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>Visualizar Material em PDF</span>
+                                </button>
+                            </div>
+                            
+                            <button onclick="showPage('inicio')" class="btn-back">
                                 <i class="fas fa-arrow-left"></i>
                                 <span>Voltar ao Início</span>
                             </button>
@@ -591,6 +618,13 @@
                 </div>
 
             </div>
+        </div>
+    </div>
+    
+    <!-- Modal do PDF (fora do player para não ter conflito de position) -->
+    <div id="pdfModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999;" onclick="closePdfViewer(event)">
+        <div style="position: relative; width: 90%; height: 90%; margin: 2% auto; background: white; border-radius: 12px; overflow: hidden;">
+            <embed id="pdfModalEmbed" type="application/pdf" width="100%" height="100%" style="border: none;">
         </div>
     </div>
 
@@ -643,9 +677,14 @@
         
         // Carregar vídeos
         async function loadVideos() {
+            console.log('[DEBUG aulas] loadVideos - Carregando vídeos...');
             try {
                 const response = await fetch('/api/aulas');
                 allVideos = await response.json();
+                console.log('[DEBUG aulas] loadVideos - Videos carregados:', allVideos.length);
+                if (allVideos.length > 0) {
+                    console.log('[DEBUG aulas] loadVideos - Primeiro video:', JSON.stringify(allVideos[0]));
+                }
                 
                 // Contadores
                 document.getElementById('count-estudos').textContent = allVideos.filter(v => v.categoria === 'estudos').length + ' aulas';
@@ -658,19 +697,76 @@
                 renderVideos(allVideos, 'grid-aulas');
                 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('[DEBUG aulas] loadVideos - Erro:', error);
             }
         }
         
+        // Variável global para armazenar o PDF atual
+        let currentPdfPath = '';
+        
         // Mostrar vídeo
         function showVideo(video) {
+            console.log('[DEBUG aulas] showVideo chamado com:', video);
+            console.log('[DEBUG aulas] video.pdf_path:', video.pdf_path);
+            console.log('[DEBUG aulas] video.descricao:', video.descricao);
+            
+            // Armazenar o PDF path para uso no modal
+            currentPdfPath = video.pdf_path || '';
+            
             const videoId = extractVideoId(video.video_url);
             document.getElementById('mainVideo').src = 'https://www.youtube.com/embed/' + videoId + '?rel=0';
             document.getElementById('mainVideoTitle').textContent = video.titulo;
             document.getElementById('mainVideoAuthor').innerHTML = '<i class="fas fa-user"></i> ' + (video.autor || 'MAANAIN');
             document.getElementById('mainVideoViews').textContent = (video.visualizacoes || 0) + ' visualizações';
+            
+            // Mostrar descrição
+            const descContainer = document.getElementById('mainVideoDesc');
+            if (video.descricao) {
+                descContainer.innerHTML = '<strong style="color: var(--verde-principal);">Descrição:</strong><br>' + parseContentImages(video.descricao);
+                descContainer.style.display = 'block';
+            } else {
+                descContainer.style.display = 'none';
+            }
+            
+            // Mostrar botão do PDF
+            const pdfContainer = document.getElementById('mainVideoPdf');
+            console.log('[DEBUG aulas] PDF container, pdf_path:', video.pdf_path);
+            if (video.pdf_path) {
+                console.log('[DEBUG aulas] PDF encontrado, path:', video.pdf_path);
+                pdfContainer.style.display = 'block';
+            } else {
+                console.log('[DEBUG aulas] Sem PDF para exibir');
+                pdfContainer.style.display = 'none';
+            }
+            
             incrementViews(video.id);
             showPage('player');
+        }
+        
+        // Função para abrir o visualizador de PDF
+        function openPdfViewer() {
+            const modal = document.getElementById('pdfModal');
+            const embed = document.getElementById('pdfModalEmbed');
+            if (modal && embed && currentPdfPath) {
+                embed.src = currentPdfPath;
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Evita scroll
+            }
+        }
+        
+        // Função para fechar o visualizador de PDF
+        function closePdfViewer(event) {
+            if (event.target.id === 'pdfModal') {
+                const modal = document.getElementById('pdfModal');
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        function closePdfViewerBtn() {
+            const modal = document.getElementById('pdfModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
         
         function showVideoById(id) {
@@ -758,5 +854,6 @@
         
         loadVideos();
     </script>
+    <script src="js/script.js?v=5"></script>
 </body>
 </html>

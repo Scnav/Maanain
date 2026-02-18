@@ -1,6 +1,7 @@
 // Admin - Gerenciamento de Vídeo Aulas
 let aulas = [];
 let editingId = null;
+let aulaPdfPath = null; // Armazena o caminho do PDF
 
 // Carregar aulas ao iniciar
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,6 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const thumbnailInput = document.getElementById('aulaThumbnailFile');
     if (thumbnailInput) {
         thumbnailInput.addEventListener('change', handleThumbnailUpload);
+    }
+    
+    // Configurar evento de upload de PDF
+    const pdfInput = document.getElementById('aulaPdfFile');
+    if (pdfInput) {
+        pdfInput.addEventListener('change', handlePdfUpload);
     }
     
     // Configurar extração automática de thumbnail do YouTube
@@ -22,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 console.log('Funções definidas: loadAulas, openModal, closeModal, editAula, saveAula, deleteAula');
 
 async function loadAulas() {
+    console.log('[DEBUG loadAulas] Carregando aulas...');
     try {
         const response = await fetch('/api/admin/aulas', {
             headers: { 'x-admin-token': getAdminToken() }
@@ -30,9 +38,11 @@ async function loadAulas() {
         if (!response.ok) throw new Error('Erro ao carregar');
         
         aulas = await response.json();
+        console.log('[DEBUG loadAulas] Aulas carregadas:', aulas.length);
+        console.log('[DEBUG loadAulas] Primeira aula (se existir):', aulas.length > 0 ? JSON.stringify(aulas[0]) : 'Nenhuma');
         renderAulas();
     } catch (error) {
-        console.error('Erro:', error);
+        console.error('[DEBUG loadAulas] Erro:', error);
         alert('Erro ao carregar aulas');
     }
 }
@@ -113,11 +123,13 @@ function getCategoriaLabel(categoria) {
 
 function openModal() {
     editingId = null;
+    aulaPdfPath = null; // Resetar PDF
     document.getElementById('aulaForm').reset();
     document.getElementById('aulaId').value = '';
     document.getElementById('modalTitle').textContent = 'Nova Aula';
     document.getElementById('aulaThumbnailPreview').innerHTML = '';
     document.getElementById('aulaThumbnail').value = '';
+    document.getElementById('aulaPdfPreview').style.display = 'none';
     document.getElementById('aulaModal').style.display = 'block';
 }
 
@@ -130,6 +142,7 @@ function editAula(id) {
     if (!aula) return;
     
     editingId = id;
+    aulaPdfPath = aula.pdf_path || null; // Carregar PDF existente
     document.getElementById('modalTitle').textContent = 'Editar Aula';
     document.getElementById('aulaId').value = aula.id;
     document.getElementById('aulaTitulo').value = aula.titulo;
@@ -147,6 +160,15 @@ function editAula(id) {
             `<img src="${aula.thumbnail}" style="max-width: 200px; border-radius: 8px; margin-top: 10px;">`;
     } else {
         document.getElementById('aulaThumbnailPreview').innerHTML = '';
+    }
+    
+    // Mostrar PDF atual se existir
+    if (aula.pdf_path) {
+        const pdfName = aula.pdf_path.split('/').pop();
+        document.getElementById('aulaPdfName').textContent = pdfName;
+        document.getElementById('aulaPdfPreview').style.display = 'block';
+    } else {
+        document.getElementById('aulaPdfPreview').style.display = 'none';
     }
     
     document.getElementById('aulaModal').style.display = 'block';
@@ -248,11 +270,15 @@ async function saveAula(e) {
         descricao: document.getElementById('aulaDescricao').value,
         video_url: document.getElementById('aulaVideoUrl').value,
         thumbnail: document.getElementById('aulaThumbnail').value,
+        pdf_path: aulaPdfPath, // Inclui o caminho do PDF
         duracao: document.getElementById('aulaDuracao').value,
         autor: document.getElementById('aulaAutor').value,
         categoria: document.getElementById('aulaCategoria').value,
         ativo: document.getElementById('aulaAtivo').checked ? 1 : 0
     };
+    
+    console.log('[DEBUG saveAula] Data a ser enviada:', JSON.stringify(data, null, 2));
+    console.log('[DEBUG saveAula] aulaPdfPath no momento do save:', aulaPdfPath);
     
     if (!data.titulo || !data.video_url) {
         alert('Título e URL do vídeo são obrigatórios');
@@ -262,6 +288,7 @@ async function saveAula(e) {
     try {
         let response;
         if (editingId) {
+            console.log('[DEBUG saveAula] PUT para:', `/api/admin/aulas/${editingId}`);
             response = await fetch(`/api/admin/aulas/${editingId}`, {
                 method: 'PUT',
                 headers: {
@@ -271,6 +298,7 @@ async function saveAula(e) {
                 body: JSON.stringify(data)
             });
         } else {
+            console.log('[DEBUG saveAula] POST para: /api/admin/aulas');
             response = await fetch('/api/admin/aulas', {
                 method: 'POST',
                 headers: {
@@ -281,15 +309,98 @@ async function saveAula(e) {
             });
         }
         
+        console.log('[DEBUG saveAula] Response status:', response.status);
         if (!response.ok) throw new Error('Erro ao salvar');
+        
+        const result = await response.json();
+        console.log('[DEBUG saveAula] Result:', result);
         
         closeModal();
         loadAulas();
         alert(editingId ? 'Aula atualizada!' : 'Aula criada!');
     } catch (error) {
-        console.error('Erro:', error);
+        console.error('[DEBUG saveAula] Erro:', error);
         alert('Erro ao salvar aula');
     }
+}
+
+// Upload de PDF
+async function handlePdfUpload(event) {
+    console.log('[DEBUG handlePdfUpload] Início da função');
+    const file = event.target.files[0];
+    console.log('[DEBUG handlePdfUpload] File:', file ? file.name : 'Nenhum arquivo');
+    if (!file) return;
+    
+    if (file.type !== 'application/pdf') {
+        console.log('[DEBUG handlePdfUpload] Tipo inválido:', file.type);
+        alert('Por favor, selecione um arquivo PDF');
+        event.target.value = '';
+        return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+        console.log('[DEBUG handlePdfUpload] Tamanho excedido:', file.size);
+        alert('O arquivo deve ter no máximo 10MB');
+        event.target.value = '';
+        return;
+    }
+    
+    console.log('[DEBUG handlePdfUpload] Convertendo para base64...');
+    try {
+        // Converter para base64
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                console.log('[DEBUG handlePdfUpload] Enviando para API...');
+                const response = await fetch('/api/admin/upload-pdf-base64', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-token': getAdminToken()
+                    },
+                    body: JSON.stringify({
+                        data: e.target.result.split(',')[1], // Remove o prefixo data:application/pdf;base64,
+                        filename: file.name
+                    })
+                });
+                
+                console.log('[DEBUG handlePdfUpload] Response status:', response.status);
+                if (!response.ok) throw new Error('Erro ao fazer upload');
+                
+                const result = await response.json();
+                console.log('[DEBUG handlePdfUpload] Result:', result);
+                
+                aulaPdfPath = result.path;
+                console.log('[DEBUG handlePdfUpload] aulaPdfPath definido:', aulaPdfPath);
+                
+                // Mostrar preview
+                const preview = document.getElementById('aulaPdfPreview');
+                const pdfName = document.getElementById('aulaPdfName');
+                if (preview && pdfName) {
+                    pdfName.textContent = file.name;
+                    preview.style.display = 'block';
+                }
+                
+                alert('PDF enviado com sucesso!');
+            } catch (error) {
+                console.error('[DEBUG handlePdfUpload] Erro upload PDF:', error);
+                alert('Erro ao enviar PDF. Faça login como admin.');
+            }
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('[DEBUG handlePdfUpload] Erro ao processar PDF:', error);
+        alert('Erro ao processar PDF');
+    }
+}
+
+// Remover PDF
+function removerAulaPdf() {
+    aulaPdfPath = null;
+    const pdfInput = document.getElementById('aulaPdfFile');
+    const preview = document.getElementById('aulaPdfPreview');
+    if (pdfInput) pdfInput.value = '';
+    if (preview) preview.style.display = 'none';
 }
 
 async function deleteAula(id) {
