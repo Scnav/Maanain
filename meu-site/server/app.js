@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 const fs = require("fs");
 const rateLimit = require("express-rate-limit");
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 80;
 const DB_PATH = path.join(__dirname, "db.sqlite3");
 const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
 
@@ -68,6 +68,21 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'x-admin-token', 'x-user-data']
 }));
+
+// Middleware para converter URLs absolutas para relativas (suporte a ngrok)
+app.use((req, res, next) => {
+    const originalJson = res.json;
+    res.json = function(data) {
+        if (data && typeof data === 'object') {
+            const jsonStr = JSON.stringify(data);
+            // Substituir URLs localhost por caminhos relativos
+            const processed = jsonStr.replace(/http:\/\/localhost:\d+/g, '');
+            return originalJson.call(this, JSON.parse(processed));
+        }
+        return originalJson.call(this, data);
+    };
+    next();
+});
 
 // Middleware para headers de cache
 app.use((req, res, next) => {
@@ -711,7 +726,16 @@ app.get('/api/gallery', (req, res) => {
     
     db.all("SELECT * FROM gallery ORDER BY created_at DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
+        
+        // Converter URLs absolutas para relativas (suporte a ngrok)
+        const processedRows = rows.map(row => {
+            if (row.url && row.url.startsWith('http://localhost')) {
+                row.url = row.url.replace(/^http:\/\/localhost:\d+/, '');
+            }
+            return row;
+        });
+        
+        res.json(processedRows);
     });
 });
 

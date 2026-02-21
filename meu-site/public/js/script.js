@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const body = Object.fromEntries(new FormData(loginForm).entries());
 
-            fetch("http://localhost:3000/api/login", {
+            fetch("/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
@@ -200,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const body = Object.fromEntries(new FormData(registerForm).entries());
 
-            fetch("http://localhost:3000/api/register", {
+            fetch("/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
