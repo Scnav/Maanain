@@ -1,5 +1,10 @@
+<<<<<<< HEAD:meu-site/index.js
 // Módulo de Banco de Dados MySQL
 const { initDatabase, db, getPool, isMySQL } = require('./database');
+=======
+// Módulo de Banco de Dados - Suporta MySQL e SQLite
+const { initDatabase, db: dbWrapper, pool } = require('./database');
+>>>>>>> c859f57 (node22):meu-site/server/app.js
 
 const express = require("express");
 const cors = require("cors");
@@ -9,7 +14,11 @@ const fs = require("fs");
 const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
 
+<<<<<<< HEAD:meu-site/index.js
 const PORT = process.env.PORT || 3000;
+=======
+const PORT = process.env.PORT || 80;
+>>>>>>> c859f57 (node22):meu-site/server/app.js
 // const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
 
 // Token admin via variável de ambiente (seguro)
@@ -46,6 +55,18 @@ let bibliaSQLiteReady = false;
 let bibliaDb = null;
 
 const app = express();
+<<<<<<< HEAD:meu-site/index.js
+=======
+
+// Usar o wrapper de banco de dados (suporta MySQL e SQLite)
+const db = require('./database').db;
+
+// Inicializar banco de dados e depois configurar o servidor
+async function startServer() {
+    try {
+        const { isMySQL } = require('./database');
+        console.log(`🔄 Banco de dados inicializado (MySQL: ${isMySQL()})`);
+>>>>>>> c859f57 (node22):meu-site/server/app.js
 
 // Inicializar banco de dados e depois configurar o servidor
 async function startServer() {
@@ -606,7 +627,11 @@ app.post('/api/admin/gallery', verifyAdmin, (req, res) => {
     const url = '/uploads/' + newFilename;
     
     // Salvar arquivo
+<<<<<<< HEAD:meu-site/index.js
     const uploadsDir = path.join(__dirname, 'uploads');
+=======
+    const uploadsDir = path.join(__dirname, '../uploads');
+>>>>>>> c859f57 (node22):meu-site/server/app.js
     const fs = require('fs');
     
     if (!fs.existsSync(uploadsDir)) {
@@ -647,7 +672,11 @@ app.delete('/api/admin/gallery/:id', verifyAdmin, (req, res) => {
         if (!row) return res.status(404).json({ error: 'Imagem não encontrada' });
         
         // Excluir arquivo
+<<<<<<< HEAD:meu-site/index.js
         const filepath = path.join(__dirname, 'uploads/', row.filename);
+=======
+        const filepath = path.join(__dirname, '../uploads/', row.filename);
+>>>>>>> c859f57 (node22):meu-site/server/app.js
         if (fs.existsSync(filepath)) {
             fs.unlinkSync(filepath);
         }
@@ -1432,7 +1461,11 @@ app.get('/api/biblia/autocomplete', (req, res) => {
 const multer = require('multer');
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
+<<<<<<< HEAD:meu-site/index.js
         const dir = path.join(__dirname, 'uploads', 'pdfs');
+=======
+        const dir = path.join(__dirname, '..', 'uploads', 'pdfs');
+>>>>>>> c859f57 (node22):meu-site/server/app.js
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -1485,7 +1518,11 @@ app.post('/api/admin/upload-pdf-base64', verifyAdmin, (req, res) => {
         const savedFilename = uniqueSuffix + '.' + ext;
         
         // Salvar arquivo
+<<<<<<< HEAD:meu-site/index.js
         const dir = path.join(__dirname, 'uploads', 'pdfs');
+=======
+        const dir = path.join(__dirname, '..', 'uploads', 'pdfs');
+>>>>>>> c859f57 (node22):meu-site/server/app.js
         if (!fs.existsSync(dir)) {
             console.log('[DEBUG API] Criando diretório:', dir);
             fs.mkdirSync(dir, { recursive: true });
@@ -1629,13 +1666,33 @@ app.post('/api/aulas/:id/views', (req, res) => {
 });
 
 // ✅ Static files (SEMPRE POR ÚLTIMO)
+<<<<<<< HEAD:meu-site/index.js
 app.use("/", express.static(path.join(__dirname)));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+=======
+app.use("/", express.static(path.join(__dirname, "./public")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+>>>>>>> c859f57 (node22):meu-site/server/app.js
 
 // Middleware de erro para retornar JSON
 app.use((err, req, res, next) => {
     console.error('Erro:', err);
     res.status(500).json({ error: err.message || 'Erro interno do servidor' });
+<<<<<<< HEAD:meu-site/index.js
+=======
+});
+
+// Iniciar o servidor - primeiro inicializar o banco de dados
+const { initDatabase } = require('./database');
+
+initDatabase().then(() => {
+    app.listen(PORT, () => {
+        console.log(`✅ MAANAIN Server: http://localhost:${PORT}`);
+    });
+}).catch(err => {
+    console.error('❌ Erro ao iniciar banco de dados:', err);
+    process.exit(1);
+>>>>>>> c859f57 (node22):meu-site/server/app.js
 });
 
         // Iniciar o servidor HTTP
