@@ -7,8 +7,8 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "start": "node server/app.js",
-    "dev": "node server/app.js",
+    "start": "node index.js",
+    "dev": "node index.js",
     "build": "echo 'Build completed - files are ready in root directory'",
     "serve": "node server/app.js"
   },

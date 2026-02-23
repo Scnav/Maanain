@@ -215,11 +215,18 @@ class DatabaseWrapper {
         }
         params = params || [];
         
+        if (!pool) {
+            console.error('❌ Banco de dados não conectado!');
+            if (callback) callback(new Error('Banco de dados não conectado'));
+            return;
+        }
+        
         pool.execute(sql, params)
             .then(([result]) => {
                 if (callback) callback(null);
             })
             .catch((err) => {
+                console.error('❌ Erro no banco de dados (run):', err.message);
                 if (callback) callback(err);
             });
     }
@@ -231,11 +238,18 @@ class DatabaseWrapper {
         }
         params = params || [];
         
+        if (!pool) {
+            console.error('❌ Banco de dados não conectado!');
+            if (callback) callback(new Error('Banco de dados não conectado'));
+            return;
+        }
+        
         pool.execute(sql, params)
             .then(([rows]) => {
                 if (callback) callback(null, rows[0] || null);
             })
             .catch((err) => {
+                console.error('❌ Erro no banco de dados (get):', err.message);
                 if (callback) callback(err);
             });
     }
@@ -247,11 +261,18 @@ class DatabaseWrapper {
         }
         params = params || [];
         
+        if (!pool) {
+            console.error('❌ Banco de dados não conectado!');
+            if (callback) callback(new Error('Banco de dados não conectado'));
+            return;
+        }
+        
         pool.execute(sql, params)
             .then(([rows]) => {
                 if (callback) callback(null, rows);
             })
             .catch((err) => {
+                console.error('❌ Erro no banco de dados (all):', err.message);
                 if (callback) callback(err);
             });
     }
