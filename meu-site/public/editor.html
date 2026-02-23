@@ -468,9 +468,19 @@
     </div>
 
     <script>
-        // Função para obter token admin
-        function getAdminToken() {
-            return localStorage.getItem('adminToken') || 'maanain2026';
+        // Função para obter headers com JWT
+        function getAdminHeaders() {
+            const token = localStorage.getItem('maanain_admin_token');
+            const expiry = localStorage.getItem('maanain_admin_expiry');
+            
+            if (token && expiry && Date.now() < parseInt(expiry)) {
+                return {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+            }
+            
+            return { 'Content-Type': 'application/json' };
         }
         
         // Registrar Service Worker
@@ -556,7 +566,7 @@
             try {
                 const response = await fetch('/api/admin/gallery/' + id, {
                     method: 'DELETE',
-                    headers: { 'x-admin-token': getAdminToken() }
+                    headers: getAdminHeaders()
                 });
                 
                 if (!response.ok) throw new Error('Erro ao excluir');

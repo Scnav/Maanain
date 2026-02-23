@@ -1,5 +1,20 @@
 // Área do Membro - Admin
 
+// Função para obter headers com JWT
+function getAdminHeaders() {
+    const token = localStorage.getItem('maanain_admin_token');
+    const expiry = localStorage.getItem('maanain_admin_expiry');
+    
+    if (token && expiry && Date.now() < parseInt(expiry)) {
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    }
+    
+    return { 'Content-Type': 'application/json' };
+}
+
 // Carregar tópicos da Área do Membro
 async function carregarAreaMembro() {
     try {

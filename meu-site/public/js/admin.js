@@ -29,14 +29,13 @@ document.addEventListener('DOMContentLoaded', function() {
 function getAdminHeaders(includeContentType = true) {
     const headers = {};
     
-    // Primeiro tenta usar dados do usuário se estiver logado como admin
-    if (window.MAANAIN_ADMIN_USER && window.MAANAIN_ADMIN_USER.role === 'admin') {
-        const userBase64 = btoa(JSON.stringify(window.MAANAIN_ADMIN_USER));
-        headers['x-user-data'] = userBase64;
-    }
+    // Usar JWT
+    const token = localStorage.getItem('maanain_admin_token');
+    const expiry = localStorage.getItem('maanain_admin_expiry');
     
-    // Fallback: usar token fixo para compatibilidade
-    headers['x-admin-token'] = 'maanain2026';
+    if (token && expiry && Date.now() < parseInt(expiry)) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
     
     // Adicionar Content-Type apenas se necessário (não para FormData)
     if (includeContentType) {

@@ -9,7 +9,11 @@
     "build": "echo 'Build completed - files are ready in public/'",
     "serve": "node server/app.js"
   },
-  "keywords": ["church", "website", "maanain"],
+  "keywords": [
+    "church",
+    "website",
+    "maanain"
+  ],
   "author": "MAANAIN",
   "license": "ISC",
   "dependencies": {
@@ -17,6 +21,7 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "express-rate-limit": "^7.1.5",
+    "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
     "sqlite3": "^5.0.2"
   }

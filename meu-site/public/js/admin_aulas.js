@@ -3,6 +3,22 @@ let aulas = [];
 let editingId = null;
 let aulaPdfPath = null; // Armazena o caminho do PDF
 
+// Função para obter headers com JWT
+function getAdminHeaders() {
+    const token = localStorage.getItem('maanain_admin_token');
+    const expiry = localStorage.getItem('maanain_admin_expiry');
+    
+    if (token && expiry && Date.now() < parseInt(expiry)) {
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    }
+    
+    // Fallback para requisições sem auth
+    return { 'Content-Type': 'application/json' };
+}
+
 // Carregar aulas ao iniciar
 document.addEventListener('DOMContentLoaded', () => {
     loadAulas();
@@ -32,7 +48,7 @@ async function loadAulas() {
     console.log('[DEBUG loadAulas] Carregando aulas...');
     try {
         const response = await fetch('/api/admin/aulas', {
-            headers: { 'x-admin-token': getAdminToken() }
+            headers: getAdminHeaders()
         });
         
         if (!response.ok) throw new Error('Erro ao carregar');
@@ -43,7 +59,7 @@ async function loadAulas() {
         renderAulas();
     } catch (error) {
         console.error('[DEBUG loadAulas] Erro:', error);
-        alert('Erro ao carregar aulas');
+        console.log('Aguardando login...');
     }
 }
 
@@ -354,10 +370,7 @@ async function handlePdfUpload(event) {
                 console.log('[DEBUG handlePdfUpload] Enviando para API...');
                 const response = await fetch('/api/admin/upload-pdf-base64', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-token': getAdminToken()
-                    },
+                    headers: getAdminHeaders(),
                     body: JSON.stringify({
                         data: e.target.result.split(',')[1], // Remove o prefixo data:application/pdf;base64,
                         filename: file.name
@@ -384,7 +397,7 @@ async function handlePdfUpload(event) {
                 alert('PDF enviado com sucesso!');
             } catch (error) {
                 console.error('[DEBUG handlePdfUpload] Erro upload PDF:', error);
-                alert('Erro ao enviar PDF. Faça login como admin.');
+                console.log('Aguardando login...');
             }
         };
         reader.readAsDataURL(file);
@@ -409,7 +422,7 @@ async function deleteAula(id) {
     try {
         const response = await fetch(`/api/admin/aulas/${id}`, {
             method: 'DELETE',
-            headers: { 'x-admin-token': getAdminToken() }
+            headers: getAdminHeaders()
         });
         
         if (!response.ok) throw new Error('Erro ao excluir');

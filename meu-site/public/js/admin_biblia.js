@@ -1,5 +1,20 @@
 // Funções para gerenciar tópicos bíblicos no admin
 
+// Função para obter headers com JWT
+function getAdminHeaders() {
+    const token = localStorage.getItem('maanain_admin_token');
+    const expiry = localStorage.getItem('maanain_admin_expiry');
+    
+    if (token && expiry && Date.now() < parseInt(expiry)) {
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    }
+    
+    return { 'Content-Type': 'application/json' };
+}
+
 // Carregar tópicos bíblicos
 async function carregarTopicosBiblia() {
     const loading = document.getElementById('loadingTopicos');
@@ -11,12 +26,8 @@ async function carregarTopicosBiblia() {
     lista.style.display = 'none';
     
     try {
-        const user = JSON.parse(localStorage.getItem('maanain_user') || '{}');
         const response = await fetch('/api/admin/topicos-biblia', {
-            headers: {
-                'x-admin-token': 'maanain2026',
-                'x-user-data': btoa(JSON.stringify(user))
-            }
+            headers: getAdminHeaders()
         });
         
         if (!response.ok) throw new Error('Erro ao carregar tópicos');
@@ -154,18 +165,13 @@ document.getElementById('btnSalvarTopico')?.addEventListener('click', async func
         return;
     }
     
-    const user = JSON.parse(localStorage.getItem('maanain_user') || '{}');
     const url = id ? `/api/admin/topicos-biblia/${id}` : '/api/admin/topicos-biblia';
     const method = id ? 'PUT' : 'POST';
     
     try {
         const response = await fetch(url, {
             method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-admin-token': 'maanain2026',
-                'x-user-data': btoa(JSON.stringify(user))
-            },
+            headers: getAdminHeaders(),
             body: JSON.stringify({ 
                 titulo, 
                 descricao, 
@@ -215,10 +221,7 @@ async function excluirTopico(id) {
         const user = JSON.parse(localStorage.getItem('maanain_user') || '{}');
         const response = await fetch(`/api/admin/topicos-biblia/${id}`, {
             method: 'DELETE',
-            headers: {
-                'x-admin-token': 'maanain2026',
-                'x-user-data': btoa(JSON.stringify(user))
-            }
+            headers: getAdminHeaders()
         });
         
         if (!response.ok) throw new Error('Erro ao excluir');

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Área do Membro - MAANAIN</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <!-- HEADER (IGUAL AO INDEX) -->
@@ -56,10 +56,63 @@
         </div>
     </section>
 
-    <!-- FOOTER (IGUAL AO INDEX) -->
-    <footer class="footer">
-        <p>MAANAIN © 2026 – Toda glória a Deus</p>
-        <p><a href="mailto:contato@maanain.com.br" style="color: white;">contato@maanain.com.br</a> | (XX) 9XXXX-XXXX</p>
+    <!-- Footer -->
+    <style>
+        .footer-novo {
+            background-color: #166534;
+            color: white;
+            padding: 2rem;
+        }
+        .footer-novo .logo {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .footer-novo .copyright {
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 1.5rem;
+        }
+        .footer-novo .icones {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .footer-novo .icones a {
+            color: white;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .footer-novo .icones a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+        @media (max-width: 768px) {
+            .footer-novo .icones {
+                justify-content: center;
+            }
+        }
+    </style>
+    <footer class="footer-novo">
+        <div class="logo">MAANAIN</div>
+        <div class="copyright">© 2026 - Toda glória a Deus</div>
+        <div class="icones">
+            <a href="https://www.instagram.com/maanaim_ig" target="_blank" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://linktr.ee/igrejamaanaimrestauracao" target="_blank" title="Linktree">
+                <i class="fas fa-link"></i>
+            </a>
+            <a href="https://www.youtube.com/@IgrejaMaanaimalmtamandare" target="_blank" title="YouTube">
+                <i class="fab fa-youtube"></i>
+            </a>
+        </div>
     </footer>
 
     <script src="js/script.js"></script>

@@ -1,15 +1,16 @@
 // Service Worker otimizado para MAANAIN
 // Cache-first para estáticos, network-first para APIs
 
-const CACHE_NAME = 'maanain-v11';
-const STATIC_CACHE = 'maanain-static-v11';
-const DYNAMIC_CACHE = 'maanain-dynamic-v11';
+const CACHE_NAME = 'maanain-v14';
+const STATIC_CACHE = 'maanain-static-v14';
+const DYNAMIC_CACHE = 'maanain-dynamic-v14';
 
 // Recursos estáticos para cache (cache-first)
 const staticAssets = [
   '/',
   '/index.html',
-  '/css/styles.css?v=8',
+  '/css/styles.css?v=13',
+  '/js/admin-auth.js',
   '/css/admin.css',
   '/js/script.js',
   '/js/admin.js',
@@ -19,6 +20,7 @@ const staticAssets = [
   '/biblia.html',
   '/programacao.html',
   '/membro.html',
+  '/redefinir-senha.html',
   '/aulas.html',
   '/admin.html',
   '/favicon.ico'

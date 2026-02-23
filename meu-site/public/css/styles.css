@@ -25,7 +25,7 @@ body {
 
 /* HEADER MODERNO (como no mockup) */
 .header {
-    background: linear-gradient(135deg, var(--verde-principal) 0%, var(--verde-claro) 100%);
+    background: linear-gradient(135deg, #166534 0%, #166534 100%);
     color: white;
     padding: 1.5rem 2rem;
     text-align: center;

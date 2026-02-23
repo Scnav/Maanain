@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/admin-auth.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@300;400;500&display=swap');
         
@@ -359,6 +360,99 @@
     </script>
 </head>
 <body>
+    <!-- Tela de Login Admin (JWT) -->
+    <div id="login-screen" onclick="if(event.target === this) this.style.display = 'none'; window.location.href='index.html';" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
+        <div class="glass" onclick="event.stopPropagation()" style="padding: 40px; border-radius: 20px; max-width: 400px; width: 90%;">
+            <h2 style="text-align: center; margin-bottom: 30px;"><i class="fas fa-shield-alt" style="color: #ef4444;"></i> Login Admin</h2>
+            <p style="text-align: center; color: #888; margin-bottom: 20px;">Digite o token de acesso:</p>
+            <input type="password" id="admin-token-input" placeholder="Token admin" style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid #333; background: rgba(255,255,255,0.1); color: white; font-size: 16px; margin-bottom: 20px;">
+            <button onclick="performAdminLogin()" class="btn-primary" style="width: 100%; padding: 15px; border: none; color: white; cursor: pointer; font-size: 16px;">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+            <p id="login-error" style="text-align: center; color: #ef4444; margin-top: 15px; display: none;"></p>
+        </div>
+    </div>
+    
+    <script>
+        // Verificar autenticação ao carregar
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loginScreen = document.getElementById('login-screen');
+            const token = localStorage.getItem('maanain_admin_token');
+            const expiry = localStorage.getItem('maanain_admin_expiry');
+            
+            if (!token || !expiry || Date.now() > parseInt(expiry)) {
+                // Não está logado - mostrar tela de login
+                loginScreen.style.display = 'flex';
+            } else {
+                // Verificar token com servidor
+                try {
+                    const response = await fetch('/api/admin/verify', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) {
+                        loginScreen.style.display = 'flex';
+                    }
+                } catch (e) {
+                    loginScreen.style.display = 'flex';
+                }
+            }
+        });
+        
+        // Realizar login
+        async function performAdminLogin() {
+            const tokenInput = document.getElementById('admin-token-input');
+            const errorMsg = document.getElementById('login-error');
+            const token = tokenInput.value.trim();
+            
+            if (!token) {
+                errorMsg.textContent = 'Por favor, digite o token';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('maanain_admin_token', data.token);
+                    localStorage.setItem('maanain_admin_expiry', (Date.now() + (data.expiresIn * 1000)).toString());
+                    document.getElementById('login-screen').style.display = 'none';
+                    
+                    // Carregar dados após login bem-sucedido
+                    if (typeof carregarEstatisticas === 'function') carregarEstatisticas();
+                    if (typeof carregarUsuarios === 'function') carregarUsuarios();
+                    if (typeof loadAulas === 'function') loadAulas();
+                    if (typeof carregarAreaMembro === 'function') carregarAreaMembro();
+                    if (typeof carregarTopicosBiblia === 'function') carregarTopicosBiblia();
+                } else {
+                    errorMsg.textContent = data.error || 'Token inválido';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (e) {
+                errorMsg.textContent = 'Erro ao conectar com o servidor';
+                errorMsg.style.display = 'block';
+            }
+        }
+        
+        // Permite login com Enter
+        document.getElementById('admin-token-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performAdminLogin();
+        });
+        
+        // Logout
+        function logoutAdmin() {
+            localStorage.removeItem('maanain_admin_token');
+            localStorage.removeItem('maanain_admin_expiry');
+            location.reload();
+        }
+    </script>
+    
     <!-- Partículas de fundo -->
     <div class="particles" id="particles"></div>
     
@@ -369,6 +463,9 @@
                 <p class="subtitle">Painel Administrativo Completo</p>
             </div>
             <a href="index.html" class="back-btn">← Voltar ao Site</a>
+            <button onclick="logoutAdmin()" class="back-btn" style="margin-left: 10px; background: #dc2626;">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
         </div>
     </header>
 
@@ -914,18 +1011,27 @@
         }
     }
     </script>
-    <script src="js/admin_aulas.js?v=2"></script>
-    <script src="js/admin.js?v=9"></script>
-    <script src="js/admin_biblia.js?v=2"></script>
-    <script src="js/admin_area_membro.js?v=5"></script>
+    <script src="js/admin_aulas.js?v=7"></script>
+    <script src="js/admin.js?v=13"></script>
+    <script src="js/admin_biblia.js?v=6"></script>
+    <script src="js/admin_area_membro.js?v=8"></script>
     <script src="js/admin_cultos.js"></script>
     <script src="js/admin_inscricoes.js"></script>
     <script src="js/admin_mensagens.js"></script>
     <script>
     window.onload = function() {
-        // Carregar estatísticas ao iniciar
-        if (typeof carregarEstatisticas === 'function') carregarEstatisticas();
-        if (typeof carregarUsuarios === 'function') carregarUsuarios();
+        // Verificar se está logado antes de carregar dados
+        const token = localStorage.getItem('maanain_admin_token');
+        const expiry = localStorage.getItem('maanain_admin_expiry');
+        
+        if (token && expiry && Date.now() < parseInt(expiry)) {
+            // Carregar dados apenas se logado
+            if (typeof carregarEstatisticas === 'function') carregarEstatisticas();
+            if (typeof carregarUsuarios === 'function') carregarUsuarios();
+            if (typeof loadAulas === 'function') loadAulas();
+            if (typeof carregarAreaMembro === 'function') carregarAreaMembro();
+            if (typeof carregarTopicosBiblia === 'function') carregarTopicosBiblia();
+        }
     };
     </script>
     <script>

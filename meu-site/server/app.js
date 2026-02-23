@@ -5,6 +5,7 @@ const path = require("path");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
 const rateLimit = require("express-rate-limit");
+const jwt = require("jsonwebtoken");
 
 const PORT = process.env.PORT || 80;
 const DB_PATH = path.join(__dirname, "db.sqlite3");
@@ -13,11 +14,17 @@ const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
 // Token admin via variável de ambiente (seguro)
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'maanain2026';
 
+// Segredo JWT - fixo para manter sessões entre reinicializações
+const JWT_SECRET = process.env.JWT_SECRET || 'maanain_jwt_secret_2026_fixo';
+
+// Tempo de expiração do token (24 horas)
+const JWT_EXPIRES_IN = '24h';
+
 // Rate Limiter para login - proteção contra força bruta
 const loginRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
+    windowMs: 2 * 60 * 1000, // 2 minutos
     max: 5, // 5 tentativas
-    message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+    message: { error: 'Muitas tentativas de login. Tente novamente em 2 minutos.' },
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -447,30 +454,77 @@ app.post('/api/redefinir-senha', loginRateLimiter, async (req, res) => {
     }
 });
 
-// Middleware de autenticação admin
+// Middleware de autenticação admin com JWT (APENAS JWT - mais seguro)
 const verifyAdmin = (req, res, next) => {
-    const authHeader = req.headers['x-admin-token'];
-    const userData = req.headers['x-user-data'];
+    const authHeader = req.headers['authorization'];
     
-    // Verificar token admin (de variável de ambiente)
-    if (authHeader === ADMIN_TOKEN) {
-        return next();
+    // Verificar se tem token JWT
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ 
+            error: 'Token de autenticação não fornecido',
+            code: 'NO_TOKEN'
+        });
     }
     
-    // Verificar se tem dados de usuário válidos
-    if (userData) {
-        try {
-            const user = JSON.parse(Buffer.from(userData, 'base64').toString('utf-8'));
-            if (user && user.role === 'admin') {
-                return next();
-            }
-        } catch (e) {
-            // Invalid user data
+    const token = authHeader.substring(7); // Remove 'Bearer '
+    
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ 
+                error: 'Token expirado ou inválido. Faça login novamente.',
+                code: 'TOKEN_EXPIRED'
+            });
         }
+        
+        // Verificar se é token de admin
+        if (decoded.role === 'admin' || decoded.isAdmin === true) {
+            req.adminUser = decoded;
+            return next();
+        }
+        
+        return res.status(403).json({ error: 'Acesso não autorizado' });
+    });
+};
+
+// Endpoint de login admin (gera JWT)
+app.post('/api/admin/login', loginRateLimiter, (req, res) => {
+    const { token } = req.body;
+    
+    // Verificar o token admin
+    if (token === ADMIN_TOKEN) {
+        // Gerar JWT
+        const adminToken = jwt.sign(
+            {
+                id: 0,
+                role: 'admin',
+                isAdmin: true,
+                loginTime: new Date().toISOString()
+            },
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
+        );
+        
+        return res.json({
+            success: true,
+            token: adminToken,
+            expiresIn: 24 * 60 * 60, // 24 horas em segundos
+            message: 'Login admin realizado com sucesso'
+        });
     }
     
-    return res.status(403).json({ error: 'Acesso não autorizado' });
-};
+    return res.status(401).json({ 
+        success: false, 
+        error: 'Token admin inválido' 
+    });
+});
+
+// Endpoint para verificar se o token é válido
+app.get('/api/admin/verify', verifyAdmin, (req, res) => {
+    res.json({ 
+        valid: true, 
+        admin: req.adminUser 
+    });
+});
 
 // ✅ ADMIN ROUTES
 app.get('/api/admin/users', verifyAdmin, (req, res) => {
