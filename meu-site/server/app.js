@@ -1,4 +1,6 @@
-const sqlite3 = require("sqlite3").verbose();
+// Módulo de Banco de Dados - Suporta MySQL e SQLite
+const { initDatabase, db: dbWrapper, pool } = require('./database');
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -8,8 +10,7 @@ const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
 
 const PORT = process.env.PORT || 80;
-const DB_PATH = path.join(__dirname, "db.sqlite3");
-const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
+// const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
 
 // Token admin via variável de ambiente (seguro)
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'maanain2026';
@@ -41,19 +42,19 @@ const apiRateLimiter = rateLimit({
 // Variável global para verificar se o SQLite está pronto
 let bibliaSQLiteReady = false;
 
-// Conexão com banco da Bíblia (FTS5)
-const bibliaDb = new sqlite3.Database(BIBLIA_DB_PATH);
-
-// Verificar se o banco da bíblia está disponível
-bibliaDb.get("SELECT COUNT(*) as total FROM livros", (err, row) => {
-    if (!err && row && row.total > 0) {
-        bibliaSQLiteReady = true;
-        console.log(`✅ Bíblia SQLite carregada: ${row.total} livros`);
-    }
-});
+// Conexão com banco da Bíblia (FTS5) - será inicializada após o banco principal
+let bibliaDb = null;
 
 const app = express();
-const db = new sqlite3.Database(DB_PATH);
+
+// Usar o wrapper de banco de dados (suporta MySQL e SQLite)
+const db = require('./database').db;
+
+// Inicializar banco de dados e depois configurar o servidor
+async function startServer() {
+    try {
+        const { isMySQL } = require('./database');
+        console.log(`🔄 Banco de dados inicializado (MySQL: ${isMySQL()})`);
 
 // Middleware - não processar JSON para FormData
 const jsonMiddleware = express.json({ limit: '50mb' });
@@ -810,7 +811,7 @@ app.post('/api/admin/gallery', verifyAdmin, (req, res) => {
     const url = '/uploads/' + newFilename;
     
     // Salvar arquivo
-    const uploadsDir = path.join(__dirname, '../public/uploads');
+    const uploadsDir = path.join(__dirname, '../uploads');
     const fs = require('fs');
     
     if (!fs.existsSync(uploadsDir)) {
@@ -851,7 +852,7 @@ app.delete('/api/admin/gallery/:id', verifyAdmin, (req, res) => {
         if (!row) return res.status(404).json({ error: 'Imagem não encontrada' });
         
         // Excluir arquivo
-        const filepath = path.join(__dirname, '../public/uploads/', row.filename);
+        const filepath = path.join(__dirname, '../uploads/', row.filename);
         if (fs.existsSync(filepath)) {
             fs.unlinkSync(filepath);
         }
@@ -1636,7 +1637,7 @@ app.get('/api/biblia/autocomplete', (req, res) => {
 const multer = require('multer');
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const dir = path.join(__dirname, '..', 'public', 'uploads', 'pdfs');
+        const dir = path.join(__dirname, '..', 'uploads', 'pdfs');
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -1689,7 +1690,7 @@ app.post('/api/admin/upload-pdf-base64', verifyAdmin, (req, res) => {
         const savedFilename = uniqueSuffix + '.' + ext;
         
         // Salvar arquivo
-        const dir = path.join(__dirname, '..', 'public', 'uploads', 'pdfs');
+        const dir = path.join(__dirname, '..', 'uploads', 'pdfs');
         if (!fs.existsSync(dir)) {
             console.log('[DEBUG API] Criando diretório:', dir);
             fs.mkdirSync(dir, { recursive: true });
@@ -1833,9 +1834,23 @@ app.post('/api/aulas/:id/views', (req, res) => {
 });
 
 // ✅ Static files (SEMPRE POR ÚLTIMO)
-app.use("/", express.static(path.join(__dirname, "../public")));
+app.use("/", express.static(path.join(__dirname, "./public")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-app.listen(PORT, () => {
-    console.log(`✅ MAANAIN Server: http://localhost:${PORT}`);
-    
+// Middleware de erro para retornar JSON
+app.use((err, req, res, next) => {
+    console.error('Erro:', err);
+    res.status(500).json({ error: err.message || 'Erro interno do servidor' });
+});
+
+// Iniciar o servidor - primeiro inicializar o banco de dados
+const { initDatabase } = require('./database');
+
+initDatabase().then(() => {
+    app.listen(PORT, () => {
+        console.log(`✅ MAANAIN Server: http://localhost:${PORT}`);
+    });
+}).catch(err => {
+    console.error('❌ Erro ao iniciar banco de dados:', err);
+    process.exit(1);
 });

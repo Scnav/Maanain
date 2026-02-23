@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "Site da Igreja MAANAIN",
   "main": "index.js",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "start": "node server/app.js",
     "dev": "node server/app.js",
-    "build": "echo 'Build completed - files are ready in public/'",
+    "build": "echo 'Build completed - files are ready in root directory'",
     "serve": "node server/app.js"
   },
   "keywords": [
@@ -23,6 +26,6 @@
     "express-rate-limit": "^7.1.5",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
-    "sqlite3": "^5.0.2"
+    "mysql2": "^3.18.0"
   }
 }
