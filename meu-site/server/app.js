@@ -131,10 +131,16 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             titulo TEXT NOT NULL,
             data TEXT NOT NULL,
+            horario TEXT,
             local TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+    
+    // Adicionar coluna horario se não existir (para banco existentes)
+    db.run("ALTER TABLE eventos ADD COLUMN horario TEXT", (err) => {
+        // Ignora erro se coluna já existe
+    });
 
     db.run(`
         CREATE TABLE IF NOT EXISTS page_content (
@@ -626,22 +632,22 @@ app.get('/api/admin/eventos', verifyAdmin, (req, res) => {
 });
 
 app.post('/api/admin/eventos', verifyAdmin, (req, res) => {
-    const { titulo, data, local } = req.body;
+    const { titulo, data, horario, local } = req.body;
     if (!titulo || !data) {
         return res.status(400).json({ error: 'Título e data obrigatórios' });
     }
 
-    db.run("INSERT INTO eventos (titulo, data, local) VALUES (?, ?, ?)", [titulo, data, local || null], function(err) {
+    db.run("INSERT INTO eventos (titulo, data, horario, local) VALUES (?, ?, ?, ?)", [titulo, data, horario || null, local || null], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: this.lastID, titulo, data, local, created_at: new Date().toISOString() });
+        res.status(201).json({ id: this.lastID, titulo, data, horario, local, created_at: new Date().toISOString() });
     });
 });
 
 app.put('/api/admin/eventos/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
-    const { titulo, data, local } = req.body;
+    const { titulo, data, horario, local } = req.body;
 
-    db.run("UPDATE eventos SET titulo = ?, data = ?, local = ? WHERE id = ?", [titulo, data, local, id], function(err) {
+    db.run("UPDATE eventos SET titulo = ?, data = ?, horario = ?, local = ? WHERE id = ?", [titulo, data, horario, local, id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Evento não encontrado' });
         res.json({ message: 'Evento atualizado' });
@@ -716,11 +722,7 @@ app.get('/api/admin/page-content', verifyAdmin, (req, res) => {
     });
 });
 
-app.put('/api/admin/page-content/:section', (req, res) => {
-    if (req.headers['x-admin-token'] !== 'maanain2026') {
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-
+app.put('/api/admin/page-content/:section', verifyAdmin, (req, res) => {
     const { section } = req.params;
     const { title, content, link, image } = req.body;
 
@@ -948,6 +950,97 @@ app.get('/api/youtube-live', async (req, res) => {
         });
     } catch (error) {
         res.json({ isLive: false, video: null });
+    }
+});
+
+// Endpoint para buscar o último vídeo uploadado do canal
+app.get('/api/youtube/latest', async (req, res) => {
+    try {
+        // Buscar configuração do canal
+        db.get("SELECT channel_id FROM youtube_config WHERE id = 1", async (err, config) => {
+            if (err || !config || !config.channel_id) {
+                return res.json({ video: null, message: 'Canal não configurado' });
+            }
+            
+            const channelId = config.channel_id.trim();
+            console.log('Buscando último vídeo para canal:', channelId);
+            
+            // Primeiro tenta buscar live atual
+            const liveUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
+            
+            try {
+                const liveResponse = await fetch(liveUrl);
+                const liveData = await liveResponse.json();
+                
+                // Se tem live agora, retorna
+                if (liveData.items && liveData.items.length > 0) {
+                    const video = liveData.items[0];
+                    res.json({
+                        video: {
+                            videoId: video.id.videoId,
+                            title: video.snippet.title,
+                            description: video.snippet.description,
+                            thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                            channelTitle: video.snippet.channelTitle,
+                            publishedAt: video.snippet.publishedAt,
+                            isLive: true
+                        }
+                    });
+                    return;
+                }
+                
+                // Se não tem live, buscar última transmissão (broadcast completed)
+                const broadcastUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=completed&type=video&maxResults=1&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
+                
+                const broadcastResponse = await fetch(broadcastUrl);
+                const broadcastData = await broadcastResponse.json();
+                
+                if (broadcastData.items && broadcastData.items.length > 0) {
+                    const video = broadcastData.items[0];
+                    res.json({
+                        video: {
+                            videoId: video.id.videoId,
+                            title: video.snippet.title,
+                            description: video.snippet.description,
+                            thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                            channelTitle: video.snippet.channelTitle,
+                            publishedAt: video.snippet.publishedAt,
+                            isLive: false
+                        }
+                    });
+                    return;
+                }
+                
+                // Se não tem broadcast, buscar último vídeo normal
+                const videoUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=1&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
+                
+                const videoResponse = await fetch(videoUrl);
+                const videoData = await videoResponse.json();
+                
+                if (videoData.items && videoData.items.length > 0) {
+                    const video = videoData.items[0];
+                    res.json({
+                        video: {
+                            videoId: video.id.videoId,
+                            title: video.snippet.title,
+                            description: video.snippet.description,
+                            thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
+                            channelTitle: video.snippet.channelTitle,
+                            publishedAt: video.snippet.publishedAt,
+                            isLive: false
+                        }
+                    });
+                    return;
+                }
+                
+                res.json({ video: null, message: 'Nenhum vídeo encontrado' });
+            } catch (apiError) {
+                console.error('YouTube API error:', apiError);
+                res.json({ video: null, error: apiError.message });
+            }
+        });
+    } catch (error) {
+        res.json({ video: null, error: error.message });
     }
 });
 
@@ -1200,8 +1293,16 @@ app.get('/api/noticias', (req, res) => {
 });
 
 app.get('/api/eventos', (req, res) => {
-    db.all("SELECT id, titulo, data, local, created_at FROM eventos WHERE data >= datetime('now') ORDER BY data ASC", (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    console.log('[DEBUG] GET /api/eventos - Buscando eventos');
+    db.all("SELECT id, titulo, data, horario, local, created_at FROM eventos WHERE data >= datetime('now') ORDER BY data ASC", (err, rows) => {
+        if (err) {
+            console.log('[DEBUG] ERRO ao buscar eventos:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log('[DEBUG] Eventos encontrados:', rows.length);
+        if (rows.length > 0) {
+            console.log('[DEBUG] Primeiro evento:', JSON.stringify(rows[0]));
+        }
         res.json(rows);
     });
 });

@@ -338,7 +338,7 @@ function criarItemEvento(evento) {
     return `
         <div style="background: white; border: 1px solid #eee; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem;">
             <h4 style="margin: 0 0 1rem 0; color: #dc3545;">${evento.titulo}</h4>
-            <p style="margin: 0 0 0.5rem 0; color: #666;"><strong>Data:</strong> ${new Date(evento.data).toLocaleString('pt-BR')}</p>
+            <p style="margin: 0 0 0.5rem 0; color: #666;"><strong>Data:</strong> ${new Date(evento.data).toLocaleString('pt-BR')}${evento.horario ? ' às ' + evento.horario : ''}</p>
             ${evento.local ? `<p style="margin: 0 0 1rem 0; color: #666;"><strong>Local:</strong> ${evento.local}</p>` : ''}
             <small style="color: #999;">Criado em: ${new Date(evento.created_at).toLocaleString('pt-BR')}</small>
             <div style="margin-top: 1rem;">
@@ -354,6 +354,7 @@ function mostrarFormEvento(evento = null) {
     const id = document.getElementById('eventoId');
     const titulo = document.getElementById('eventoTitulo');
     const data = document.getElementById('eventoData');
+    const horario = document.getElementById('eventoHorario');
     const local = document.getElementById('eventoLocal');
 
     if (evento) {
@@ -361,12 +362,14 @@ function mostrarFormEvento(evento = null) {
         id.value = evento.id;
         titulo.value = evento.titulo;
         data.value = new Date(evento.data).toISOString().slice(0, 16);
+        horario.value = evento.horario || '';
         local.value = evento.local || '';
     } else {
         title.textContent = 'Novo Evento';
         id.value = '';
         titulo.value = '';
         data.value = '';
+        horario.value = '';
         local.value = '';
     }
 
@@ -381,6 +384,7 @@ async function salvarEvento() {
     const id = document.getElementById('eventoId').value;
     const titulo = document.getElementById('eventoTitulo').value;
     const data = document.getElementById('eventoData').value;
+    const horario = document.getElementById('eventoHorario').value;
     const local = document.getElementById('eventoLocal').value;
 
     if (!titulo || !data) {
@@ -398,7 +402,7 @@ async function salvarEvento() {
                 'Content-Type': 'application/json',
                 ...getAdminHeaders()
             },
-            body: JSON.stringify({ titulo, data, local })
+            body: JSON.stringify({ titulo, data, horario, local })
         });
 
         if (!response.ok) throw new Error('Erro ao salvar evento');

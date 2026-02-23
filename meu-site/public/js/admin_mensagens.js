@@ -47,7 +47,6 @@ async function carregarMensagens() {
 function abrirFormMensagem() {
     document.getElementById('mensagemId').value = '';
     document.getElementById('mensagemTitulo').value = '';
-    document.getElementById('mensagemConteudo').value = '';
     document.getElementById('mensagemVideo').value = '';
     document.getElementById('mensagemAtiva').checked = true;
     document.getElementById('formMensagemTitle').textContent = 'Nova Mensagem';

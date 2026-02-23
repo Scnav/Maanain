@@ -283,16 +283,33 @@ async function carregarNoticias() {
 // Função para carregar eventos
 async function carregarEventos() {
     try {
+        console.log('[DEBUG JS] Carregando eventos...');
+        
         // Buscar eventos especiais e cultos semanais em paralelo
         const [eventosResp, cultosResp] = await Promise.all([
             fetch('/api/eventos'),
-            fetch('/api/cultos')
+            fetch('/api/cultos').catch(() => ({ ok: true, json: () => [] })) // Fallback se falhar
         ]);
         
-        if (!eventosResp.ok || !cultosResp.ok) throw new Error('Erro ao carregar eventos');
+        if (!eventosResp.ok) throw new Error('Erro ao carregar eventos');
         
-        const eventos = await eventosResp.json();
-        const cultos = await cultosResp.json();
+        let eventos = await eventosResp.json();
+        const cultos = cultosResp.ok ? await cultosResp.json() : [];
+
+        console.log('[DEBUG JS] Eventos recebidos:', eventos);
+        console.log('[DEBUG JS] Cultos recebidos:', cultos);
+
+        // Processar eventos para extrair horario da data se necessário
+        eventos = eventos.map(evento => {
+            if (!evento.horario && evento.data) {
+                // Extrair hora do campo data (formato: 2026-03-21T22:00)
+                const horaExtraida = evento.data.split('T')[1];
+                if (horaExtraida) {
+                    evento.horario = horaExtraida.substring(0, 5); // Pega HH:MM
+                }
+            }
+            return evento;
+        });
 
         // Carregar eventos no index (resumo)
         const containerIndex = document.getElementById('eventosContainer');
@@ -309,7 +326,11 @@ async function carregarEventos() {
             // Adicionar eventos especiais
             if (eventos.length > 0) {
                 eventos.slice(0, 2).forEach(evento => {
-                    html += `<p><strong>${evento.titulo}</strong><br>${new Date(evento.data).toLocaleDateString('pt-BR')} ${evento.local ? '- ' + evento.local : ''}</p>`;
+                    // Extrair a data diretamente da string ISO sem conversão de fuso horário
+                    const dataPart = evento.data.split('T')[0];
+                    const [ano, mes, dia] = dataPart.split('-');
+                    const dataFormatada = `${dia}/${mes}/${ano}`;
+                    html += `<p><strong>${evento.titulo}</strong><br>${dataFormatada}${evento.horario ? ' às ' + evento.horario : ''} ${evento.local ? '- ' + evento.local : ''}</p>`;
                 });
             }
             
@@ -326,19 +347,24 @@ async function carregarEventos() {
             if (eventos.length === 0) {
                 containerProgramacao.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; grid-column: 1 / -1;">Nenhum evento especial programado.</p>';
             } else {
-                containerProgramacao.innerHTML = eventos.map(evento => `
+                containerProgramacao.innerHTML = eventos.map(evento => {
+                    // Extrair a data diretamente da string ISO sem conversão de fuso horário
+                    const dataPart = evento.data.split('T')[0];
+                    const [ano, mes, dia] = dataPart.split('-');
+                    const dataFormatada = new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    return `
                     <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
                         <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
                             <i class="fas fa-calendar-alt"></i>
                         </div>
                         <h4>${evento.titulo}</h4>
                         <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
-                            ${new Date(evento.data).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            ${dataFormatada}${evento.horario ? ' às ' + evento.horario : ''}
                         </p>
                         <p>${evento.local || 'Local a definir'}</p>
                         <button onclick="abrirInscricao(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" style="background: var(--verde-principal); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; margin-top: 1rem;">📝 Inscrever-se</button>
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
 
@@ -367,10 +393,8 @@ async function carregarConteudosPaginaInicial() {
         // Atualizar Hero
         const heroTitle = document.getElementById('heroTitle');
         const heroSubtitle = document.getElementById('heroSubtitle');
-        const heroImage = document.getElementById('heroImage');
         if (heroTitle && conteudos.hero?.title) heroTitle.textContent = conteudos.hero.title;
         if (heroSubtitle && conteudos.hero?.content) heroSubtitle.textContent = conteudos.hero.content;
-        if (heroImage && conteudos.hero?.image) heroImage.src = conteudos.hero.image;
 
         // Atualizar Sobre
         const sobreTitle = document.getElementById('sobreTitle');
@@ -460,12 +484,38 @@ async function carregarCultos() {
 
 // Carregar mensagens na página inicial
 async function carregarMensagensHome() {
+    const container = document.getElementById('mensagensHomeContainer');
+    if (!container) return;
+    
     try {
+        // Primeiro tenta buscar do YouTube (último vídeo)
+        const youtubeResponse = await fetch('/api/youtube/latest');
+        const youtubeData = await youtubeResponse.json();
+        
+        // Se tem vídeo do YouTube, mostrar
+        if (youtubeData && youtubeData.video) {
+            const video = youtubeData.video;
+            const thumbnailUrl = video.thumbnail;
+            container.innerHTML = `
+                <div class="mensagem-video-container" style="margin-top: 1rem;">
+                    ${thumbnailUrl ? `
+                        <a href="https://www.youtube.com/watch?v=${video.videoId}" target="_blank" style="display: block; position: relative;">
+                            <img src="${thumbnailUrl}" alt="${video.title}" style="width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,0,0,0.9); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-play" style="color: white; font-size: 1.5rem; margin-left: 4px;"></i>
+                            </div>
+                        </a>
+                    ` : ''}
+                    ${video.title ? `<h5 style="margin-top: 1rem; margin-bottom: 0;">${video.title}</h5>` : ''}
+                </div>
+            `;
+            return;
+        }
+        
+        // Se não tem YouTube (erro ou sem vídeo), buscar do banco de mensagens
+        console.log('YouTube não disponível, buscando do banco de mensagens...');
         const response = await fetch('/api/mensagens');
         const mensagens = await response.json();
-        
-        const container = document.getElementById('mensagensHomeContainer');
-        if (!container) return;
         
         // A API já retorna ordenado por data (mais recente primeiro) e só msgs ativas
         const msg = mensagens[0]; // Pegar a mais recente
