@@ -435,9 +435,10 @@ async function deleteAula(id) {
     }
 }
 
-function getAdminToken() {
-    return localStorage.getItem('adminToken') || 'maanaim2026';
-}
+// Função movida para admin-auth.js - não sobrescrever
+// function getAdminToken() {
+//     return localStorage.getItem('adminToken') || 'maanaim2026';
+// }
 
 function extractVideoId(url) {
     const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);

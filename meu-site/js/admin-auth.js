@@ -16,22 +16,37 @@ function getAdminToken() {
     const token = localStorage.getItem(ADMIN_TOKEN_KEY);
     const expiry = localStorage.getItem(ADMIN_EXPIRY_KEY);
     
+    console.log('[AUTH JS] getAdminToken chamado - token:', token ? 'existe' : 'não existe', '- expiry:', expiry ? 'existe' : 'não existe');
+    
     if (!token || !expiry) {
+        console.log('[AUTH JS] Sem token ou expiry, retornando null');
+        return null;
+    }
+    
+    // Verificar se é um JWT válido (começa com "eyJ")
+    // Se não for, limpar e retornar null
+    if (!token.startsWith('eyJ')) {
+        console.log('[AUTH JS] Token inválido detectado (não começa com eyJ), limpando...');
+        clearAdminToken();
         return null;
     }
     
     // Verificar se expirou
     if (Date.now() > parseInt(expiry)) {
+        console.log('[AUTH JS] Token expirado, limpando...');
         clearAdminToken();
         return null;
     }
     
+    console.log('[AUTH JS] Token válido, retornando');
     return token;
 }
 
 // Verificar se está logado como admin
 function isAdminLoggedIn() {
-    return getAdminToken() !== null;
+    const loggedIn = getAdminToken() !== null;
+    console.log('[AUTH JS] isAdminLoggedIn chamado, resultado:', loggedIn);
+    return loggedIn;
 }
 
 // Limpar token (logout)
@@ -41,14 +56,14 @@ function clearAdminToken() {
 }
 
 // Fazer login admin
-async function adminLogin(token) {
+async function adminLogin(username, password) {
     try {
         const response = await fetch('/api/admin/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ token: token })
+            body: JSON.stringify({ username, password })
         });
         
         const data = await response.json();
@@ -94,9 +109,8 @@ function getAdminHeaders() {
             'Content-Type': 'application/json'
         };
     }
-    // Fallback para token antigo (manter compatibilidade)
+    // Sem token - não usar fallback
     return {
-        'x-admin-token': 'maanaim2026',
         'Content-Type': 'application/json'
     };
 }

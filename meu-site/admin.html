@@ -14,14 +14,19 @@
     <script>
         // Verificar autenticação ao carregar
         document.addEventListener('DOMContentLoaded', async function() {
-            // Se não estiver logado, redirecionar para login
+            console.log('[ADMIN HTML] DOMContentLoaded disparado');
+            
+            // Se não estiver logado, mostrar tela de login do admin
             if (!isAdminLoggedIn()) {
-                window.location.href = 'login.html';
+                console.log('[ADMIN HTML] Não está logado, mostrando tela de login');
+                document.getElementById('login-screen').style.display = 'flex';
                 return;
             }
             
+            console.log('[ADMIN HTML] Está logado, verificando token com servidor...');
             // Verificar token com servidor
             const isValid = await verifyAdminToken();
+            console.log('[ADMIN HTML] Token verificado, resultado:', isValid);
             if (!isValid) {
                 adminLogout();
                 return;
@@ -379,12 +384,13 @@
     </script>
 </head>
 <body>
-    <!-- Tela de Login Admin (JWT) -->
+    <!-- Tela de Login Admin (usuário e senha) -->
     <div id="login-screen" onclick="if(event.target === this) this.style.display = 'none'; window.location.href='index.html';" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
         <div class="glass" onclick="event.stopPropagation()" style="padding: 40px; border-radius: 20px; max-width: 400px; width: 90%;">
             <h2 style="text-align: center; margin-bottom: 30px;"><i class="fas fa-shield-alt" style="color: #ef4444;"></i> Login Admin</h2>
-            <p style="text-align: center; color: #888; margin-bottom: 20px;">Digite o token de acesso:</p>
-            <input type="password" id="admin-token-input" placeholder="Token admin" style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid #333; background: rgba(255,255,255,0.1); color: white; font-size: 16px; margin-bottom: 20px;">
+            <p style="text-align: center; color: #888; margin-bottom: 20px;">Digite seu usuário e senha:</p>
+            <input type="text" id="admin-username-input" placeholder="Usuário" style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid #333; background: rgba(255,255,255,0.1); color: white; font-size: 16px; margin-bottom: 15px;">
+            <input type="password" id="admin-password-input" placeholder="Senha" style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid #333; background: rgba(255,255,255,0.1); color: white; font-size: 16px; margin-bottom: 20px;">
             <button onclick="performAdminLogin()" class="btn-primary" style="width: 100%; padding: 15px; border: none; color: white; cursor: pointer; font-size: 16px;">
                 <i class="fas fa-sign-in-alt"></i> Entrar
             </button>
@@ -419,12 +425,14 @@
         
         // Realizar login
         async function performAdminLogin() {
-            const tokenInput = document.getElementById('admin-token-input');
+            const usernameInput = document.getElementById('admin-username-input');
+            const passwordInput = document.getElementById('admin-password-input');
             const errorMsg = document.getElementById('login-error');
-            const token = tokenInput.value.trim();
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
             
-            if (!token) {
-                errorMsg.textContent = 'Por favor, digite o token';
+            if (!username || !password) {
+                errorMsg.textContent = 'Por favor, digite usuário e senha';
                 errorMsg.style.display = 'block';
                 return;
             }
@@ -433,7 +441,7 @@
                 const response = await fetch('/api/admin/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: token })
+                    body: JSON.stringify({ username: username, password: password })
                 });
                 
                 const data = await response.json();
@@ -450,7 +458,7 @@
                     if (typeof carregarAreaMembro === 'function') carregarAreaMembro();
                     if (typeof carregarTopicosBiblia === 'function') carregarTopicosBiblia();
                 } else {
-                    errorMsg.textContent = data.error || 'Token inválido';
+                    errorMsg.textContent = data.error || 'Login inválido';
                     errorMsg.style.display = 'block';
                 }
             } catch (e) {
@@ -460,7 +468,7 @@
         }
         
         // Permite login com Enter
-        document.getElementById('admin-token-input').addEventListener('keypress', (e) => {
+        document.getElementById('admin-password-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') performAdminLogin();
         });
         
@@ -1023,18 +1031,10 @@
     </div>
 
     <script>
-    // Verificar se o usuário é admin antes de carregar a página
-    const userData = localStorage.getItem('maanaim_user');
-    if (!userData) {
-        window.location.href = 'login.html';
-    } else {
-        const user = JSON.parse(userData);
-        if (user.role !== 'admin') {
-            window.location.href = 'index.html';
-        }
-    }
+    // O sistema de autenticação já é tratado pelo código acima
+    // que verifica isAdminLoggedIn() e mostra a tela de login se necessário
     </script>
-    <script src="js/admin_aulas.js?v=7"></script>
+    <script src="js/admin_aulas.js?v=8"></script>
     <script src="js/admin.js?v=13"></script>
     <script src="js/admin_biblia.js?v=6"></script>
     <script src="js/admin_area_membro.js?v=8"></script>

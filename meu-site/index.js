@@ -298,36 +298,68 @@ const verifyAdmin = (req, res, next) => {
     });
 };
 
-// Endpoint de login admin (gera JWT)
+// Endpoint de login admin (gera JWT usando username e password)
 app.post('/api/admin/login', loginRateLimiter, (req, res) => {
-    const { token } = req.body;
+    const { username, password } = req.body;
     
-    // Verificar o token admin
-    if (token === ADMIN_TOKEN) {
-        // Gerar JWT
-        const adminToken = jwt.sign(
-            {
-                id: 0,
-                role: 'admin',
-                isAdmin: true,
-                loginTime: new Date().toISOString()
-            },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
-        );
-        
-        return res.json({
-            success: true,
-            token: adminToken,
-            expiresIn: 24 * 60 * 60, // 24 horas em segundos
-            message: 'Login admin realizado com sucesso'
+    if (!username || !password) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'Usuário e senha são obrigatórios' 
         });
     }
     
-    return res.status(401).json({ 
-        success: false, 
-        error: 'Token admin inválido' 
-    });
+    // Buscar usuário no banco
+    db.get(
+        "SELECT id, username, email, password_hash, role FROM users WHERE username = ?",
+        [username],
+        (err, row) => {
+            if (err || !row) {
+                return res.status(401).json({ 
+                    success: false, 
+                    error: 'Usuário ou senha inválidos' 
+                });
+            }
+            
+            // Verificar se é admin
+            if (row.role !== 'admin') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'Acesso restrito a administradores' 
+                });
+            }
+            
+            // Verificar senha
+            bcrypt.compare(password, row.password_hash, (err, valid) => {
+                if (err || !valid) {
+                    return res.status(401).json({ 
+                        success: false, 
+                        error: 'Usuário ou senha inválidos' 
+                    });
+                }
+                
+                // Gerar JWT
+                const adminToken = jwt.sign(
+                    {
+                        id: row.id,
+                        username: row.username,
+                        role: 'admin',
+                        isAdmin: true,
+                        loginTime: new Date().toISOString()
+                    },
+                    JWT_SECRET,
+                    { expiresIn: JWT_EXPIRES_IN }
+                );
+                
+                return res.json({
+                    success: true,
+                    token: adminToken,
+                    expiresIn: 24 * 60 * 60, // 24 horas em segundos
+                    message: 'Login admin realizado com sucesso'
+                });
+            });
+        }
+    );
 });
 
 // Endpoint para verificar se o token é válido
