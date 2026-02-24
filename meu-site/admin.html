@@ -11,6 +11,25 @@
     <link rel="stylesheet" href="css/admin.css?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/admin-auth.js"></script>
+    <script>
+        // Verificar autenticação ao carregar
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Se não estiver logado, redirecionar para login
+            if (!isAdminLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Verificar token com servidor
+            const isValid = await verifyAdminToken();
+            if (!isValid) {
+                adminLogout();
+                return;
+            }
+            
+            console.log('Admin autenticado com sucesso');
+        });
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@300;400;500&display=swap');
         
