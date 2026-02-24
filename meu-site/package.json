@@ -10,7 +10,7 @@
     "start": "node index.js",
     "dev": "node index.js",
     "build": "echo 'Build completed - files are ready in root directory'",
-    "serve": "node server/app.js"
+    "serve": "node index.js"
   },
   "keywords": [
     "church",
@@ -22,7 +22,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
-    "express": "^5.2.1",
+    "express": "^4.21.0",
     "express-rate-limit": "^7.1.5",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",

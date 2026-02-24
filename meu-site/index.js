@@ -9,7 +9,7 @@ const fs = require("fs");
 const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 3000;
 // const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
 
 // Token admin via variável de ambiente (seguro)
@@ -53,16 +53,18 @@ const db = require('./database').db;
 // Inicializar banco de dados e depois configurar o servidor
 async function startServer() {
     try {
+        // Inicializar o banco de dados
+        await initDatabase();
         const { isMySQL } = require('./database');
         console.log(`🔄 Banco de dados inicializado (MySQL: ${isMySQL()})`);
 
-// Middleware - não processar JSON para FormData
-const jsonMiddleware = express.json({ limit: '50mb' });
-app.use((req, res, next) => {
-    if (req.method === 'POST' || req.method === 'PUT') {
-        const contentType = req.headers['content-type'] || '';
-        if (contentType.includes('multipart/form-data')) {
-            // Não usar express.json para FormData, deixe o multer tratar
+        // Middleware - não processar JSON para FormData
+        const jsonMiddleware = express.json({ limit: '50mb' });
+        app.use((req, res, next) => {
+            if (req.method === 'POST' || req.method === 'PUT') {
+                const contentType = req.headers['content-type'] || '';
+                if (contentType.includes('multipart/form-data')) {
+                    // Não usar express.json para FormData, deixe o multer tratar
             return next();
         }
     }
@@ -1854,14 +1856,17 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message || 'Erro interno do servidor' });
 });
 
-// Iniciar o servidor - primeiro inicializar o banco de dados
-const { initDatabase } = require('./database');
+        // Iniciar o servidor HTTP
+        app.listen(PORT, () => {
+            console.log(`✅ MAANAIN Server rodando na porta ${PORT}`);
+        });
+    } catch (err) {
+        console.error('❌ Erro ao iniciar servidor:', err);
+        // Iniciar servidor mesmo sem banco para debug
+        app.listen(PORT, () => {
+            console.log(`⚠️ MAANAIN Server rodando SEM banco de dados na porta ${PORT}`);
+        });
+    }
+} // fecha a função startServer
 
-initDatabase().then(() => {
-    app.listen(PORT, () => {
-        console.log(`✅ MAANAIN Server: http://localhost:${PORT}`);
-    });
-}).catch(err => {
-    console.error('❌ Erro ao iniciar banco de dados:', err);
-    process.exit(1);
-});
+startServer(); // chamar a função startServer
