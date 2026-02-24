@@ -1,5 +1,5 @@
-// Módulo de Banco de Dados - Suporta MySQL e SQLite
-const { initDatabase, db: dbWrapper, pool } = require('./database');
+// Módulo de Banco de Dados MySQL
+const { initDatabase, db, getPool, isMySQL } = require('./database');
 
 const express = require("express");
 const cors = require("cors");
@@ -47,15 +47,11 @@ let bibliaDb = null;
 
 const app = express();
 
-// Usar o wrapper de banco de dados (suporta MySQL e SQLite)
-const db = require('./database').db;
-
 // Inicializar banco de dados e depois configurar o servidor
 async function startServer() {
     try {
         // Inicializar o banco de dados
         await initDatabase();
-        const { isMySQL } = require('./database');
         console.log(`🔄 Banco de dados inicializado (MySQL: ${isMySQL()})`);
 
         // Middleware - não processar JSON para FormData
@@ -65,14 +61,14 @@ async function startServer() {
                 const contentType = req.headers['content-type'] || '';
                 if (contentType.includes('multipart/form-data')) {
                     // Não usar express.json para FormData, deixe o multer tratar
-            return next();
-        }
-    }
-    jsonMiddleware(req, res, next);
-});
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+                    return next();
+                }
+            }
+            jsonMiddleware(req, res, next);
+        });
+        app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// CORS - permitir todas as origens para desenvolvimento
+        // CORS - permitir todas as origens para desenvolvimento
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -106,220 +102,6 @@ app.use((req, res, next) => {
         res.set('Cache-Control', 'public, max-age=3600');
     }
     next();
-});
-
-// ✅ Tabelas
-db.serialize(() => {
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT,
-            password_hash TEXT NOT NULL,
-            role TEXT DEFAULT 'frequentador'
-        )
-    `);
-
-    db.run(`
-        CREATE TABLE IF NOT EXISTS noticias (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            conteudo TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    db.run(`
-        CREATE TABLE IF NOT EXISTS eventos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            data TEXT NOT NULL,
-            horario TEXT,
-            local TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-    
-    // Adicionar coluna horario se não existir (para banco existentes)
-    db.run("ALTER TABLE eventos ADD COLUMN horario TEXT", (err) => {
-        // Ignora erro se coluna já existe
-    });
-
-    db.run(`
-        CREATE TABLE IF NOT EXISTS page_content (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            section TEXT UNIQUE NOT NULL,
-            title TEXT,
-            content TEXT,
-            link TEXT,
-            image TEXT,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Adicionar coluna 'link' se não existir (para bancos de dados antigos)
-    db.run(`ALTER TABLE page_content ADD COLUMN link TEXT`, (err) => {
-        // Ignorar erro se a coluna já existe
-    });
-
-    // Adicionar coluna 'image' se não existir (para bancos de dados antigos)
-    db.run(`ALTER TABLE page_content ADD COLUMN image TEXT`, (err) => {
-        // Ignorar erro se a coluna já existe
-    });
-
-    // Tabela de configurações do YouTube
-    db.run(`
-        CREATE TABLE IF NOT EXISTS youtube_config (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            channel_id TEXT,
-            channel_name TEXT,
-            enabled INTEGER DEFAULT 0,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Inserir configuração padrão se não existir
-    db.run(`INSERT OR IGNORE INTO youtube_config (id, channel_id, channel_name, enabled) VALUES (1, '', '', 0)`, (err) => {});
-
-    // Tabela de mensagens
-    db.run(`
-        CREATE TABLE IF NOT EXISTS mensagens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            conteudo TEXT,
-            video_url TEXT,
-            data_publicacao DATETIME DEFAULT CURRENT_TIMESTAMP,
-            ativa INTEGER DEFAULT 1
-        )
-    `);
-
-    db.run(`
-        CREATE TABLE IF NOT EXISTS ministerios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            descricao TEXT,
-            icone TEXT DEFAULT 'fas fa-church',
-            ordem INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    db.run(`
-        CREATE TABLE IF NOT EXISTS cultos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            horario TEXT,
-            local TEXT,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Tabela de inscrições em eventos
-    db.run(`
-        CREATE TABLE IF NOT EXISTS inscricoes_eventos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            evento_id INTEGER NOT NULL,
-            nome TEXT NOT NULL,
-            email TEXT,
-            telefone TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (evento_id) REFERENCES eventos(id)
-        )
-    `);
-
-    // Tabela de tópicos bíblicos
-    db.run(`
-        CREATE TABLE IF NOT EXISTS topicos_biblia (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            descricao TEXT,
-            conteudo TEXT,
-            categoria TEXT DEFAULT 'geral',
-            icone TEXT DEFAULT 'fas fa-book-bible',
-            ordem INTEGER DEFAULT 0,
-            ativo INTEGER DEFAULT 1,
-            data_publicacao TEXT,
-            hora_publicacao TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-    
-    // Adicionar colunas de agendamento se não existirem (com verificação mais robusta)
-    db.run("ALTER TABLE topicos_biblia ADD COLUMN data_publicacao TEXT", (err) => {
-        // Ignora erro se a coluna já existe
-    });
-    db.run("ALTER TABLE topicos_biblia ADD COLUMN hora_publicacao TEXT", (err) => {
-        // Ignora erro se a coluna já existe
-    });
-    
-    // Verificar e criar colunas via PRAGMA se necessário
-    db.all("PRAGMA table_info(topicos_biblia)", (err, rows) => {
-        if (!err && rows) {
-            const columns = rows.map(r => r.name);
-            if (!columns.includes('data_publicacao')) {
-                db.run("ALTER TABLE topicos_biblia ADD COLUMN data_publicacao TEXT");
-            }
-            if (!columns.includes('hora_publicacao')) {
-                db.run("ALTER TABLE topicos_biblia ADD COLUMN hora_publicacao TEXT");
-            }
-        }
-    });
-
-    // Tabela de conteúdos da Área do Membro
-    db.run(`
-        CREATE TABLE IF NOT EXISTS area_membro (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            descricao TEXT,
-            conteudo TEXT,
-            pdf_path TEXT,
-            categoria TEXT NOT NULL,
-            icone TEXT DEFAULT 'fas fa-book',
-            ordem INTEGER DEFAULT 0,
-            ativo INTEGER DEFAULT 1,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-    
-    // Adicionar coluna pdf_path se não existir (para bancos existentes)
-    db.run("ALTER TABLE area_membro ADD COLUMN pdf_path TEXT", (err) => {
-        // Ignora erro se a coluna já existe
-    });
-
-    // Tabela de vídeo aulas
-    db.run(`
-        CREATE TABLE IF NOT EXISTS aulas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            descricao TEXT,
-            video_url TEXT NOT NULL,
-            thumbnail TEXT,
-            pdf_path TEXT,
-            duracao TEXT DEFAULT '00:00',
-            autor TEXT DEFAULT 'MAANAIN',
-            categoria TEXT DEFAULT 'estudos',
-            visualizacoes INTEGER DEFAULT 0,
-            ativo INTEGER DEFAULT 1,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-    
-    // Adicionar coluna pdf_path se não existir (para bancos existentes)
-    db.run("ALTER TABLE aulas ADD COLUMN pdf_path TEXT", (err) => {
-        // Ignora erro se a coluna já existe
-    });
-
-    // Tabela de galeria de imagens
-    db.run(`
-        CREATE TABLE IF NOT EXISTS gallery (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename TEXT NOT NULL,
-            original_name TEXT,
-            url TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
 });
 
 // ✅ REGISTER

@@ -1,0 +1,29 @@
+# .htaccess - Reescrever URL para API PHP
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Se for um arquivo ou diretório real, não reescrever
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Redirecionar /api/* para api.php
+    RewriteRule ^api/(.*)$ api.php?route=$1 [L,QSA]
+    
+    # Se a requisição não指向 um arquivo, tentar servir como arquivo estático
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.html [L]
+</IfModule>
+
+# Headers de segurança
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# Proteger arquivos sensíveis
+<FilesMatch "\.(env|config|js|json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
