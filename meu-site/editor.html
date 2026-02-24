@@ -461,7 +461,6 @@
                     <button class="toolbar-btn" onclick="formatDoc('p')" title="Parágrafo">P</button>
                 </div>
                 <div id="editor" class="editor" contenteditable="true" placeholder="Digite seu conteúdo aqui... Arraste imagens da galeria!">
-                    <p>Comece escrevendo seu conteúdo...</p>
                 </div>
             </div>
         </div>
@@ -504,6 +503,9 @@
         // Carregar conteúdo inicial
         if (content) {
             document.getElementById('editor').innerHTML = decodeURIComponent(content);
+        } else {
+            // Deixar vazio se não houver conteúdo
+            document.getElementById('editor').innerHTML = '';
         }
         
         const editor = document.getElementById('editor');
@@ -589,6 +591,9 @@
                 return;
             }
             
+            // Obter token do localStorage
+            const token = localStorage.getItem('maanaim_admin_token');
+            
             // Converter para base64
             const reader = new FileReader();
             reader.onload = async (ev) => {
@@ -597,7 +602,7 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'x-admin-token': getAdminToken()
+                            'Authorization': token ? `Bearer ${token}` : ''
                         },
                         body: JSON.stringify({
                             image: ev.target.result,
@@ -714,9 +719,84 @@
             }
         });
         
+        // Mapeamento de campos do admin para seções do page-content
+        const fieldToSectionMap = {
+            'hero-title': 'hero',
+            'hero-content': 'hero',
+            'sobre-title': 'sobre',
+            'sobre-content': 'sobre',
+            'ministerios-title': 'ministerios',
+            'mensagem-title': 'mensagem',
+            'mensagem-content': 'mensagem'
+        };
+        
+        // Seções do page-content que salvam diretamente na API
+        const pageContentSections = ['hero', 'sobre', 'mensagem', 'ministerios'];
+        
+        // Determinar qual seção usar
+        const section = fieldToSectionMap[fieldId] || fieldId;
+        const isPageContent = pageContentSections.includes(section);
+        
+        // Função para obter headers de admin
+        function getAdminHeaders() {
+            const token = localStorage.getItem('maanaim_admin_token');
+            if (token) {
+                return {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+            }
+            return { 'Content-Type': 'application/json' };
+        }
+        
         // Salvar e voltar
-        function salvar() {
-            const conteudo = editor.innerHTML;
+        async function salvar() {
+            let conteudo = editor.innerHTML;
+            
+            // Remover o placeholder padrão se for o único conteúdo
+            const placeholderText = 'Comece escrevendo seu conteúdo...';
+            if (conteudo.includes(placeholderText)) {
+                conteudo = '';
+            }
+            
+            // Se for seção de page-content, salvar diretamente na API
+            if (isPageContent) {
+                try {
+                    // Obter o título do campo correspondente (se for campo de conteúdo)
+                    let title = '';
+                    const titleFieldId = fieldId.replace('content', 'title');
+                    const titleField = window.opener?.document.getElementById(titleFieldId);
+                    if (titleField) {
+                        title = titleField.value;
+                    }
+                    
+                    const response = await fetch('/api/admin/page-content/' + section, {
+                        method: 'PUT',
+                        headers: getAdminHeaders(),
+                        body: JSON.stringify({ 
+                            title: title, 
+                            content: conteudo 
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // Atualizar o campo no admin também
+                        if (window.opener) {
+                            const field = window.opener.document.getElementById(fieldId);
+                            if (field) {
+                                field.value = conteudo;
+                            }
+                        }
+                        alert('✅ Conteúdo salvo com sucesso!');
+                    } else {
+                        alert('❌ Erro ao salvar. Faça login como admin.');
+                    }
+                } catch (err) {
+                    alert('❌ Erro: ' + err.message);
+                }
+                voltar();
+                return;
+            }
             
             // Salvar no localStorage para recuperação
             localStorage.setItem('editor_content_' + fieldId, conteudo);

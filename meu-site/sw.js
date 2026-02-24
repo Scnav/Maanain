@@ -1,9 +1,9 @@
 // Service Worker otimizado para MAANAIM
 // Cache-first para estáticos, network-first para APIs
 
-const CACHE_NAME = 'maanaim-v27';
-const STATIC_CACHE = 'maanaim-static-v27';
-const DYNAMIC_CACHE = 'maanaim-dynamic-v27';
+const CACHE_NAME = 'maanaim-v32';
+const STATIC_CACHE = 'maanaim-static-v32';
+const DYNAMIC_CACHE = 'maanaim-dynamic-v32';
 
 // Recursos estáticos para cache (cache-first)
 const staticAssets = [

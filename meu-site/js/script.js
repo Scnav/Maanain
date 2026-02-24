@@ -401,7 +401,7 @@ async function carregarConteudosPaginaInicial() {
         const heroTitle = document.getElementById('heroTitle');
         const heroSubtitle = document.getElementById('heroSubtitle');
         if (heroTitle && conteudos.hero?.title) heroTitle.textContent = conteudos.hero.title;
-        if (heroSubtitle && conteudos.hero?.content) heroSubtitle.textContent = conteudos.hero.content;
+        if (heroSubtitle && conteudos.hero?.content) heroSubtitle.innerHTML = conteudos.hero.content;
 
         // Atualizar Sobre
         const sobreTitle = document.getElementById('sobreTitle');
