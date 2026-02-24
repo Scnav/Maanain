@@ -171,13 +171,17 @@ document.addEventListener("DOMContentLoaded", () => {
         loginForm.addEventListener("submit", (e) => {
             e.preventDefault();
             const body = Object.fromEntries(new FormData(loginForm).entries());
+            console.log('[DEBUG LOGIN] Enviando dados:', body);
 
             fetch("/api/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body)
             })
-            .then(r => r.json())
+            .then(r => {
+                console.log('[DEBUG LOGIN] Status:', r.status);
+                return r.json();
+            })
             .then(data => {
                 if (data.error) {
                     alert("❌ " + data.error);
@@ -189,7 +193,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     window.location.href = 'index.html';
                 }
             })
-            .catch(err => alert("❌ " + err.message));
+            .catch(err => {
+                console.error('[DEBUG LOGIN] Erro:', err);
+                alert("❌ " + err.message);
+            });
         });
     }
 

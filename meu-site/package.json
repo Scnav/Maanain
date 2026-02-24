@@ -7,17 +7,10 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-<<<<<<< HEAD
     "start": "node index.js",
     "dev": "node index.js",
     "build": "echo 'Build completed - files are ready in root directory'",
     "serve": "node index.js"
-=======
-    "start": "node server/app.js",
-    "dev": "node server/app.js",
-    "build": "echo 'Build completed - files are ready in root directory'",
-    "serve": "node server/app.js"
->>>>>>> c859f57 (node22)
   },
   "keywords": [
     "church",
