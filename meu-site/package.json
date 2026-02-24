@@ -1,7 +1,7 @@
 {
   "name": "meu-site",
   "version": "1.0.0",
-  "description": "Site da Igreja MAANAIN",
+  "description": "Site da Igreja MAANAIM",
   "main": "index.js",
   "engines": {
     "node": ">=22.0.0"
@@ -15,9 +15,9 @@
   "keywords": [
     "church",
     "website",
-    "maanain"
+    "maanaim"
   ],
-  "author": "MAANAIN",
+  "author": "MAANAIM",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",

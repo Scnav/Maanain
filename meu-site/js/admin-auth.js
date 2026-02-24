@@ -1,8 +1,8 @@
 // Gerenciamento de autenticação JWT para o Admin Panel
 // Armazena o token no localStorage
 
-const ADMIN_TOKEN_KEY = 'maanain_admin_token';
-const ADMIN_EXPIRY_KEY = 'maanain_admin_expiry';
+const ADMIN_TOKEN_KEY = 'maanaim_admin_token';
+const ADMIN_EXPIRY_KEY = 'maanaim_admin_expiry';
 
 // Salvar token JWT
 function saveAdminToken(token, expiresIn) {
@@ -96,7 +96,7 @@ function getAdminHeaders() {
     }
     // Fallback para token antigo (manter compatibilidade)
     return {
-        'x-admin-token': 'maanain2026',
+        'x-admin-token': 'maanaim2026',
         'Content-Type': 'application/json'
     };
 }

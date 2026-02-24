@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Admin - MAANAIN</title>
+    <title>Admin - MAANAIM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -377,8 +377,8 @@
         // Verificar autenticação ao carregar
         document.addEventListener('DOMContentLoaded', async () => {
             const loginScreen = document.getElementById('login-screen');
-            const token = localStorage.getItem('maanain_admin_token');
-            const expiry = localStorage.getItem('maanain_admin_expiry');
+            const token = localStorage.getItem('maanaim_admin_token');
+            const expiry = localStorage.getItem('maanaim_admin_expiry');
             
             if (!token || !expiry || Date.now() > parseInt(expiry)) {
                 // Não está logado - mostrar tela de login
@@ -420,8 +420,8 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    localStorage.setItem('maanain_admin_token', data.token);
-                    localStorage.setItem('maanain_admin_expiry', (Date.now() + (data.expiresIn * 1000)).toString());
+                    localStorage.setItem('maanaim_admin_token', data.token);
+                    localStorage.setItem('maanaim_admin_expiry', (Date.now() + (data.expiresIn * 1000)).toString());
                     document.getElementById('login-screen').style.display = 'none';
                     
                     // Carregar dados após login bem-sucedido
@@ -447,8 +447,8 @@
         
         // Logout
         function logoutAdmin() {
-            localStorage.removeItem('maanain_admin_token');
-            localStorage.removeItem('maanain_admin_expiry');
+            localStorage.removeItem('maanaim_admin_token');
+            localStorage.removeItem('maanaim_admin_expiry');
             location.reload();
         }
     </script>
@@ -459,7 +459,7 @@
     <header class="header">
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <div>
-                <h1><i style="margin-right: 0.5rem;">📊</i> MAANAIN ADMIN</h1>
+                <h1><i style="margin-right: 0.5rem;">📊</i> MAANAIM ADMIN</h1>
                 <p class="subtitle">Painel Administrativo Completo</p>
             </div>
             <a href="index.html" class="back-btn">← Voltar ao Site</a>
@@ -495,7 +495,7 @@
         <main class="main-content">
             <!-- Dashboard -->
             <section id="dashboard" class="content-section active">
-                <h2 class="section-title">📊 Estatísticas da MAANAIN</h2>
+                <h2 class="section-title">📊 Estatísticas da MAANAIM</h2>
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-number" id="totalUsuarios">124</div><div class="stat-label">Total Usuários</div></div>
                     <div class="stat-card"><div class="stat-number" id="frequentadores">89</div><div class="stat-label">Frequentadores</div></div>
@@ -773,7 +773,7 @@
                             </div>
                             <div>
                                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Autor/Pastor</label>
-                                <input type="text" id="aulaAutor" placeholder="MAANAIN" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                                <input type="text" id="aulaAutor" placeholder="MAANAIM" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;">
                             </div>
                         </div>
                         
@@ -986,7 +986,7 @@
                     
                     <div style="margin-bottom: 1rem;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Nome do Canal:</label>
-                        <input type="text" id="youtubeChannelName" placeholder="Ex: Igreja Maanain" style="width: 100%; max-width: 400px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <input type="text" id="youtubeChannelName" placeholder="Ex: Igreja Maanaim" style="width: 100%; max-width: 400px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                     </div>
                     
                     <div style="margin-bottom: 1rem;">
@@ -1005,7 +1005,7 @@
 
     <script>
     // Verificar se o usuário é admin antes de carregar a página
-    const userData = localStorage.getItem('maanain_user');
+    const userData = localStorage.getItem('maanaim_user');
     if (!userData) {
         window.location.href = 'login.html';
     } else {
@@ -1025,8 +1025,8 @@
     <script>
     window.onload = function() {
         // Verificar se está logado antes de carregar dados
-        const token = localStorage.getItem('maanain_admin_token');
-        const expiry = localStorage.getItem('maanain_admin_expiry');
+        const token = localStorage.getItem('maanaim_admin_token');
+        const expiry = localStorage.getItem('maanaim_admin_expiry');
         
         if (token && expiry && Date.now() < parseInt(expiry)) {
             // Carregar dados apenas se logado

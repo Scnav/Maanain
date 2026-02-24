@@ -234,7 +234,7 @@ function createMySQLTables(pool, callback) {
             thumbnail VARCHAR(500),
             pdf_path VARCHAR(500),
             duracao VARCHAR(10) DEFAULT '00:00',
-            autor VARCHAR(100) DEFAULT 'MAANAIN',
+            autor VARCHAR(100) DEFAULT 'MAANAIM',
             categoria VARCHAR(100) DEFAULT 'estudos',
             visualizacoes INT DEFAULT 0,
             ativo TINYINT(1) DEFAULT 1,

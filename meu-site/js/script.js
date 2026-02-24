@@ -1,5 +1,5 @@
 // VARIÁVEL GLOBAL para controle
-window.MAANAIN_AUTH = { usuario: null, atualizarHeader: null };
+window.MAANAIM_AUTH = { usuario: null, atualizarHeader: null };
 
 // Variáveis globais para busca bíblica
 let bibliaLivros = [];
@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Carrega usuário
     function carregarUsuario() {
-        const userData = localStorage.getItem('maanain_user');
+        const userData = localStorage.getItem('maanaim_user');
         usuarioLogado = userData ? JSON.parse(userData) : null;
         atualizarHeader();
 
@@ -159,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Logout
     function fazerLogout() {
-        localStorage.removeItem('maanain_user');
+        localStorage.removeItem('maanaim_user');
         usuarioLogado = null;
         atualizarHeader();
         setTimeout(() => window.location.reload(), 100);
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.error) {
                     alert("❌ " + data.error);
                 } else {
-                    localStorage.setItem('maanain_user', JSON.stringify(data.user));
+                    localStorage.setItem('maanaim_user', JSON.stringify(data.user));
                     usuarioLogado = data.user;
                     atualizarHeader();
                     // Forçar recarregamento completo para atualizar o header
@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Multi-abas
     window.addEventListener('storage', (e) => {
-        if (e.key === 'maanain_user') window.location.reload();
+        if (e.key === 'maanaim_user') window.location.reload();
     });
 
     // Carregar notícias (se estiver na página inicial)

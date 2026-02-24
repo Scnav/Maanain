@@ -13,10 +13,10 @@ const PORT = process.env.PORT || 3000;
 // const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
 
 // Token admin via variável de ambiente (seguro)
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'maanain2026';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'maanaim2026';
 
 // Segredo JWT - fixo para manter sessões entre reinicializações
-const JWT_SECRET = process.env.JWT_SECRET || 'maanain_jwt_secret_2026_fixo';
+const JWT_SECRET = process.env.JWT_SECRET || 'maanaim_jwt_secret_2026_fixo';
 
 // Tempo de expiração do token (24 horas)
 const JWT_EXPIRES_IN = '24h';
@@ -1594,7 +1594,7 @@ app.post('/api/admin/aulas', verifyAdmin, (req, res) => {
     }
 
     db.run("INSERT INTO aulas (titulo, descricao, video_url, thumbnail, pdf_path, duracao, autor, categoria, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [titulo, descricao || '', video_url, thumbnail || '', pdf_path || '', duracao || '00:00', autor || 'MAANAIN', categoria || 'estudos', ativo !== undefined ? ativo : 1],
+        [titulo, descricao || '', video_url, thumbnail || '', pdf_path || '', duracao || '00:00', autor || 'MAANAIM', categoria || 'estudos', ativo !== undefined ? ativo : 1],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
             console.log('[DEBUG API] Aula criada com ID:', this.lastID, '- pdf_path:', pdf_path);
@@ -1611,7 +1611,7 @@ app.put('/api/admin/aulas/:id', verifyAdmin, (req, res) => {
     console.log('[DEBUG API] pdf_path recebido:', pdf_path);
 
     db.run("UPDATE aulas SET titulo = ?, descricao = ?, video_url = ?, thumbnail = ?, pdf_path = ?, duracao = ?, autor = ?, categoria = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-        [titulo, descricao || '', video_url, thumbnail || '', pdf_path || '', duracao || '00:00', autor || 'MAANAIN', categoria || 'estudos', ativo !== undefined ? ativo : 1, id],
+        [titulo, descricao || '', video_url, thumbnail || '', pdf_path || '', duracao || '00:00', autor || 'MAANAIM', categoria || 'estudos', ativo !== undefined ? ativo : 1, id],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
             if (this.changes === 0) return res.status(404).json({ error: 'Aula não encontrada' });
@@ -1659,6 +1659,6 @@ initDatabase((err) => {
     }
     
     app.listen(PORT, () => {
-        console.log(`✅ MAANAIN Server: http://localhost:${PORT}`);
+        console.log(`✅ MAANAIM Server: http://localhost:${PORT}`);
     });
 });

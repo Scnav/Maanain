@@ -5,8 +5,8 @@ let aulaPdfPath = null; // Armazena o caminho do PDF
 
 // Função para obter headers com JWT
 function getAdminHeaders() {
-    const token = localStorage.getItem('maanain_admin_token');
-    const expiry = localStorage.getItem('maanain_admin_expiry');
+    const token = localStorage.getItem('maanaim_admin_token');
+    const expiry = localStorage.getItem('maanaim_admin_expiry');
     
     if (token && expiry && Date.now() < parseInt(expiry)) {
         return {
@@ -93,7 +93,7 @@ function renderAulas() {
                 }
             </td>
             <td style="font-weight: 500;">${aula.titulo}</td>
-            <td>${aula.autor || 'MAANAIN'}</td>
+            <td>${aula.autor || 'MAANAIM'}</td>
             <td><span class="badge" style="background: #e3f2fd; color: #1565c0;">${getCategoriaLabel(aula.categoria)}</span></td>
             <td>${aula.duracao || '--:--'}</td>
             <td>${aula.visualizacoes || 0}</td>
@@ -166,7 +166,7 @@ function editAula(id) {
     document.getElementById('aulaVideoUrl').value = aula.video_url;
     document.getElementById('aulaThumbnail').value = aula.thumbnail || '';
     document.getElementById('aulaDuracao').value = aula.duracao || '00:00';
-    document.getElementById('aulaAutor').value = aula.autor || 'MAANAIN';
+    document.getElementById('aulaAutor').value = aula.autor || 'MAANAIM';
     document.getElementById('aulaCategoria').value = aula.categoria || 'estudos';
     document.getElementById('aulaAtivo').checked = aula.ativo !== 0;
     
@@ -436,7 +436,7 @@ async function deleteAula(id) {
 }
 
 function getAdminToken() {
-    return localStorage.getItem('adminToken') || 'maanain2026';
+    return localStorage.getItem('adminToken') || 'maanaim2026';
 }
 
 function extractVideoId(url) {

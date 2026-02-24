@@ -1,4 +1,4 @@
-# MAANAIN - Site da Igreja
+# MAANAIM - Site da Igreja
 
 Sistema web completo para gestão de conteúdo de igreja, desenvolvido com Node.js, Express e SQLite.
 

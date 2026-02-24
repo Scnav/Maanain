@@ -2,8 +2,8 @@
 
 // Função para obter headers com JWT
 function getAdminHeaders() {
-    const token = localStorage.getItem('maanain_admin_token');
-    const expiry = localStorage.getItem('maanain_admin_expiry');
+    const token = localStorage.getItem('maanaim_admin_token');
+    const expiry = localStorage.getItem('maanaim_admin_expiry');
     
     if (token && expiry && Date.now() < parseInt(expiry)) {
         return {
@@ -218,7 +218,7 @@ async function excluirTopico(id) {
     if (!confirm('Tem certeza que deseja excluir este tópico?')) return;
     
     try {
-        const user = JSON.parse(localStorage.getItem('maanain_user') || '{}');
+        const user = JSON.parse(localStorage.getItem('maanaim_user') || '{}');
         const response = await fetch(`/api/admin/topicos-biblia/${id}`, {
             method: 'DELETE',
             headers: getAdminHeaders()

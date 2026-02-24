@@ -2,8 +2,8 @@
 
 // Função para obter headers com JWT
 function getAdminHeaders() {
-    const token = localStorage.getItem('maanain_admin_token');
-    const expiry = localStorage.getItem('maanain_admin_expiry');
+    const token = localStorage.getItem('maanaim_admin_token');
+    const expiry = localStorage.getItem('maanaim_admin_expiry');
     
     if (token && expiry && Date.now() < parseInt(expiry)) {
         return {
@@ -141,7 +141,7 @@ async function salvarAreaMembro() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-token': 'maanain2026'
+                    'x-admin-token': 'maanaim2026'
                 },
                 body: JSON.stringify({
                     filename: arquivo.name,

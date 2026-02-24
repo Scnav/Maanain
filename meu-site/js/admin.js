@@ -1,8 +1,8 @@
 // Sidebar Navigation
 document.addEventListener('DOMContentLoaded', function() {
     // Obter dados do usuário logado
-    const userData = localStorage.getItem('maanain_user');
-    window.MAANAIN_ADMIN_USER = userData ? JSON.parse(userData) : null;
+    const userData = localStorage.getItem('maanaim_user');
+    window.MAANAIM_ADMIN_USER = userData ? JSON.parse(userData) : null;
     
     carregarEstatisticas();
     carregarUsuarios();
@@ -30,8 +30,8 @@ function getAdminHeaders(includeContentType = true) {
     const headers = {};
     
     // Usar JWT
-    const token = localStorage.getItem('maanain_admin_token');
-    const expiry = localStorage.getItem('maanain_admin_expiry');
+    const token = localStorage.getItem('maanaim_admin_token');
+    const expiry = localStorage.getItem('maanaim_admin_expiry');
     
     if (token && expiry && Date.now() < parseInt(expiry)) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -746,7 +746,7 @@ async function carregarConteudos() {
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Título:</label>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="text" id="hero-title" value="${conteudos.hero?.title || 'Bem-vindo à MAANAIN'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                        <input type="text" id="hero-title" value="${conteudos.hero?.title || 'Bem-vindo à MAANAIM'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                         <button onclick="abrirEditorRico('hero-title', document.getElementById('hero-title').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
                     </div>
                 </div>

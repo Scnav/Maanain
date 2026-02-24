@@ -1,4 +1,4 @@
--- Script SQL para criar todas as tabelas do site MAANAIN
+-- Script SQL para criar todas as tabelas do site MAANAIM
 -- Execute este script no seu banco de dados MySQL na Hostinger
 
 -- ============================================
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS aulas (
     thumbnail VARCHAR(500),
     pdf_path VARCHAR(500),
     duracao VARCHAR(10) DEFAULT '00:00',
-    autor VARCHAR(100) DEFAULT 'MAANAIN',
+    autor VARCHAR(100) DEFAULT 'MAANAIM',
     categoria VARCHAR(100) DEFAULT 'estudos',
     visualizacoes INT DEFAULT 0,
     ativo TINYINT(1) DEFAULT 1,
