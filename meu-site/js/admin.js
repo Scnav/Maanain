@@ -751,17 +751,11 @@ async function carregarConteudos() {
                     </div>
                 </div>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Subtítulo:</label>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="text" id="hero-subtitle" value="${conteudos.hero?.content || 'Uma família na fé'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
-                        <button onclick="abrirEditorRico('hero-subtitle', document.getElementById('hero-subtitle').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
-                    </div>
-                </div>
-                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">URL da Imagem:</label>
-                    <input type="text" id="hero-image" value="${conteudos.hero?.image || ''}" placeholder="https://exemplo.com/imagem.jpg" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
-                    <small style="color: #666; display: block; margin-top: 0.5rem;">Cole a URL da imagem (ex: imgbb, google drive, etc)</small>
-                    ${conteudos.hero?.image ? `<img src="${conteudos.hero.image}" style="max-width: 200px; margin-top: 10px; border-radius: 5px;" alt="Preview">` : ''}
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                        Conteúdo:
+                        <button onclick="abrirEditorRico('hero-content', document.getElementById('hero-content').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>
+                    </label>
+                    <textarea id="hero-content" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">${conteudos.hero?.content || ''}</textarea>
                 </div>
                 <button onclick="salvarConteudo('hero')" class="btn-editar-cargo">💾 Salvar Hero</button>
             </div>
@@ -817,9 +811,9 @@ async function salvarConteudo(section) {
 
         if (section === 'hero') {
             title = document.getElementById('hero-title').value;
-            content = document.getElementById('hero-subtitle').value;
+            content = document.getElementById('hero-content').value;
             link = null;
-            image = document.getElementById('hero-image').value;
+            image = '';
         } else if (section === 'sobre') {
             title = document.getElementById('sobre-title').value;
             content = document.getElementById('sobre-content').value;

@@ -534,13 +534,13 @@ app.put('/api/admin/page-content/:section', verifyAdmin, (req, res) => {
 
     // Verificar se link foi fornecido e não é vazio
     if (link || image) {
-        db.run("INSERT OR REPLACE INTO page_content (section, title, content, link, image, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'))",
+        db.run("INSERT INTO page_content (section, title, content, link, image, updated_at) VALUES (?, ?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE title=VALUES(title), content=VALUES(content), link=VALUES(link), image=VALUES(image), updated_at=NOW()",
             [section, title, content, link || null, image || null], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Conteúdo atualizado' });
         });
     } else {
-        db.run("INSERT OR REPLACE INTO page_content (section, title, content, updated_at) VALUES (?, ?, ?, datetime('now'))",
+        db.run("INSERT INTO page_content (section, title, content, updated_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE title=VALUES(title), content=VALUES(content), updated_at=NOW()",
             [section, title, content], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Conteúdo atualizado' });
@@ -555,26 +555,19 @@ app.get('/api/page-content', (req, res) => {
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     
-    // Verificar se a coluna 'image' existe
-    db.all("PRAGMA table_info(page_content)", (err, columns) => {
+    // MySQL: buscar todos os campos diretamente
+    db.all("SELECT section, title, content, link, image FROM page_content", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        
-        const hasImage = columns.some(col => col.name === 'image');
-        const selectFields = hasImage ? 'section, title, content, link, image' : 'section, title, content, link';
-        
-        db.all(`SELECT ${selectFields} FROM page_content`, (err, rows) => {
-            if (err) return res.status(500).json({ error: err.message });
-            const contentMap = {};
-            rows.forEach(row => {
-                contentMap[row.section] = { 
-                    title: row.title, 
-                    content: row.content, 
-                    link: row.link || '',
-                    image: row.image || ''
-                };
-            });
-            res.json(contentMap);
+        const contentMap = {};
+        rows.forEach(row => {
+            contentMap[row.section] = { 
+                title: row.title, 
+                content: row.content, 
+                link: row.link || '',
+                image: row.image || ''
+            };
         });
+        res.json(contentMap);
     });
 });
 
@@ -976,7 +969,7 @@ app.put('/api/admin/cultos/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
     const { titulo, horario, local } = req.body;
 
-    db.run("UPDATE cultos SET titulo = ?, horario = ?, local = ?, updated_at = datetime('now') WHERE id = ?",
+    db.run("UPDATE cultos SET titulo = ?, horario = ?, local = ?, updated_at = NOW() WHERE id = ?",
         [titulo, horario, local, id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Culto não encontrado' });
@@ -1023,7 +1016,7 @@ app.get('/api/topicos-biblia', (req, res) => {
         FROM topicos_biblia 
         WHERE ativo = 1 
         AND (data_publicacao IS NULL OR data_publicacao = '' 
-             OR (data_publicacao || ' ' || COALESCE(hora_publicacao, '00:00') <= datetime('now', 'localtime')))
+             OR CONCAT(data_publicacao, ' ', IFNULL(hora_publicacao, '00:00')) <= NOW())
         ORDER BY ordem ASC`;
     
     console.log('Query:', query);
@@ -1103,7 +1096,7 @@ app.get('/api/noticias', (req, res) => {
 
 app.get('/api/eventos', (req, res) => {
     console.log('[DEBUG] GET /api/eventos - Buscando eventos');
-    db.all("SELECT id, titulo, data, horario, local, created_at FROM eventos WHERE data >= datetime('now') ORDER BY data ASC", (err, rows) => {
+    db.all("SELECT id, titulo, data, horario, local, created_at FROM eventos WHERE data >= CURDATE() ORDER BY data ASC", (err, rows) => {
         if (err) {
             console.log('[DEBUG] ERRO ao buscar eventos:', err.message);
             return res.status(500).json({ error: err.message });
@@ -1642,6 +1635,16 @@ app.post('/api/aulas/:id/views', (req, res) => {
 });
 
 // ✅ Static files (SEMPRE POR ÚLTIMO)
+// Headers para evitar cache
+app.use((req, res, next) => {
+    if (req.url.endsWith('.js') || req.url.endsWith('.css')) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
+    next();
+});
+
 app.use("/", express.static(path.join(__dirname)));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

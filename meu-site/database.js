@@ -134,7 +134,7 @@ function createMySQLTables(pool, callback) {
             id INT AUTO_INCREMENT PRIMARY KEY,
             titulo TEXT NOT NULL,
             data DATE NOT NULL,
-            horario TIME,
+            horario VARCHAR(50),
             local VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -182,8 +182,9 @@ function createMySQLTables(pool, callback) {
         `CREATE TABLE IF NOT EXISTS cultos (
             id INT AUTO_INCREMENT PRIMARY KEY,
             titulo TEXT NOT NULL,
-            horario TIME,
+            horario VARCHAR(50),
             local VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
         
@@ -254,11 +255,36 @@ function createMySQLTables(pool, callback) {
     // Criar tabelas uma por uma
     function createNextTable(index) {
         if (index >= tables.length) {
-            // Todas as tabelas criadas, inserir config padrão
-            pool.query(`INSERT IGNORE INTO youtube_config (id, channel_id, channel_name, enabled) VALUES (1, '', '', 0)`, (err) => {
-                console.log('✅ Tabelas MySQL criadas/verificadas!');
-                if (callback) callback(null, { pool, isMySQL: true });
-            });
+            // Verificar e adicionar colunas que podem faltar
+            const alterTables = [
+                // Modificar coluna 'horario' de TIME para VARCHAR em cultos
+                "ALTER TABLE cultos MODIFY COLUMN horario VARCHAR(50)",
+                // Modificar coluna 'horario' de TIME para VARCHAR em eventos
+                "ALTER TABLE eventos MODIFY COLUMN horario VARCHAR(50)",
+                // Adicionar coluna 'local' em eventos
+                "ALTER TABLE eventos ADD COLUMN local VARCHAR(255)",
+                // Adicionar coluna 'local' em cultos
+                "ALTER TABLE cultos ADD COLUMN local VARCHAR(255)"
+            ];
+            
+            function runAlterTable(i) {
+                if (i >= alterTables.length) {
+                    // Todas as alterações feitas, inserir config padrão
+                    pool.query(`INSERT IGNORE INTO youtube_config (id, channel_id, channel_name, enabled) VALUES (1, '', '', 0)`, (err) => {
+                        console.log('✅ Tabelas MySQL criadas/verificadas!');
+                        if (callback) callback(null, { pool, isMySQL: true });
+                    });
+                    return;
+                }
+                
+                // Tentar adicionar coluna, ignorar erro se já existir
+                pool.query(alterTables[i], (err) => {
+                    // Ignorar erro de coluna duplicada
+                    runAlterTable(i + 1);
+                });
+            }
+            
+            runAlterTable(0);
             return;
         }
         
