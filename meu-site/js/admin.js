@@ -899,3 +899,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ========== YOUTUBE CONFIG ==========
+async function carregarYoutubeConfig() {
+    try {
+        const response = await fetch('/api/admin/youtube-config', {
+            headers: getAdminHeaders()
+        });
+        if (!response.ok) throw new Error('Erro ao carregar config');
+        const config = await response.json();
+        
+        document.getElementById('youtubeChannelId').value = config.channel_id || '';
+        document.getElementById('youtubeChannelName').value = config.channel_name || '';
+        document.getElementById('youtubeEnabled').checked = config.enabled === 1 || config.enabled === true;
+    } catch (error) {
+        console.error('Erro ao carregar config do YouTube:', error);
+    }
+}
+
+async function salvarYoutubeConfig() {
+    const channel_id = document.getElementById('youtubeChannelId').value;
+    const channel_name = document.getElementById('youtubeChannelName').value;
+    const enabled = document.getElementById('youtubeEnabled').checked;
+    
+    try {
+        const response = await fetch('/api/admin/youtube-config', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAdminHeaders()
+            },
+            body: JSON.stringify({ channel_id, channel_name, enabled })
+        });
+        
+        if (!response.ok) throw new Error('Erro ao salvar');
+        
+        mostrarToast('✅ Configuração do YouTube salva!', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar config do YouTube:', error);
+        mostrarToast('❌ Erro ao salvar configuração', 'error');
+    }
+}
+
+// Event listener para o botão do YouTube
+document.getElementById('btnSalvarYoutube')?.addEventListener('click', salvarYoutubeConfig);
+
+// Carregar config do YouTube quando navegar para a seção
+document.querySelectorAll('.sidebar-link[data-section]').forEach(link => {
+    link.addEventListener('click', function() {
+        if (this.dataset.section === 'youtube') {
+            setTimeout(carregarYoutubeConfig, 100);
+        }
+    });
+});
+

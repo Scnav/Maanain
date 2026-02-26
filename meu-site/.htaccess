@@ -23,7 +23,7 @@
 </IfModule>
 
 # Proteger arquivos sensíveis
-<FilesMatch "\.(env|config|js|json)$">
+<FilesMatch "\.(env|config|json)$">
     Order allow,deny
     Deny from all
 </FilesMatch>
