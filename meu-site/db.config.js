@@ -1,11 +1,12 @@
 // Configuração do Banco de Dados MySQL - Hostinger
 // Credenciais da hospedagem
+require('dotenv').config();
 
 module.exports = {
-    host: 'srv1194.hstgr.io', // Host do MySQL
-    user: 'u669041569_DbMaanaim', // Seu usuário MySQL
-    password: '=f1fH1Yycv7K', // Sua senha do MySQL
-    database: 'u669041569_DbMaanaim', // Nome do banco de dados
+    host: process.env.DB_HOST, // Host do MySQL
+    user: process.env.DB_USER, // Seu usuário MySQL
+    password: process.env.DB_PASSWORD, // Sua senha do MySQL
+    database: process.env.DB_NAME, // Nome do banco de dados
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

@@ -1,9 +1,9 @@
 // Service Worker otimizado para MAANAIM
 // Cache-first para estáticos, network-first para APIs
 
-const CACHE_NAME = 'maanaim-v32';
-const STATIC_CACHE = 'maanaim-static-v32';
-const DYNAMIC_CACHE = 'maanaim-dynamic-v32';
+const CACHE_NAME = 'maanaim-v33';
+const STATIC_CACHE = 'maanaim-static-v33';
+const DYNAMIC_CACHE = 'maanaim-dynamic-v33';
 
 // Recursos estáticos para cache (cache-first)
 const staticAssets = [
@@ -13,8 +13,9 @@ const staticAssets = [
   '/js/admin-auth.js',
   '/css/admin.css',
   '/js/script.js',
-  '/js/admin.js?v=4',
+  '/js/admin.js?v=13',
   '/editor.html',
+  '/editor',
   '/login.html',
   '/register.html',
   '/biblia.html',

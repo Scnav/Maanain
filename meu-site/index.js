@@ -1,3 +1,6 @@
+// Carregar variáveis de ambiente
+require('dotenv').config();
+
 // Módulo de Banco de Dados MySQL
 const { initDatabase, db, getPool, isMySQL } = require('./database');
 
@@ -1901,6 +1904,13 @@ app.use((req, res, next) => {
 
 app.use("/", express.static(path.join(__dirname)));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Rota para o editor (sem extensão) - serve editor.html
+app.get('/editor', (req, res) => {
+    console.log('📝 EDITOR: Requisição recebida para /editor');
+    console.log('📝 EDITOR: Query params:', req.query);
+    res.sendFile(path.join(__dirname, 'editor.html'));
+});
 
 // Middleware de erro para retornar JSON
 app.use((err, req, res, next) => {
