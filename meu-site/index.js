@@ -9,6 +9,53 @@ const fs = require("fs");
 const rateLimit = require("express-rate-limit");
 const jwt = require("jsonwebtoken");
 
+// ============================================
+// TRATAMENTO DE ERROS GLOBAIS
+// ============================================
+
+// Capturar erros não tratados (Promise rejections)
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ ERRO NÃO TRATADO - Promise Rejection:');
+    console.error('   Reason:', reason);
+    console.error('   Promise:', promise);
+    console.error('   Stack:', reason?.stack || 'No stack available');
+});
+
+// Capturar exceções não tratadas
+process.on('uncaughtException', (error) => {
+    console.error('❌ ERRO NÃO TRATADO - Uncaught Exception:');
+    console.error('   Error:', error.message);
+    console.error('   Stack:', error.stack);
+    // Não encerrar o processo automaticamente, apenas logar
+});
+
+// Tratamento de sinais de encerramento graceful
+process.on('SIGTERM', () => {
+    console.log('� Recebido SIGTERM, encerrando graciosamente...');
+    const pool = getPool();
+    if (pool) {
+        pool.end(() => {
+            console.log('✅ Conexões encerradas');
+            process.exit(0);
+        });
+    } else {
+        process.exit(0);
+    }
+});
+
+process.on('SIGINT', () => {
+    console.log('� Recebido SIGINT, encerrando graciosamente...');
+    const pool = getPool();
+    if (pool) {
+        pool.end(() => {
+            console.log('✅ Conexões encerradas');
+            process.exit(0);
+        });
+    } else {
+        process.exit(0);
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 // const BIBLIA_DB_PATH = path.join(__dirname, "biblia.db");
 
@@ -697,35 +744,56 @@ app.delete('/api/admin/gallery/:id', verifyAdmin, (req, res) => {
 
 // ========== YOUTUBE CONFIG ==========
 // Get YouTube config (admin)
+console.log('📺 Registrando rota: GET /api/admin/youtube-config');
 app.get('/api/admin/youtube-config', verifyAdmin, (req, res) => {
+    console.log('📺 GET /api/admin/youtube-config chamada');
     db.get("SELECT channel_id, channel_name, enabled FROM youtube_config WHERE id = 1", (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error('❌ Erro ao buscar config YouTube:', err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log('📺 Configuração atual:', row);
         res.json(row || { channel_id: '', channel_name: '', enabled: 0 });
     });
 });
 
 // Update YouTube config (admin)
+console.log('📺 Registrando rota: PUT /api/admin/youtube-config');
 app.put('/api/admin/youtube-config', verifyAdmin, (req, res) => {
     const { channel_id, channel_name, enabled } = req.body;
+    
+    console.log('📺 PUT /api/admin/youtube-config chamada');
+    console.log('   channel_id:', channel_id);
+    console.log('   channel_name:', channel_name);
+    console.log('   enabled:', enabled);
     
     db.run("UPDATE youtube_config SET channel_id = ?, channel_name = ?, enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1",
         [channel_id || '', channel_name || '', enabled ? 1 : 0],
         function(err) {
-            if (err) return res.status(500).json({ error: err.message });
+            if (err) {
+                console.error('❌ Erro ao salvar config YouTube:', err.message);
+                return res.status(500).json({ error: err.message });
+            }
+            console.log('✅ Configuração YouTube salva com sucesso!');
             res.json({ message: 'Configuração do YouTube atualizada!' });
         }
     );
 });
 
 // Get YouTube live status (público)
+console.log('📺 Registrando rota: GET /api/youtube-live');
 app.get('/api/youtube-live', async (req, res) => {
     try {
         // Primeiro pega a configuração
         db.get("SELECT channel_id, enabled FROM youtube_config WHERE id = 1", async (err, config) => {
-            console.log('YouTube config from DB:', config);
+            console.log('📺 YouTube config from DB:', config);
             
             if (err || !config || !config.enabled || !config.channel_id) {
-                console.log('YouTube config not found or disabled');
+                console.log('📺 YouTube config not found or disabled');
+                console.log('   - err:', err);
+                console.log('   - config:', config);
+                console.log('   - enabled:', config?.enabled);
+                console.log('   - channel_id:', config?.channel_id);
                 return res.json({ isLive: false, video: null });
             }
             

@@ -1,46 +1,79 @@
 // Módulo de Banco de Dados MySQL - Hostinger
 // Apenas MySQL, sem SQLite
 
+console.log('📦 Carregando módulo de banco de dados...');
+
 const mysql = require('mysql2');
 const dbConfig = require('./db.config');
 
+console.log('📋 Configuração do banco:');
+console.log('   Host:', dbConfig.host);
+console.log('   User:', dbConfig.user);
+console.log('   Database:', dbConfig.database);
+
 let pool;
 let isMySQL = false;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 // Wrapper para compatibilidade com código existente (callbacks)
 const db = {
     // Para SELECT que retorna uma linha
     get: (sql, params, callback) => {
+        console.log('📊 DB GET:', sql.substring(0, 100), params);
         if (typeof params === 'function') {
             callback = params;
             params = [];
         }
+        if (!pool) {
+            console.error('❌ DB GET Error: Pool não inicializada');
+            return callback(new Error('Banco de dados não conectado'));
+        }
         pool.query(sql, params, (err, rows) => {
-            if (err) return callback(err);
+            if (err) {
+                console.error('❌ DB GET Error:', err.message);
+                return callback(err);
+            }
             callback(null, rows[0] || null);
         });
     },
     
     // Para SELECT que retorna múltiplas linhas
     all: (sql, params, callback) => {
+        console.log('📊 DB ALL:', sql.substring(0, 100), params);
         if (typeof params === 'function') {
             callback = params;
             params = [];
         }
+        if (!pool) {
+            console.error('❌ DB ALL Error: Pool não inicializada');
+            return callback(new Error('Banco de dados não conectado'));
+        }
         pool.query(sql, params, (err, rows) => {
-            if (err) return callback(err);
+            if (err) {
+                console.error('❌ DB ALL Error:', err.message);
+                return callback(err);
+            }
             callback(null, rows);
         });
     },
     
     // Para INSERT, UPDATE, DELETE
     run: (sql, params, callback) => {
+        console.log('📊 DB RUN:', sql.substring(0, 100), params);
         if (typeof params === 'function') {
             callback = params;
             params = [];
         }
+        if (!pool) {
+            console.error('❌ DB RUN Error: Pool não inicializada');
+            return callback(new Error('Banco de dados não conectado'));
+        }
         pool.query(sql, params, (err, result) => {
-            if (err) return callback(err);
+            if (err) {
+                console.error('❌ DB RUN Error:', err.message);
+                return callback(err);
+            }
             callback(null, { 
                 lastID: result.insertId || 0, 
                 changes: result.affectedRows || 0 
@@ -54,9 +87,87 @@ const db = {
     }
 };
 
+// Função para criar o pool com configurações de estabilidade
+function createPool() {
+    console.log('🔄 Criando pool de conexões MySQL...');
+    
+    const newPool = mysql.createPool({
+        host: dbConfig.host || 'localhost',
+        user: dbConfig.user,
+        password: dbConfig.password,
+        database: dbConfig.database,
+        waitForConnections: true,
+        connectionLimit: dbConfig.connectionLimit || 10,
+        queueLimit: 0,
+        // Configurações de keep-alive para evitar desconexão
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 10000,
+        // Timeout de conexão
+        connectTimeout: 10000,
+        // Timeout de inatividade
+        idleTimeout: 60000
+    });
+    
+    return newPool;
+}
+
+// Função para testar e reconectar se necessário
+function testConnection() {
+    if (!pool) return false;
+    
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error('❌ Erro ao testar conexão:', err.message);
+            attemptReconnect();
+            return;
+        }
+        console.log('✅ Conexão ativa verificada');
+        connection.release();
+        reconnectAttempts = 0; // Reset contador de tentativas
+    });
+    return true;
+}
+
+// Função para tentar reconectar
+function attemptReconnect() {
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        console.error('❌ Máximo de tentativas de reconexão atingido');
+        return;
+    }
+    
+    reconnectAttempts++;
+    console.log(`🔄 Tentando reconectar... (tentativa ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+    
+    // Fechar pool antigo se existir
+    if (pool) {
+        try {
+            pool.end();
+        } catch (e) {
+            console.log('Erro ao fechar pool antigo:', e.message);
+        }
+    }
+    
+    // Tentar novamente após 5 segundos
+    setTimeout(() => {
+        initDatabase((err) => {
+            if (err) {
+                console.error('❌ Falha na reconexão:', err.message);
+            } else {
+                console.log('✅ Reconexão bem-sucedida!');
+                reconnectAttempts = 0;
+            }
+        });
+    }, 5000);
+}
+
 // Inicializar banco de dados MySQL
 function initDatabase(callback) {
-    console.log('📦 Conectando ao MySQL da Hostinger...');
+    console.log('===========================================');
+    console.log('📦 Tentando conectar ao MySQL da Hostinger...');
+    console.log('   Host:', dbConfig.host || 'localhost');
+    console.log('   User:', dbConfig.user);
+    console.log('   Database:', dbConfig.database);
+    console.log('===========================================');
     
     // Primeiro conecta sem banco para criar se não existir
     const initialPool = mysql.createPool({
@@ -65,10 +176,13 @@ function initDatabase(callback) {
         password: dbConfig.password,
         waitForConnections: true,
         connectionLimit: 2,
-        queueLimit: 0
+        queueLimit: 0,
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 10000
     });
     
     // Criar banco se não existir
+    console.log('🔄 Criando/verificando banco de dados...');
     initialPool.query(`CREATE DATABASE IF NOT EXISTS \`${dbConfig.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`, (err) => {
         if (err) {
             console.log('Erro ao criar banco:', err.message);
@@ -77,18 +191,12 @@ function initDatabase(callback) {
         }
         
         // Agora conecta ao banco específico
+        console.log('🔄 Conectando ao banco específico...');
         initialPool.end((err) => {
-            pool = mysql.createPool({
-                host: dbConfig.host || 'localhost',
-                user: dbConfig.user,
-                password: dbConfig.password,
-                database: dbConfig.database,
-                waitForConnections: true,
-                connectionLimit: dbConfig.connectionLimit || 10,
-                queueLimit: 0
-            });
+            pool = createPool();
             
             // Testar conexão
+            console.log('🔄 Testando conexão com o banco...');
             pool.getConnection((err, connection) => {
                 if (err) {
                     console.error('❌ Erro ao conectar no MySQL:', err.message);
@@ -97,8 +205,13 @@ function initDatabase(callback) {
                 }
                 
                 console.log('✅ Conectado ao MySQL com sucesso!');
+                console.log('📦 Conexão obtida, criando tabelas...');
                 connection.release();
                 isMySQL = true;
+                
+                // Iniciar teste de conexão periódica (a cada 5 minutos)
+                setInterval(testConnection, 5 * 60 * 1000);
+                console.log('✅ Timer de verificação de conexão iniciado (a cada 5 min)');
                 
                 // Criar tabelas automaticamente
                 createMySQLTables(pool, callback);
@@ -311,5 +424,6 @@ module.exports = {
     initDatabase,
     db: db,
     getPool: () => pool,
-    isMySQL: checkIsMySQL
+    isMySQL: checkIsMySQL,
+    testConnection
 };
