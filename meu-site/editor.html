@@ -467,6 +467,23 @@
     </div>
 
     <script>
+        // ============================================
+        // LOGS DE DEBUG - EDITOR
+        // ============================================
+        console.log('📝 EDITOR CARREGADO');
+        console.log('📝 URL:', window.location.href);
+        console.log('📝 Params:', JSON.stringify(Object.fromEntries(new URLSearchParams(window.location.search))));
+        
+        // Capture global errors
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('❌ ERRO GLOBAL:', {msg, url, line, col, error});
+            return false;
+        };
+        
+        window.onunhandledrejection = function(event) {
+            console.error('❌ PROMETE REJEITADO:', event.reason);
+        };
+        
         // Função para obter headers com JWT
         function getAdminHeaders() {
             const token = localStorage.getItem('maanaim_admin_token');

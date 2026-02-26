@@ -184,6 +184,19 @@ let bibliaDb = null;
 
 const app = express();
 
+// ============================================
+// MIDDLEWARE DE LOGGING DETALHADO
+// ============================================
+app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    console.log(`\n🌐 [${timestamp}] ${req.method} ${req.url}`);
+    console.log(`   Headers:`, JSON.stringify(req.headers, null, 2));
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log(`   Body:`, JSON.stringify(req.body, null, 2));
+    }
+    next();
+});
+
         // Middleware - não processar JSON para FormData
         const jsonMiddleware = express.json({ limit: '50mb' });
         app.use((req, res, next) => {
