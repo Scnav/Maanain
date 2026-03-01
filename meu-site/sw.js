@@ -1,9 +1,9 @@
 // Service Worker otimizado para MAANAIM
 // Cache-first para estáticos, network-first para APIs
 
-const CACHE_NAME = 'maanaim-v33';
-const STATIC_CACHE = 'maanaim-static-v33';
-const DYNAMIC_CACHE = 'maanaim-dynamic-v33';
+const CACHE_NAME = 'maanaim-v35';
+const STATIC_CACHE = 'maanaim-static-v35';
+const DYNAMIC_CACHE = 'maanaim-dynamic-v35';
 
 // Recursos estáticos para cache (cache-first)
 const staticAssets = [
@@ -13,7 +13,7 @@ const staticAssets = [
   '/js/admin-auth.js',
   '/css/admin.css',
   '/js/script.js',
-  '/js/admin.js?v=13',
+  '/js/admin.js',
   '/editor.html',
   '/editor',
   '/login.html',
@@ -33,7 +33,9 @@ self.addEventListener('install', event => {
     caches.open(STATIC_CACHE)
       .then(cache => {
         console.log('[SW] Cache estático aberto');
-        return cache.addAll(staticAssets);
+        return cache.addAll(staticAssets).catch(err => {
+          console.log('[SW] Erro ao cachear alguns arquivos:', err);
+        });
       })
       .then(() => self.skipWaiting())
   );
@@ -80,9 +82,15 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // JavaScript: sempre buscar do servidor
-  if (url.pathname.endsWith('.js')) {
+  // JavaScript e CSS: sempre buscar do servidor (evita problemas de cache)
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
     event.respondWith(networkFirst(request));
+    return;
+  }
+  
+  // Imagens: cache-first
+  if (url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|webp)$/i)) {
+    event.respondWith(cacheFirst(request));
     return;
   }
   

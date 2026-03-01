@@ -238,40 +238,55 @@
         </div>
     </footer>
 
-    <script src="js/script.js?v=8"></script>
+    <script src="js/script.js?v=9"></script>
     <script>
         // Logs de depuração para autenticação
         console.log('[MEMBRO] Iniciando verificação de autenticação...');
         
-        // Verificar se localStorage está disponível
-        try {
-            const userFromStorage = localStorage.getItem('maanaim_user');
-            console.log('[MEMBRO] Valor no localStorage:', userFromStorage);
-            
-            const usuarioLogado = userFromStorage ? JSON.parse(userFromStorage) : null;
-            console.log('[MEMBRO] Usuárioparseado:', usuarioLogado);
-            console.log('[MEMBRO] Role do usuário:', usuarioLogado?.role);
-            
-            const rolesPermitidos = ['admin', 'conselho', 'membro'];
-            console.log('[MEMBRO] Roles permitidos:', rolesPermitidos);
-            console.log('[MEMBRO] Role está na lista?:', rolesPermitidos.includes(usuarioLogado?.role));
-            
-            if (!usuarioLogado) {
-                console.log('[MEMBRO] 🚫 Usuário não está logado (usuarioLogado é null/undefined)');
-                alert('Esta área é exclusiva para membros. Faça login para acessar.');
-                window.location.href = 'login.html';
-            } else if (!rolesPermitidos.includes(usuarioLogado.role)) {
-                console.log('[MEMBRO] 🚫 Usuário logado mas role não permite acesso:', usuarioLogado.role);
-                alert('Esta área é exclusiva para membros. Faça login para acessar.');
-                window.location.href = 'login.html';
-            } else {
+        // Função para verificar se está logado
+        function verificarAutenticacao() {
+            // Verificar se localStorage está disponível
+            try {
+                const userFromStorage = localStorage.getItem('maanaim_user');
+                console.log('[MEMBRO] Valor no localStorage:', userFromStorage);
+                
+                if (!userFromStorage || userFromStorage === 'null') {
+                    console.log('[MEMBRO] 🚫 Usuário não está logado (localStorage vazio ou null)');
+                    return false;
+                }
+                
+                const usuarioLogado = JSON.parse(userFromStorage);
+                console.log('[MEMBRO] Usuário parseado:', usuarioLogado);
+                console.log('[MEMBRO] Role do usuário:', usuarioLogado?.role);
+                
+                const rolesPermitidos = ['admin', 'conselho', 'membro'];
+                console.log('[MEMBRO] Roles permitidos:', rolesPermitidos);
+                console.log('[MEMBRO] Role está na lista?:', rolesPermitidos.includes(usuarioLogado?.role));
+                
+                if (!usuarioLogado || !usuarioLogado.role) {
+                    console.log('[MEMBRO] 🚫 Usuário sem role definida');
+                    return false;
+                }
+                
+                if (!rolesPermitidos.includes(usuarioLogado.role)) {
+                    console.log('[MEMBRO] 🚫 Usuário logado mas role não permite acesso:', usuarioLogado.role);
+                    return false;
+                }
+                
                 console.log('[MEMBRO] ✅ Usuário autenticado com role:', usuarioLogado.role);
+                return true;
+            } catch (e) {
+                console.error('[MEMBRO] ❌ Erro ao verificar autenticação:', e);
+                return false;
             }
-        } catch (e) {
-            console.error('[MEMBRO] ❌ Erro ao verificar autenticação:', e);
-            alert('Erro ao verificar autenticação. Faça login novamente.');
+        }
+        
+        // Verificar autenticação
+        if (!verificarAutenticacao()) {
+            alert('Esta área é exclusiva para membros. Faça login para acessar.');
             window.location.href = 'login.html';
         }
+    </script>
 
         // Carregar cards dinamicamente do banco
         async function carregarCardsAreaMembro() {
@@ -289,19 +304,18 @@
                 // Ordenar por ordem
                 topicos.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
                 
-                grid.innerHTML = topicos.map(topico => `
-                    <div class="topico-card" onclick="mostrarConteudo(${topico.id}, '${topico.categoria}')">
+                grid.innerHTML = topicos.map(topico => {
+                    const cat = (topico.categoria || '').replace(/'/g, "\\'");
+                    return `<div class="topico-card" onclick="mostrarConteudo(${topico.id}, '${cat}')">
                         <i class="${topico.icone || 'fas fa-file-alt'}"></i>
                         <h3>${topico.titulo}</h3>
                         <p>${topico.descricao || 'Clique para acessar'}</p>
-                    </div>
-                `).join('') + `
-                    <div class="topico-card" onclick="window.location.href='aulas.html'" style="background: linear-gradient(135deg, #1a5c1a, #2d8a2d);">
-                        <i class="fas fa-graduation-cap"></i>
-                        <h3>AULAS</h3>
-                        <p>Vídeo aulas e estudos</p>
-                    </div>
-                `;
+                    </div>`;
+                }).join('') + `<div class="topico-card" onclick="window.location.href='aulas.html'" style="background: linear-gradient(135deg, #1a5c1a, #2d8a2d);">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h3>AULAS</h3>
+                    <p>Vídeo aulas e estudos</p>
+                </div>`;
                 
             } catch (error) {
                 console.error('Erro ao carregar cards:', error);
