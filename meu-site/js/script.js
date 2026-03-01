@@ -1,6 +1,17 @@
 // VARIÁVEL GLOBAL para controle
 window.MAANAIM_AUTH = { usuario: null, atualizarHeader: null };
 
+// Captura de erros globais
+window.addEventListener('error', function(e) {
+    console.error('[ERRO GLOBAL JS] Erro capturado:', e.message, 'em', e.filename, 'linha', e.lineno);
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('[ERRO GLOBAL JS] Promise rejeitada não tratada:', e.reason);
+});
+
+console.log('[JS] Script carregado - Version 8');
+
 // Variáveis globais para busca bíblica
 let bibliaLivros = [];
 let livroAtual = null;
@@ -259,10 +270,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // Função para carregar notícias
 async function carregarNoticias() {
     try {
+        console.log('[DEBUG JS] Carregando notícias...');
         const response = await fetch('/api/noticias');
-        if (!response.ok) throw new Error('Erro ao carregar notícias');
+        if (!response.ok) throw new Error('Erro ao carregar notícias: ' + response.status);
 
         const noticias = await response.json();
+        console.log('[DEBUG JS] Notícias recebidas:', noticias.length);
         const container = document.getElementById('noticiasContainer');
 
         if (noticias.length === 0) {
@@ -282,7 +295,7 @@ async function carregarNoticias() {
             `;
         }).join('');
     } catch (error) {
-        console.error('Erro ao carregar notícias:', error);
+        console.error('[ERRO JS] Erro ao carregar notícias:', error);
         document.getElementById('noticiasContainer').innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">Erro ao carregar notícias.</p>';
     }
 }

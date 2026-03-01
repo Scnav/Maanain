@@ -240,12 +240,36 @@
 
     <script src="js/script.js?v=8"></script>
     <script>
-        // Controle de acesso
-        const usuarioLogado = JSON.parse(localStorage.getItem('maanaim_user') || 'null');
-        const rolesPermitidos = ['admin', 'conselho', 'membro'];
+        // Logs de depuração para autenticação
+        console.log('[MEMBRO] Iniciando verificação de autenticação...');
         
-        if (!usuarioLogado || !rolesPermitidos.includes(usuarioLogado.role)) {
-            alert('Esta área é exclusiva para membros. Faça login para acessar.');
+        // Verificar se localStorage está disponível
+        try {
+            const userFromStorage = localStorage.getItem('maanaim_user');
+            console.log('[MEMBRO] Valor no localStorage:', userFromStorage);
+            
+            const usuarioLogado = userFromStorage ? JSON.parse(userFromStorage) : null;
+            console.log('[MEMBRO] Usuárioparseado:', usuarioLogado);
+            console.log('[MEMBRO] Role do usuário:', usuarioLogado?.role);
+            
+            const rolesPermitidos = ['admin', 'conselho', 'membro'];
+            console.log('[MEMBRO] Roles permitidos:', rolesPermitidos);
+            console.log('[MEMBRO] Role está na lista?:', rolesPermitidos.includes(usuarioLogado?.role));
+            
+            if (!usuarioLogado) {
+                console.log('[MEMBRO] 🚫 Usuário não está logado (usuarioLogado é null/undefined)');
+                alert('Esta área é exclusiva para membros. Faça login para acessar.');
+                window.location.href = 'login.html';
+            } else if (!rolesPermitidos.includes(usuarioLogado.role)) {
+                console.log('[MEMBRO] 🚫 Usuário logado mas role não permite acesso:', usuarioLogado.role);
+                alert('Esta área é exclusiva para membros. Faça login para acessar.');
+                window.location.href = 'login.html';
+            } else {
+                console.log('[MEMBRO] ✅ Usuário autenticado com role:', usuarioLogado.role);
+            }
+        } catch (e) {
+            console.error('[MEMBRO] ❌ Erro ao verificar autenticação:', e);
+            alert('Erro ao verificar autenticação. Faça login novamente.');
             window.location.href = 'login.html';
         }
 

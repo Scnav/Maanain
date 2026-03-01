@@ -265,6 +265,7 @@ app.post("/api/register", loginRateLimiter, async (req, res) => {
         const hashed = await bcrypt.hash(password, 10);
         console.log('[REGISTER] Senha hasheada com sucesso');
         
+        // O role padrão é 'frequentador' - o admin deve alterar manualmente para 'membro'
         db.run(
             "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
             [username, email || null, hashed, 'frequentador'],
@@ -276,12 +277,12 @@ app.post("/api/register", loginRateLimiter, async (req, res) => {
                     }
                     return res.status(500).json({ error: err.message });
                 }
-                console.log('[REGISTER] Usuário criado com sucesso, ID:', this.lastID);
+                console.log('[REGISTER] ✅ Usuário criado com sucesso, ID:', this.lastID, '| Role: frequentador (padrão)');
                 res.status(201).json({ message: "Cadastro OK!", id: this.lastID });
             }
         );
     } catch (err) {
-        console.log('[REGISTER] Erro ao fazer hash da senha:', err.message);
+        console.log('[REGISTER] ❌ Erro ao fazer hash da senha:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -302,11 +303,12 @@ app.post("/api/login", loginRateLimiter, (req, res) => {
         [username],
         (err, row) => {
             if (err) {
-                console.error('❌ Erro no login:', err.message);
+                console.error('[SERVER] ❌ Erro no login (DB):', err.message);
                 return res.status(500).json({ error: "Erro no servidor. Tente novamente." });
             }
             
             console.log('[SERVER] Consulta DB resultado:', row ? 'usuário encontrado' : 'não encontrado');
+            console.log('[SERVER] Dados do usuário no DB:', row ? { id: row.id, username: row.username, role: row.role } : 'nenhum');
             
             if (!row) {
                 console.log('[SERVER] Login falhou - usuário não existe');
@@ -314,6 +316,7 @@ app.post("/api/login", loginRateLimiter, (req, res) => {
             }
 
             if (!row.role) {
+                console.log('[SERVER] Role estava vazio, definindo como frequentador');
                 db.run("UPDATE users SET role = 'frequentador' WHERE id = ?", [row.id]);
                 row.role = 'frequentador';
             }
@@ -321,7 +324,7 @@ app.post("/api/login", loginRateLimiter, (req, res) => {
             console.log('[SERVER] Verificando senha...');
             bcrypt.compare(password, row.password_hash, (err, valid) => {
                 if (err) {
-                    console.error('❌ Erro ao verificar senha:', err.message);
+                    console.error('[SERVER] ❌ Erro ao verificar senha:', err.message);
                     return res.status(500).json({ error: "Erro no servidor. Tente novamente." });
                 }
                 
@@ -330,7 +333,7 @@ app.post("/api/login", loginRateLimiter, (req, res) => {
                     return res.status(400).json({ error: "Usuário ou senha inválidos." });
                 }
 
-                console.log('[SERVER] Login bem-sucedido para:', username);
+                console.log('[SERVER] ✅ Login bem-sucedido para:', username, '| Role:', row.role);
                 res.json({
                     message: "Login OK!",
                     user: {
@@ -886,9 +889,23 @@ app.put('/api/admin/youtube-config', verifyAdmin, (req, res) => {
     );
 });
 
-// Get YouTube live status (público)
+// Cache para YouTube (5 minutos)
+let youtubeCache = {
+    live: { data: null, timestamp: 0 },
+    latest: { data: null, timestamp: 0 }
+};
+const YOUTUBE_CACHE_TIME = 5 * 60 * 1000; // 5 minutos
+
+// Get YouTube live status (público) - SSR com cache
 console.log('📺 Registrando rota: GET /api/youtube-live');
 app.get('/api/youtube-live', async (req, res) => {
+    // Verificar cache
+    const now = Date.now();
+    if (youtubeCache.live.data && (now - youtubeCache.live.timestamp) < YOUTUBE_CACHE_TIME) {
+        console.log('📺 Retornando live do cache');
+        return res.json(youtubeCache.live.data);
+    }
+    
     try {
         // Primeiro pega a configuração
         db.get("SELECT channel_id, enabled FROM youtube_config WHERE id = 1", async (err, config) => {
@@ -896,30 +913,24 @@ app.get('/api/youtube-live', async (req, res) => {
             
             if (err || !config || !config.enabled || !config.channel_id) {
                 console.log('📺 YouTube config not found or disabled');
-                console.log('   - err:', err);
-                console.log('   - config:', config);
-                console.log('   - enabled:', config?.enabled);
-                console.log('   - channel_id:', config?.channel_id);
-                return res.json({ isLive: false, video: null });
+                const result = { isLive: false, video: null };
+                youtubeCache.live = { data: result, timestamp: now };
+                return res.json(result);
             }
             
             let channelId = config.channel_id.trim();
             
             // Detectar se é URL ou @username e converter para ID
             if (channelId.includes('youtube.com/')) {
-                // Extrair o @username ou ID da URL
                 const match = channelId.match(/@(.[^/]+)|channel\/([^/]+)|c\/([^/]+)/);
                 if (match) {
                     const identifier = match[1] || match[2] || match[3];
-                    // Se parece ser um ID (começa com UC), usa direto
                     if (identifier.startsWith('UC')) {
                         channelId = identifier;
                     } else {
-                        // É um @username, precisa resolver para ID
-                        console.log('Resolving username:', identifier);
-                        // Por enquanto, retornamos que não está em live
-                        // (implementar resolução de username requer API adicional)
-                        return res.json({ isLive: false, video: null, message: 'Use o ID do canal (começa com UC)' });
+                        const result = { isLive: false, video: null, message: 'Use o ID do canal (começa com UC)' };
+                        youtubeCache.live = { data: result, timestamp: now };
+                        return res.json(result);
                     }
                 }
             }
@@ -934,9 +945,10 @@ app.get('/api/youtube-live', async (req, res) => {
                 const data = await response.json();
                 console.log('YouTube API response:', data);
                 
+                let result;
                 if (data.items && data.items.length > 0) {
                     const video = data.items[0];
-                    res.json({
+                    result = {
                         isLive: true,
                         video: {
                             videoId: video.id.videoId,
@@ -944,13 +956,19 @@ app.get('/api/youtube-live', async (req, res) => {
                             thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
                             channelTitle: video.snippet.channelTitle
                         }
-                    });
+                    };
                 } else {
-                    res.json({ isLive: false, video: null });
+                    result = { isLive: false, video: null };
                 }
+                
+                // Salvar no cache
+                youtubeCache.live = { data: result, timestamp: now };
+                res.json(result);
             } catch (apiError) {
                 console.error('YouTube API error:', apiError);
-                res.json({ isLive: false, video: null });
+                const result = { isLive: false, video: null };
+                youtubeCache.live = { data: result, timestamp: now };
+                res.json(result);
             }
         });
     } catch (error) {
@@ -958,29 +976,35 @@ app.get('/api/youtube-live', async (req, res) => {
     }
 });
 
-// Endpoint para buscar o último vídeo uploadado do canal
+// Endpoint para buscar o último vídeo uploadado do canal - SSR com cache
 app.get('/api/youtube/latest', async (req, res) => {
+    // Verificar cache
+    const now = Date.now();
+    if (youtubeCache.latest.data && (now - youtubeCache.latest.timestamp) < YOUTUBE_CACHE_TIME) {
+        console.log('📺 Retornando latest do cache');
+        return res.json(youtubeCache.latest.data);
+    }
+    
     try {
-        // Buscar configuração do canal
         db.get("SELECT channel_id FROM youtube_config WHERE id = 1", async (err, config) => {
             if (err || !config || !config.channel_id) {
-                return res.json({ video: null, message: 'Canal não configurado' });
+                const result = { video: null, message: 'Canal não configurado' };
+                youtubeCache.latest = { data: result, timestamp: now };
+                return res.json(result);
             }
             
             const channelId = config.channel_id.trim();
             console.log('Buscando último vídeo para canal:', channelId);
             
-            // Primeiro tenta buscar live atual
             const liveUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
             
             try {
                 const liveResponse = await fetch(liveUrl);
                 const liveData = await liveResponse.json();
                 
-                // Se tem live agora, retorna
                 if (liveData.items && liveData.items.length > 0) {
                     const video = liveData.items[0];
-                    res.json({
+                    const result = {
                         video: {
                             videoId: video.id.videoId,
                             title: video.snippet.title,
@@ -990,11 +1014,12 @@ app.get('/api/youtube/latest', async (req, res) => {
                             publishedAt: video.snippet.publishedAt,
                             isLive: true
                         }
-                    });
-                    return;
+                    };
+                    youtubeCache.latest = { data: result, timestamp: now };
+                    return res.json(result);
                 }
                 
-                // Se não tem live, buscar última transmissão (broadcast completed)
+                // Se não tem live, buscar última transmissão
                 const broadcastUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=completed&type=video&maxResults=1&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
                 
                 const broadcastResponse = await fetch(broadcastUrl);
@@ -1002,7 +1027,7 @@ app.get('/api/youtube/latest', async (req, res) => {
                 
                 if (broadcastData.items && broadcastData.items.length > 0) {
                     const video = broadcastData.items[0];
-                    res.json({
+                    const result = {
                         video: {
                             videoId: video.id.videoId,
                             title: video.snippet.title,
@@ -1012,8 +1037,9 @@ app.get('/api/youtube/latest', async (req, res) => {
                             publishedAt: video.snippet.publishedAt,
                             isLive: false
                         }
-                    });
-                    return;
+                    };
+                    youtubeCache.latest = { data: result, timestamp: now };
+                    return res.json(result);
                 }
                 
                 // Se não tem broadcast, buscar último vídeo normal
@@ -1022,9 +1048,10 @@ app.get('/api/youtube/latest', async (req, res) => {
                 const videoResponse = await fetch(videoUrl);
                 const videoData = await videoResponse.json();
                 
+                let result;
                 if (videoData.items && videoData.items.length > 0) {
                     const video = videoData.items[0];
-                    res.json({
+                    result = {
                         video: {
                             videoId: video.id.videoId,
                             title: video.snippet.title,
@@ -1034,14 +1061,18 @@ app.get('/api/youtube/latest', async (req, res) => {
                             publishedAt: video.snippet.publishedAt,
                             isLive: false
                         }
-                    });
-                    return;
+                    };
+                } else {
+                    result = { video: null, message: 'Nenhum vídeo encontrado' };
                 }
                 
-                res.json({ video: null, message: 'Nenhum vídeo encontrado' });
+                youtubeCache.latest = { data: result, timestamp: now };
+                res.json(result);
             } catch (apiError) {
                 console.error('YouTube API error:', apiError);
-                res.json({ video: null, error: apiError.message });
+                const result = { video: null, error: apiError.message };
+                youtubeCache.latest = { data: result, timestamp: now };
+                res.json(result);
             }
         });
     } catch (error) {
