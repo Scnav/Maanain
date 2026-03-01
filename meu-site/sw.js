@@ -82,9 +82,9 @@ self.addEventListener('fetch', event => {
     return;
   }
   
-  // JavaScript e CSS: sempre buscar do servidor (evita problemas de cache)
+  // JavaScript e CSS: SEMPRE buscar do servidor (evita problemas de cache)
   if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(fetch(request));
     return;
   }
   
