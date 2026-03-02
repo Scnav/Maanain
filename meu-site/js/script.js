@@ -67,7 +67,14 @@ function parseContentImages(texto) {
 function renderContentWithImages(texto, containerId) {
     const container = document.getElementById(containerId);
     if (container) {
-        container.innerHTML = parseContentImages(texto);
+        let html = parseContentImages(texto);
+        
+        // Adicionar tratamento de erro para imagens quebradas
+        html = html.replace(/<img src="([^"]+)"/g, function(match, src) {
+            return '<img src="' + src + '" onerror="this.style.display=\'none\'"';
+        });
+        
+        container.innerHTML = html;
     }
 }
 
@@ -159,12 +166,36 @@ document.addEventListener("DOMContentLoaded", () => {
     // Carrega usuário
     function carregarUsuario() {
         const userData = localStorage.getItem('maanaim_user');
-        usuarioLogado = userData ? JSON.parse(userData) : null;
+        console.log('[DEBUG] localStorage:', userData);
+        
+        // Tratar dados inválidos no localStorage
+        if (!userData || userData === 'null' || userData === 'undefined' || userData === '') {
+            console.log('[DEBUG] Usuário não logado (localStorage vazio ou inválido)');
+            usuarioLogado = null;
+        } else {
+            try {
+                usuarioLogado = JSON.parse(userData);
+                console.log('[DEBUG] Usuário logado:', usuarioLogado);
+            } catch(e) {
+                console.error('[DEBUG] Erro ao parsear usuário:', e);
+                localStorage.removeItem('maanaim_user');
+                usuarioLogado = null;
+            }
+        }
+        
         atualizarHeader();
 
-        // Redireciona se já logado
-        if (usuarioLogado && (window.location.pathname.includes('login.html') || window.location.pathname.includes('register.html'))) {
-            window.location.href = 'index.html';
+        // Debug pathname
+        const pathname = window.location.pathname || window.location.href;
+        console.log('[DEBUG] Página atual:', pathname);
+        
+        // Redireciona se já logado E tem id válido
+        if (usuarioLogado && usuarioLogado.id) {
+            if (pathname.includes('login.html') || pathname.includes('register.html')) {
+                console.log('[DEBUG] Redirecionando para index.html');
+                window.location.href = 'index.html';
+                return;
+            }
         }
     }
 
@@ -681,6 +712,22 @@ async function realizarBusca() {
         return;
     }
     
+    // Normalizar termos como "2 reis" -> "2reis 1" para reconhecer como livro + capítulo
+    let termoNormalizado = termo;
+    
+    // Verificar se é formato "número livro" (ex: "2 reis", "1 samuel") - sem número de capítulo
+    const matchNumeroLivroSemCapitulo = termo.match(/^(\d+)\s+(\w+)$/i);
+    if (matchNumeroLivroSemCapitulo) {
+        const numero = matchNumeroLivroSemCapitulo[1];
+        const livro = matchNumeroLivroSemCapitulo[2];
+        termoNormalizado = numero + livro + ' 1';  // Assumir capítulo 1
+        console.log('[BUSCA] Normalizado de "' + termo + '" para "' + termoNormalizado + '"');
+        
+        // Agora chama buscarPorCapitulo diretamente com o livro normalizado
+        await buscarPorCapitulo(numero + livro, 1);
+        return;
+    }
+    
     // Verificar se é uma referência bíblica
     // Formatos aceitos: 
     // "livro capítulo:versículo" - genesis 1:1 ou genesis 1:1:5
@@ -689,7 +736,7 @@ async function realizarBusca() {
     // "livro capítulo" - salmos 23 (apenas capítulo)
     // "livro capítulo a capítulo" - levitico 16 a 18 (múltiplos capítulos)
     // "livro capítulo e capítulo" - levitico 22 e 23 (múltiplos capítulos)
-    const refMatch = termo.match(/^(\w+)\s+(\d+)(?:\s+a\s+(\d+)|\s+e\s+(\d+))?(?::(\d+)(?::(\d+))?|\s+(\d+)(?:\s+(\d+))?)?$/i);
+    const refMatch = termoNormalizado.match(/^(\w+)\s+(\d+)(?:\s+a\s+(\d+)|\s+e\s+(\d+))?(?::(\d+)(?::(\d+))?|\s+(\d+)(?:\s+(\d+))?)?$/i);
     if (refMatch) {
         const livroAbrev = refMatch[1];
         const capitulo = parseInt(refMatch[2]);
@@ -733,6 +780,7 @@ async function realizarBusca() {
         return;
     }
     
+    // Se não bateu com o padrão de referência, faz busca por texto
     termoBuscaAtual = termo;
     buscaOffset = 0;
     await executarBusca(termo, 0);
