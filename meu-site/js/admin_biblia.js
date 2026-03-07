@@ -17,10 +17,17 @@ function getAdminHeaders() {
 
 // Carregar tópicos bíblicos
 async function carregarTopicosBiblia() {
+    console.log('🔍 carregarTopicosBiblia chamada!');
     const loading = document.getElementById('loadingTopicos');
     const lista = document.getElementById('listaTopicos');
     
-    if (!loading || !lista) return;
+    console.log('loading:', loading);
+    console.log('lista:', lista);
+    
+    if (!loading || !lista) {
+        console.error('❌ Elementos não encontrados!');
+        return;
+    }
     
     loading.style.display = 'block';
     lista.style.display = 'none';
@@ -56,36 +63,108 @@ function exibirTopicos(topicos) {
         return;
     }
     
-    // Função para verificar se tem agendamento (independentemente de já ter passado ou não)
-    function verificarAgendamento(topico) {
-        console.log('Verificando agendamento - data:', topico.data_publicacao, 'hora:', topico.hora_publicacao, 'ativo raw:', topico.ativo);
-        if (!topico.data_publicacao || topico.data_publicacao === '') return null;
-        const dataHoraPub = topico.data_publicacao + ' ' + (topico.hora_publicacao || '00:00');
-        const dataPub = new Date(dataHoraPub.replace(' ', 'T'));
+    // Função para verificar o status real do tópico
+    function verificarStatus(topico) {
+        console.log('Verificando status - data:', topico.data_publicacao, 'hora:', topico.hora_publicacao, 'ativo raw:', topico.ativo);
+        
+        const ativoNum = Number(topico.ativo);
+        
+        // Obter a data atual no fuso horário do Brasil (UTC-3)
         const agora = new Date();
-        // Retorna a data se ainda não passou, ou null se já passou
-        return dataPub > agora ? dataPub : null;
+        const agoraBRT = new Date(agora.getTime() - (3 * 60 * 60 * 1000)); // Converter para BRT
+        
+        console.log('Agora (UTC):', agora.toISOString());
+        console.log('Agora (BRT):', agoraBRT.toISOString());
+        
+        // Se tem hora de publicação, verificar o agendamento
+        if (topico.hora_publicacao && topico.hora_publicacao !== '') {
+            // Determinar a data de publicação em UTC
+            let dataPub;
+            const horaParts = topico.hora_publicacao.split(':');
+            const hora = parseInt(horaParts[0]);
+            const minuto = parseInt(horaParts[1]) || 0;
+            
+            if (topico.data_publicacao && topico.data_publicacao !== '') {
+                // Tem data específica
+                let dataStr = String(topico.data_publicacao);
+                let dataPart;
+                
+                // Handle diferentes formatos de data do banco
+                if (dataStr.includes('T') && dataStr.includes('GMT')) {
+                    // Formato Date object do SQLite: "Fri Mar 06 2026 00:00:00 GMT-0300"
+                    const partes = dataStr.split(' ');
+                    const meses = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+                    const mes = meses[partes[1]];
+                    const dia = parseInt(partes[2]);
+                    const ano = parseInt(partes[3]);
+                    dataPart = `${ano}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+                } else if (dataStr.includes('T')) {
+                    // Formato ISO: "2026-03-06T03:00:00.000Z"
+                    dataPart = dataStr.split('T')[0];
+                } else {
+                    // Formato YYYY-MM-DD
+                    dataPart = dataStr;
+                }
+                
+                const [ano, mes, dia] = dataPart.split('-').map(Number);
+                
+                // Criar dataPub em UTC (hora brasileira convertida para UTC)
+                // Quando o usuário configura 22:00 BRT, o UTC é 22:00 - 3 = 01:00 do dia seguinte
+                dataPub = new Date(Date.UTC(ano, mes - 1, dia, hora, minuto));
+                
+                console.log('Data pub (com data):', dataPub.toISOString());
+            } else {
+                // Não tem data - usar data de hoje com a hora especificada
+                // Criar dataPub em UTC
+                dataPub = new Date(Date.UTC(agoraBRT.getFullYear(), agoraBRT.getMonth(), agoraBRT.getDate(), hora, minuto));
+                
+                console.log('Data pub (sem data, com hora):', dataPub.toISOString());
+                
+                // Se a hora de hoje já passou (dataPub < agoraBRT), agendar para amanha
+                if (dataPub.getTime() <= agoraBRT.getTime()) {
+                    dataPub = new Date(Date.UTC(agoraBRT.getFullYear(), agoraBRT.getMonth(), agoraBRT.getDate() + 1, hora, minuto));
+                    console.log('Data pub ajustada para amanha:', dataPub.toISOString());
+                }
+            }
+            
+            console.log('Data publicação:', dataPub.toISOString(), 'Agora BRT:', agoraBRT.toISOString());
+            console.log('Comparacao:', dataPub.getTime(), '>', agoraBRT.getTime(), '=', dataPub.getTime() > agoraBRT.getTime());
+            
+            if (dataPub.getTime() > agoraBRT.getTime()) {
+                // Data/hora ainda não chegou - está agendado
+                const dataFormatada = dataPub.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const horaFormatada = dataPub.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                return { 
+                    status: 'agendado', 
+                    label: `⏰ Agendado para ${dataFormatada} às ${horaFormatada}`, 
+                    cor: '#ffc107',
+                    dataAgendamento: dataPub
+                };
+            }
+            
+            // Data/hora já passou - verificar se está ativo
+            if (ativoNum === 1) {
+                return { status: 'publicado', label: '✅Publicado', cor: '#28a745' };
+            } else {
+                return { status: 'expirado', label: '⏸️ Expirado', cor: '#6c757d' };
+            }
+        }
+        
+        // Se não tem hora de publicação
+        if (ativoNum === 1) {
+            return { status: 'publicado', label: '✅Publicado', cor: '#28a745' };
+        } else {
+            return { status: 'rascunho', label: '📝 Rascunho', cor: '#6c757d' };
+        }
     }
     
     lista.innerHTML = `
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
             ${topicos.map(topico => {
-                const dataAgendamento = verificarAgendamento(topico);
+                const statusInfo = verificarStatus(topico);
                 const ativoNum = Number(topico.ativo);
-                console.log('Topico:', topico.titulo, 'ativo (raw):', topico.ativo, 'ativo (num):', ativoNum, 'dataAgendamento:', dataAgendamento);
-                let statusBadge = '';
-                if (dataAgendamento) {
-                    // Ainda está agendado para o futuro
-                    const dataFormatada = dataAgendamento.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    const horaFormatada = dataAgendamento.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    statusBadge = `<span style="background: #ffc107; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;" title="Agendado para ${dataFormatada} às ${horaFormatada}">⏰ Agendado</span>`;
-                } else if (ativoNum === 1) {
-                    // Ativo e data já passou (ou sem data)
-                    statusBadge = `<span style="background: #28a745; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">✅Publicado</span>`;
-                } else {
-                    statusBadge = `<span style="background: #6c757d; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">❌ Inativo</span>`;
-                }
-                
+                console.log('Topico:', topico.titulo, '- Status:', statusInfo.status, '- Label:', statusInfo.label);
+                let statusBadge = `<span style="background: ${statusInfo.cor}; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;" title="${statusInfo.label}">${statusInfo.label}</span>`;
                 return `
                 <div style="background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">

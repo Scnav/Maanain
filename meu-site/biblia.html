@@ -687,27 +687,20 @@
                 return;
             }
             
-            // Verificar se é uma referência bíblica
-            // Formatos aceitos:
-            // - "livro cap:vers" - genesis 1:1
-            // - "livro cap:vers-vers" - genesis 1:1-4
-            // - "livro cap:vers e vers" - genesis 1:1 e 4
-            // - "livro cap vers" - genesis 1 1
-            // - "livro cap vers-vers" - genesis 1 1-4
-            // - "livro cap vers e vers" - genesis 1 1 e 4
-            // - "livro cap" - salmos 23
-            // - "livro cap a cap" - genesis 1 a 3 (múltiplos capítulos)
-            // - "2 reis 1" - 2 reis capítulo 1
+            console.log('DEBUG - termo digitado:', termo);
             
+            // Verificar se é uma referência bíblica
             // Parser de referência bíblica
             const refParse = parseBiblicalReference(termo);
-            console.log('DEBUG - termo digitado:', termo);
             console.log('DEBUG - refParse resultado:', refParse);
             
             if (refParse) {
                 console.log('Referência parseada:', refParse);
                 
-                if (refParse.tipo === 'capitulo') {
+                if (refParse.tipo === 'livro') {
+                    // Apenas nome do livro - carregar primeiro capítulo
+                    await buscarPorCapitulo(refParse.livro, 1);
+                } else if (refParse.tipo === 'capitulo') {
                     // Apenas capítulo
                     await buscarPorCapitulo(refParse.livro, refParse.capitulo);
                 } else if (refParse.tipo === 'intervalo_versiculos') {
@@ -726,6 +719,8 @@
                 return;
             }
             
+            // Se não conseguiu parsear como referência bíblica, faz busca de texto
+            console.log('DEBUG - Não foi referência bíblica, fazendo busca de texto');
             termoBuscaAtual = termo;
             buscaOffset = 0;
             
@@ -1050,30 +1045,51 @@
         // Parser de referência bíblica
         function parseBiblicalReference(termo) {
             const livrosPT = {
-                'genesis': 'gn', 'gen': 'gn', 'exodo': 'ex', 'levitico': 'lv', 'numeros': 'nm', 'deuteronomio': 'dt',
-                'josue': 'js', 'juizes': 'jz', 'rute': 'rt', '1samuel': '1sm', '2samuel': '2sm', '1reis': '1rs', '2reis': '2rs',
-                '1cronicas': '1cr', '2cronicas': '2cr', 'esdras': 'ed', 'neemias': 'ne', 'ester': 'et', 'jo': 'jo', 'salmos': 'sl',
-                'proverbios': 'pv', 'eclesiastes': 'ec', 'canticos': 'ct', 'isaias': 'is', 'jeremias': 'jr', 'lamentacoes': 'lm',
-                'ezequiel': 'ez', 'daniel': 'dn', 'oseias': 'os', 'joel': 'jl', 'amos': 'am', 'obadias': 'ob', 'jonas': 'jn',
-                'miqueias': 'mq', 'naum': 'na', 'habacuque': 'hc', 'sofonias': 'sf', 'ageu': 'ag', 'zacarias': 'zc', 'malaquias': 'ml',
-                'mateus': 'mt', 'marcos': 'mc', 'lucas': 'lc', 'joao': 'jo', 'atos': 'at', 'romanos': 'rm', '1corintios': '1co',
-                '2corintios': '2co', 'galatas': 'gl', 'efesios': 'ef', 'filipenses': 'fp', 'colossenses': 'cl',
-                '1tessalonicenses': '1ts', '2tessalonicenses': '2ts', '1timoteo': '1tm', '2timoteo': '2tm', 'tito': 'tt',
-                'filemom': 'fm', 'hebreus': 'hb', 'tiago': 'tg', '1pedro': '1pe', '2pedro': '2pe', '1joao': '1jo',
-                '2joao': '2jo', '3joao': '3jo', 'judas': 'jd', 'apocalipse': 'ap'
+                // Nomes completos
+                'genesis': 'gn', 'gen': 'gn', 'gn': 'gn', 'exodo': 'ex', 'ex': 'ex', 'levitico': 'lv', 'lv': 'lv', 'numeros': 'nm', 'nm': 'nm', 'deuteronomio': 'dt', 'dt': 'dt',
+                'josue': 'js', 'js': 'js', 'juizes': 'jz', 'jz': 'jz', 'rute': 'rt', 'rt': 'rt', 
+                '1samuel': '1sm', '1sm': '1sm', '2samuel': '2sm', '2sm': '2sm', 
+                '1reis': '1rs', '1rs': '1rs', '2reis': '2rs', '2rs': '2rs',
+                '1cronicas': '1cr', '1cr': '1cr', '2cronicas': '2cr', '2cr': '2cr', 
+                'esdras': 'ed', 'ed': 'ed', 'neemias': 'ne', 'ne': 'ne', 'ester': 'et', 'et': 'et', 
+                'jo': 'jo', 'salmos': 'sl', 'sl': 'sl',
+                'proverbios': 'pv', 'pv': 'pv', 'eclesiastes': 'ec', 'ec': 'ec', 'canticos': 'ct', 'ct': 'ct', 
+                'isaias': 'is', 'is': 'is', 'jeremias': 'jr', 'jr': 'jr', 'lamentacoes': 'lm', 'lm': 'lm',
+                'ezequiel': 'ez', 'ez': 'ez', 'daniel': 'dn', 'dn': 'dn', 'oseias': 'os', 'os': 'os', 
+                'joel': 'jl', 'jl': 'jl', 'amos': 'am', 'am': 'am', 'obadias': 'ob', 'ob': 'ob', 
+                'jonas': 'jn', 'jn': 'jn', 'miqueias': 'mq', 'mq': 'mq', 'naum': 'na', 'na': 'na', 
+                'habacuque': 'hc', 'hc': 'hc', 'sofonias': 'sf', 'sf': 'sf', 'ageu': 'ag', 'ag': 'ag', 
+                'zacarias': 'zc', 'zc': 'zc', 'malaquias': 'ml', 'ml': 'ml',
+                'mateus': 'mt', 'mt': 'mt', 'marcos': 'mc', 'mc': 'mc', 'lucas': 'lc', 'lc': 'lc', 
+                'joao': 'jo', 'atos': 'at', 'at': 'at', 'romanos': 'rm', 'rm': 'rm', 
+                '1corintios': '1co', '1co': '1co', '2corintios': '2co', '2co': '2co', 
+                'galatas': 'gl', 'gl': 'gl', 'efesios': 'ef', 'ef': 'ef', 'filipenses': 'fp', 'fp': 'fp', 
+                'colossenses': 'cl', 'cl': 'cl',
+                '1tessalonicenses': '1ts', '1ts': '1ts', '2tessalonicenses': '2ts', '2ts': '2ts', 
+                '1timoteo': '1tm', '1tm': '1tm', '2timoteo': '2tm', '2tm': '2tm', 
+                'tito': 'tt', 'tt': 'tt', 'filemon': 'fm', 'fm': 'fm', 
+                'hebreus': 'hb', 'hb': 'hb', 'tiago': 'tg', 'tg': 'tg', 
+                '1pedro': '1pe', '1pe': '1pe', '2pedro': '2pe', '2pe': '2pe', 
+                '1joao': '1jo', '1jo': '1jo', '2joao': '2jo', '2jo': '2jo', 
+                '3joao': '3jo', '3jo': '3jo', 'judas': 'jd', 'jd': 'jd', 
+                'apocalipse': 'ap', 'ap': 'ap'
             };
             
             let texto = termo.toLowerCase().trim();
             let prefixoNumero = '';
             let livroParte = texto;
             
+            console.log('PARSE DEBUG - texto inicial:', texto);
+            
             // Verificar se começa com 1, 2 ou 3 seguido de espaço ou letra
-            if (texto.match(/^(1|2|3)\s*\w/)) {
-                const match = texto.match(/^(1|2|3)(\s*)(\w.*)/);
+            // Este padrão é para "2 reis", "1 samuel", etc.
+            if (texto.match(/^(1|2|3)\s+\w/)) {
+                const match = texto.match(/^(1|2|3)(\s+)(\w.*)/);
                 if (match) {
                     prefixoNumero = match[1];
                     // Se houver espaço, remover o espaço do nome do livro
                     livroParte = match[3];
+                    console.log('PARSE DEBUG - prefixoNumero:', prefixoNumero, 'livroParte:', livroParte);
                 }
             }
             
@@ -1081,18 +1097,31 @@
             const nomeLivro = partes[0];
             const resto = partes.slice(1).join(' ');
             
+            console.log('PARSE DEBUG - nomeLivro:', nomeLivro, 'resto:', resto);
+            
             // Primeiro tenta encontrar só pelo nome do livro
             let abrev = livrosPT[nomeLivro];
-            // Se não encontrou e tem prefixo, tenta combinar prefixo + nome
+            console.log('PARSE DEBUG - abrev (primeira tentativa):', abrev);
+            
+            // Se não encontrou e tem prefixo, tenta combinar prefixo + nome (ex: "1samuel")
             if (!abrev && prefixoNumero) {
                 abrev = livrosPT[prefixoNumero + nomeLivro];
+                console.log('PARSE DEBUG - abrev (prefixo+nome):', abrev);
             }
-            // Se ainda não encontrou, tenta só com o prefixo
+            // Se ainda não encontrou, tenta só com o prefixo (ex: "1sm")
             if (!abrev && prefixoNumero) {
                 abrev = livrosPT[prefixoNumero];
+                console.log('PARSE DEBUG - abrev (só prefixo):', abrev);
             }
             if (!abrev) abrev = nomeLivro;
-            if (!resto) return null;
+            console.log('PARSE DEBUG - abrev (final):', abrev);
+            
+            // Se não há resto (apenas nome do livro), retorna tipo 'livro' para carregar primeiro capítulo
+            if (!resto) {
+                return { tipo: 'livro', livro: abrev };
+            }
+            
+            console.log('PARSE DEBUG - testando resto:', resto);
             
             // Intervalo de capítulos
             const multiCap = resto.match(/^(\d+)\s+(a|e)\s+(\d+)$/);
@@ -1100,24 +1129,36 @@
             
             // Com dois pontos: 1:1-4 ou 1:1 e 4
             const doisPontos = resto.match(/^(\d+):(\d+)(?:-(\d+)|\s+e\s+(\d+))?$/);
+            console.log('PARSE DEBUG - doisPontos match:', doisPontos);
             if (doisPontos) {
                 if (doisPontos[3]) return { tipo: 'intervalo_versiculos', livro: abrev, capitulo: parseInt(doisPontos[1]), versiculoInicio: parseInt(doisPontos[2]), versiculoFim: parseInt(doisPontos[3]) };
                 if (doisPontos[4]) return { tipo: 'versiculos_especificos', livro: abrev, capitulo: parseInt(doisPontos[1]), versiculos: [parseInt(doisPontos[2]), parseInt(doisPontos[4])] };
                 return { tipo: 'unico', livro: abrev, capitulo: parseInt(doisPontos[1]), versiculo: parseInt(doisPontos[2]) };
             }
             
-            // Com espaço: 1 1-4 ou 1 1 e 4
+            // Com espaço: 1 1-4 ou 1 1 e 4 (capítulo versículo-versículo)
+            // Também suporta: 1 3 5 (capítulo versículoInicio versículoFim)
             const espaco = resto.match(/^(\d+)\s+(\d+)(?:-(\d+)|\s+e\s+(\d+))?$/);
+            console.log('PARSE DEBUG - espaco match:', espaco);
             if (espaco) {
                 if (espaco[3]) return { tipo: 'intervalo_versiculos', livro: abrev, capitulo: parseInt(espaco[1]), versiculoInicio: parseInt(espaco[2]), versiculoFim: parseInt(espaco[3]) };
                 if (espaco[4]) return { tipo: 'versiculos_especificos', livro: abrev, capitulo: parseInt(espaco[1]), versiculos: [parseInt(espaco[2]), parseInt(espaco[4])] };
                 return { tipo: 'unico', livro: abrev, capitulo: parseInt(espaco[1]), versiculo: parseInt(espaco[2]) };
             }
             
+            // NOVO: Suporte para "1 3 5" - capítulo versículoInicio versículoFim (sem hífen)
+            // Exemplo: genesis 1 3 5 = genesis 1:3-5
+            const espacoSimples = resto.match(/^(\d+)\s+(\d+)\s+(\d+)$/);
+            console.log('PARSE DEBUG - espacoSimples match:', espacoSimples);
+            if (espacoSimples) {
+                return { tipo: 'intervalo_versiculos', livro: abrev, capitulo: parseInt(espacoSimples[1]), versiculoInicio: parseInt(espacoSimples[2]), versiculoFim: parseInt(espacoSimples[3]) };
+            }
+            
             // Apenas capítulo
             const cap = resto.match(/^(\d+)$/);
             if (cap) return { tipo: 'capitulo', livro: abrev, capitulo: parseInt(cap[1]) };
             
+            console.log('PARSE DEBUG - returning null');
             return null;
         }
         

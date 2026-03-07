@@ -1247,13 +1247,11 @@ app.get('/api/admin/topicos-biblia', verifyAdmin, (req, res) => {
 
 // Listar tópicos ativos (público) - apenas publicados ou sem agendamento
 app.get('/api/topicos-biblia', (req, res) => {
-    // Só retorna tópicos onde: não tem agendamento OU data/hora já passou
+    // Busca todos os tópicos ativos e filtra no JavaScript para considerar fuso horário
     const query = `
-        SELECT id, titulo, descricao, conteudo, categoria, icone 
+        SELECT id, titulo, descricao, conteudo, categoria, icone, data_publicacao, hora_publicacao
         FROM topicos_biblia 
         WHERE ativo = 1 
-        AND (data_publicacao IS NULL OR data_publicacao = '' 
-             OR CONCAT(data_publicacao, ' ', IFNULL(hora_publicacao, '00:00')) <= NOW())
         ORDER BY ordem ASC`;
     
     console.log('Query:', query);
@@ -1264,8 +1262,134 @@ app.get('/api/topicos-biblia', (req, res) => {
             console.error('Erro na query:', err);
             return res.status(500).json({ error: err.message });
         }
-        console.log('Tópicos retornados:', rows.length);
-        res.json(rows);
+        
+        // Filtrar tópicos agendados no JavaScript (considerando fuso horário Brasil UTC-3)
+        const agora = new Date();
+        // Ajustar para o fuso horário brasileiro
+        const agoraBrasil = new Date(agora.getTime() - (3 * 60 * 60 * 1000));
+        
+        console.log('Agora (UTC):', agora.toISOString());
+        console.log('Agora (BRT):', agoraBrasil.toISOString());
+        
+        const topicosFiltrados = rows.filter(topico => {
+            console.log('=== PROCESSANDO TOPICO:', topico.titulo, '===');
+            console.log('data_publicacao:', topico.data_publicacao);
+            console.log('hora_publicacao:', topico.hora_publicacao);
+            console.log('agoraBrasil:', agoraBrasil.toISOString());
+            
+            // Verificar se tem hora de publicação sem data
+            const horaPub = topico.hora_publicacao ? topico.hora_publicacao.substring(0, 5) : '';
+            const temHoraPublicacao = horaPub && horaPub !== '' && horaPub !== '00:00';
+            
+            // Se não tem data de publicação, mas tem hora, usar data de hoje
+            if (!topico.data_publicacao || topico.data_publicacao === null || topico.data_publicacao === '') {
+                if (temHoraPublicacao) {
+                    // Tem hora mas sem data - agendar para hoje nessa hora
+                    // Comparar horas diretamente (ambas em horário de Brasília)
+                    try {
+                        const [horaPubNum, minutoPubNum] = horaPub.split(':').map(Number);
+                        
+                        // Obter hora atual do Brasil (UTC-3)
+                        const agora = new Date();
+                        let horasUTC = agora.getUTCHours();
+                        const minutosUTC = agora.getUTCMinutes();
+                        
+                        // Converter UTC para BRT (UTC-3)
+                        let horasBRT = horasUTC - 3;
+                        const minutosBRT = minutosUTC;
+                        
+                        // Se horas ficarem negativas (antes das 3h UTC), somar 24
+                        if (horasBRT < 0) {
+                            horasBRT += 24;
+                        }
+                        
+                        const agoraTotal = horasBRT * 60 + minutosBRT;
+                        const pubTotal = horaPubNum * 60 + minutoPubNum;
+                        
+                        console.log('Topico:', topico.titulo, '- horaPub:', horaPub, '- agora (BRT):', horasBRT + ':' + String(minutosBRT).padStart(2, '0'));
+                        
+                        // Se a hora de hoje ainda não chegou, não mostrar
+                        if (pubTotal > agoraTotal) {
+                            console.log('Topico:', topico.titulo, '- ainda não chegou (hora pub:', pubTotal, '> agora:', agoraTotal, '), não mostrar');
+                            return false;
+                        }
+                        // Se a hora já passou, mostrar o tópico
+                        console.log('Topico:', topico.titulo, '- já passou (hora pub:', pubTotal, '< agora:', agoraTotal, '), mostrar');
+                        return true;
+                    } catch (e) {
+                        console.error('Erro ao processar hora:', e);
+                        return true;
+                    }
+                }
+                // Sem data e sem hora - mostrar sempre
+                return true;
+            }
+            
+            // Tem data de publicação - verificar se já passou
+            try {
+                // Converter para string para garantir que funciona
+                let dataStr = String(topico.data_publicacao);
+                const horaStr = topico.hora_publicacao || '00:00';
+                console.log('DEBUG: dataStr original:', dataStr, 'tipo:', typeof dataStr);
+                
+                // Se tem 'T' e 'GMT', é um objeto Date convertido para string local
+                // Precisamos extrair a parte da data (YYYY-MM-DD)
+                let dataPart;
+                if (dataStr.includes('T') && dataStr.includes('GMT')) {
+                    // Formato local: "Fri Mar 06 2026 00:00:00 GMT-0300 (Brasilia Standard Time)"
+                    // Extrair a parte da data
+                    const partes = dataStr.split(' ');
+                    // partes = ['Fri', 'Mar', '06', '2026', '00:00:00', 'GMT-0300', ...]
+                    const meses = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+                    const mes = meses[partes[1]];
+                    const dia = parseInt(partes[2]);
+                    const ano = parseInt(partes[3]);
+                    dataPart = `${ano}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+                    console.log('DEBUG: extraido do Date local:', dataPart);
+                } else if (dataStr.includes('T')) {
+                    // Formato ISO: "2026-03-06T03:00:00.000Z"
+                    dataPart = dataStr.split('T')[0];
+                } else {
+                    // Já é YYYY-MM-DD
+                    dataPart = dataStr;
+                }
+                
+                // Criar dataPub usando dataPart extraída
+                const horaParts = horaStr.split(':');
+                const hora = parseInt(horaParts[0]);
+                const minuto = parseInt(horaParts[1]) || 0;
+                const [ano, mes, dia] = dataPart.split('-').map(Number);
+                dataPub = new Date(Date.UTC(ano, mes - 1, dia, hora, minuto));
+                console.log('DEBUG final: dataPart:', dataPart, 'ano:', ano, 'mes:', mes, 'dia:', dia, 'hora:', hora, 'minuto:', minuto, 'dataPub:', dataPub.toISOString());
+                
+                // Se a data é inválida, mostra o tópico
+                if (isNaN(dataPub.getTime())) {
+                    return true;
+                }
+                
+                console.log('Topico:', topico.titulo, '- dataPub:', dataPub.toISOString(), '- agora:', agoraBrasil.toISOString());
+                
+                // A data/hora de publicação já passou?
+                return dataPub.getTime() <= agoraBrasil.getTime();
+            } catch (e) {
+                console.error('Erro ao processar data:', e);
+                // Em caso de erro, mostra o tópico
+                return true;
+            }
+        });
+        
+        // Remover campos internos do resultado
+        const resultado = topicosFiltrados.map(t => ({
+            id: t.id,
+            titulo: t.titulo,
+            descricao: t.descricao,
+            conteudo: t.conteudo,
+            categoria: t.categoria,
+            icone: t.icone
+        }));
+        
+        console.log('Tópicos retornados:', resultado.length);
+        res.json(resultado);
     });
 });
 
