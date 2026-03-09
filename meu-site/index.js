@@ -2434,7 +2434,35 @@ app.use((req, res, next) => {
 app.use("/", express.static(path.join(__dirname)));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Rota para o editor (sem extensão) - serve editor.html
+// ROTAS PARA PÁGINAS HTML (sem extensão)
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'register.html'));
+});
+
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+app.get('/membro', (req, res) => {
+    res.sendFile(path.join(__dirname, 'membro.html'));
+});
+
+app.get('/programacao', (req, res) => {
+    res.sendFile(path.join(__dirname, 'programacao.html'));
+});
+
+app.get('/aulas', (req, res) => {
+    res.sendFile(path.join(__dirname, 'aulas.html'));
+});
+
+app.get('/biblia', (req, res) => {
+    res.sendFile(path.join(__dirname, 'biblia.html'));
+});
+
 app.get('/editor', (req, res) => {
     console.log('📝 EDITOR: Requisição recebida para /editor');
     console.log('📝 EDITOR: Query params:', req.query);
