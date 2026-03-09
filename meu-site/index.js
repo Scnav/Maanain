@@ -1402,9 +1402,15 @@ app.post('/api/admin/topicos-biblia', verifyAdmin, (req, res) => {
     if (!titulo) {
         return res.status(400).json({ error: 'Título é obrigatório' });
     }
-
+    
+    // Se não tem data e hora (ou são vazios), publicar diretamente (null)
+    const dataPub = (data_publicacao && data_publicacao !== '') ? data_publicacao : null;
+    const horaPub = (hora_publicacao && hora_publicacao !== '' && hora_publicacao !== '00:00') ? hora_publicacao : null;
+    
+    console.log('Salvando - dataPub:', dataPub, 'horaPub:', horaPub);
+    
     db.run("INSERT INTO topicos_biblia (titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao, hora_publicacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [titulo, descricao || '', conteudo || '', categoria || 'geral', icone || 'fas fa-book-bible', ordem || 0, ativo !== undefined ? ativo : 1, data_publicacao || null, hora_publicacao || '00:00'], 
+        [titulo, descricao || '', conteudo || '', categoria || 'geral', icone || 'fas fa-book-bible', ordem || 0, ativo !== undefined ? ativo : 1, dataPub, horaPub], 
         function(err) {
         if (err) {
             console.error('Erro ao criar tópico:', err);
@@ -1420,9 +1426,15 @@ app.put('/api/admin/topicos-biblia/:id', verifyAdmin, (req, res) => {
     const { titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao, hora_publicacao } = req.body;
     
     console.log('Atualizando - data_publicacao:', data_publicacao, 'hora_publicacao:', hora_publicacao);
-
+    
+    // Se não tem data e hora (ou são vazios), publicar diretamente (null)
+    const dataPub = (data_publicacao && data_publicacao !== '') ? data_publicacao : null;
+    const horaPub = (hora_publicacao && hora_publicacao !== '' && hora_publicacao !== '00:00') ? hora_publicacao : null;
+    
+    console.log('Salvando - dataPub:', dataPub, 'horaPub:', horaPub);
+    
     db.run("UPDATE topicos_biblia SET titulo = ?, descricao = ?, conteudo = ?, categoria = ?, icone = ?, ordem = ?, ativo = ?, data_publicacao = ?, hora_publicacao = ? WHERE id = ?",
-        [titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao || null, hora_publicacao || '00:00', id], function(err) {
+        [titulo, descricao, conteudo, categoria, icone, ordem, ativo, dataPub, horaPub, id], function(err) {
         if (err) {
             console.error('Erro ao atualizar:', err);
             return res.status(500).json({ error: err.message });
@@ -1764,38 +1776,400 @@ app.get('/api/biblia/busca', (req, res) => {
     if (bibliaSQLiteReady) {
         const termo = q.toLowerCase();
         const resultados = [];
-        const versao = 'nvi';
+        // Verificar qual versão da bíblía está disponível e tem mais livros
+        let versao = 'acf';  // ACF tem 65 livros carregados
+        if (!bibliaDados.acf || Object.keys(bibliaDados.acf).length === 0) {
+            versao = 'aa';
+        }
+        if (!bibliaDados[versao] || Object.keys(bibliaDados[versao]).length === 0) {
+            versao = 'nvi';
+        }
         const bibliaLivros = bibliaDados[versao];
+        console.log('DEBUG BUSCA - Usando versão da bíblía:', versao, 'Livros carregados:', Object.keys(bibliaLivros).length);
         
         if (!bibliaLivros) {
             return res.status(500).json({ error: 'Dados da bíblia não carregados' });
         }
         
-        // Buscar em todos os livros e capítulos
-        for (const [livroId, capitulos] of Object.entries(bibliaLivros)) {
-            for (const [capituloNum, versosObj] of Object.entries(capitulos)) {
-                for (const [versoNum, texto] of Object.entries(versosObj)) {
-                    if (typeof texto === 'string' && texto.toLowerCase().includes(termo)) {
-                        resultados.push({
-                            livro: NOMES_LIVROS[parseInt(livroId)],
-                            abreviacao: ABREVIACOES_LIVROS[parseInt(livroId)],
-                            capitulo: parseInt(capituloNum),
-                            verso: parseInt(versoNum),
-                            texto: texto
-                        });
-                        
-                        // Limitar resultados para performance
-                        if (resultados.length >= parseInt(limite) + parseInt(offset)) {
+        // Verificar se é uma busca por múltiplos livros (contém " e " ou " &")
+        const separadores = [' e ', ' e ', ' & ', ' and '];
+        let termosBusca = [termo];
+        
+        for (const sep of separadores) {
+            if (termo.includes(sep)) {
+                termosBusca = termo.split(sep).map(t => t.trim()).filter(t => t.length > 0);
+                break;
+            }
+        }
+        
+        // Mapeamento de nomes de livros para IDs (incluindo versões com números por extenso)
+        const nomeParaId = {};
+        for (const [id, nome] of Object.entries(NOMES_LIVROS)) {
+            // Nome completo: "2 Reis", "2 Pedro"
+            nomeParaId[nome.toLowerCase()] = parseInt(id);
+            // Abreviação: "2reis", "2pedro"
+            nomeParaId[ABREVIACOES_LIVROS[parseInt(id)].toLowerCase()] = parseInt(id);
+            // Versão sem espaço: "2reis" -> 12
+            const nomeSemEspaco = nome.toLowerCase().replace(/\s/g, '');
+            nomeParaId[nomeSemEspaco] = parseInt(id);
+        }
+        // Adicionar mapeamentos extras para números por extenso
+        nomeParaId['2reis'] = 12;
+        nomeParaId['1reis'] = 11;
+        nomeParaId['2pedro'] = 61;
+        nomeParaId['1pedro'] = 60;
+        nomeParaId['2samuel'] = 10;
+        nomeParaId['1samuel'] = 9;
+        
+        // Função para extrair livro, capítulo e versículo de um termo
+        function parseReferencia(texto) {
+            // Detectar padrões: 
+            // "livro capítulo:verso" ou "livro capítulo:verso-fim" (formato antigo)
+            // "livro capítulo versiculo" ou "livro capítulo versiculo versiculo_fim" (novo formato com espaços)
+            // Exemplos: "2 reis 1:10", "2 pedro 2", "2reis 1", "2 reis 3 1 4", "2 pedro 2 1 7"
+            
+            let livroId = null;
+            let capitulo = null;
+            let versiculo = null;
+            let livroNome = null;
+            let livroNomeOriginal = null;
+            
+            // Primeiro tenta encontrar o livro no termo
+            let termoSemEspaco = texto.toLowerCase().replace(/\s/g, '');
+            
+            // Procurar pelo nome do livro no termo - vamos encontrar o mais longo
+            let melhorNome = '';
+            for (const [nome, id] of Object.entries(nomeParaId)) {
+                if (texto.toLowerCase().includes(nome) || termoSemEspaco.includes(nome)) {
+                    if (nome.length > melhorNome.length) {
+                        melhorNome = nome;
+                        livroId = id;
+                        livroNome = NOMES_LIVROS[id];
+                        livroNomeOriginal = nome;
+                    }
+                }
+            }
+            
+            if (!livroId) return null;
+            
+            // Remover o nome do livro para encontrar capítulo e versículo
+            let resto = texto.toLowerCase();
+            if (livroNomeOriginal) {
+                resto = resto.replace(livroNomeOriginal, '').trim();
+            }
+            // Also remove common variations
+            for (const nome of Object.keys(nomeParaId)) {
+                if (nome !== livroNomeOriginal) {
+                    resto = resto.replace(nome, '').trim();
+                }
+            }
+            
+            console.log('DEBUG parseReferencia - texto:', texto, 'livro:', livroNome, 'resto:', resto);
+            
+            // Detectar capítulo:verso (ex: "1:10" ou "1:10-15") - formato antigo
+            const matchCapituloVerso = resto.match(/(\d+):(\d+(?:-\d+)?)/);
+            if (matchCapituloVerso) {
+                capitulo = parseInt(matchCapituloVerso[1]);
+                if (matchCapituloVerso[2].includes('-')) {
+                    // Range de versículos: 1:10-15
+                    versiculo = matchCapituloVerso[2]; // Retorna "10-15"
+                } else {
+                    versiculo = parseInt(matchCapituloVerso[2]);
+                }
+            } else if (resto && resto.length > 0) {
+                // Novo formato com espaços: "3 1" = capítulo 3 versículo 1
+                // ou "3 1 4" = capítulo 3, versículos 1 a 4
+                const numeros = resto.match(/(\d+)/g);
+                if (numeros && numeros.length >= 1) {
+                    capitulo = parseInt(numeros[0]);
+                    if (numeros.length >= 2) {
+                        if (numeros.length >= 3) {
+                            // "3 1 4" = capítulo 3, versículos 1 a 4
+                            versiculo = `${numeros[1]}-${numeros[2]}`;
+                        } else {
+                            // "3 1" = capítulo 3 versículo 1
+                            versiculo = parseInt(numeros[1]);
+                        }
+                    }
+                }
+            }
+            
+            console.log('DEBUG parseReferencia - resultado:', { livroId, livroNome, capitulo, versiculo });
+            
+            return { livroId, livroNome, capitulo, versiculo };
+        }
+        
+        // Verificar se é uma busca por referências completas (livro + capítulo)
+        const referencias = [];
+        for (const t of termosBusca) {
+            const ref = parseReferencia(t);
+            console.log('DEBUG loop ref - termo:', t, 'result:', ref);
+            if (ref && ref.livroId) {
+                referencias.push(ref);
+            }
+        }
+        
+        console.log('DEBUG - referencias:', referencias.length, 'termos:', termosBusca.length);
+        console.log('DEBUG - termosBusca array:', JSON.stringify(termosBusca));
+        
+        // Se encontrou referências completas (livro + capítulo), retornar para navegação direta
+        if (referencias.length > 0 && referencias.length === termosBusca.length) {
+            console.log('DEBUG - Entrou no bloco de referências completas! referencias:', referencias.length, 'termos:', termosBusca.length);
+            // Se tem versículos específicos, buscar esses versículos
+            const resultados = [];
+            for (const ref of referencias) {
+                try {
+                    const livroIdNum = parseInt(ref.livroId);
+                    console.log('DEBUG - Buscando livroId:', livroIdNum, 'cap:', ref.capitulo, 'vers:', ref.versiculo);
+                    console.log('DEBUG - bibliaLivros[12]:', typeof bibliaLivros[12], Object.keys(bibliaLivros[12] || {}));
+                    
+                    // Estrutura: bibliaLivros[12]['1'] = objeto com versículos { '1': 'texto', '2': 'texto', ... }
+                    if (ref.versiculo) {
+                        // Buscar versículo(s) específico(s)
+                        const capituloData = bibliaLivros[livroIdNum]?.[ref.capitulo];
+                        console.log('DEBUG - capituloData:', capituloData ? 'existe' : 'null', typeof capituloData);
+                        if (capituloData) {
+                            if (typeof ref.versiculo === 'string' && ref.versiculo.includes('-')) {
+                                // Range de versículos
+                                const [ini, fin] = ref.versiculo.split('-').map(Number);
+                                for (let v = ini; v <= fin; v++) {
+                                    const textoVersiculo = capituloData[v];
+                                    console.log('DEBUG - verso', v, 'texto:', textoVersiculo ? 'existe' : 'null');
+                                    if (textoVersiculo) {
+                                        resultados.push({
+                                            livro: ref.livroNome,
+                                            abreviacao: ABREVIACOES_LIVROS[livroIdNum],
+                                            capitulo: ref.capitulo,
+                                            verso: v,
+                                            texto: textoVersiculo
+                                        });
+                                    }
+                                }
+                            } else {
+                                // Versículo único
+                                const v = parseInt(ref.versiculo);
+                                const textoVersiculo = capituloData[v];
+                                if (textoVersiculo) {
+                                    resultados.push({
+                                        livro: ref.livroNome,
+                                        abreviacao: ABREVIACOES_LIVROS[livroIdNum],
+                                        capitulo: ref.capitulo,
+                                        verso: v,
+                                        texto: textoVersiculo
+                                    });
+                                }
+                            }
+                        }
+                    } else if (ref.capitulo) {
+                        // Apenas capítulo, retornar o capítulo completo
+                        const capituloData = bibliaLivros[livroIdNum]?.[ref.capitulo];
+                        if (capituloData && typeof capituloData === 'object') {
+                            Object.keys(capituloData).forEach((verso) => {
+                                resultados.push({
+                                    livro: ref.livroNome,
+                                    abreviacao: ABREVIACOES_LIVROS[livroIdNum],
+                                    capitulo: ref.capitulo,
+                                    verso: parseInt(verso),
+                                    texto: capituloData[verso]
+                                });
+                            });
+                        }
+                    } else {
+                        // Sem capítulo especificado, retornar o primeiro capítulo
+                        const livroData = bibliaLivros[livroIdNum];
+                        if (livroData && livroData['1']) {
+                            const capituloData = livroData['1'];
+                            if (typeof capituloData === 'object') {
+                                Object.keys(capituloData).forEach((verso) => {
+                                    resultados.push({
+                                        livro: ref.livroNome,
+                                        abreviacao: ABREVIACOES_LIVROS[livroIdNum],
+                                        capitulo: 1,
+                                        verso: parseInt(verso),
+                                        texto: capituloData[verso]
+                                    });
+                                });
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log('Erro ao buscar referência:', e);
+                }
+            }
+            
+            if (resultados.length > 0) {
+                // Aplicar offset e limite para paginação
+                const offsetNum = parseInt(offset);
+                const limiteNum = parseInt(limite);
+                const paginados = resultados.slice(offsetNum, offsetNum + limiteNum);
+                
+                return res.json({
+                    total: resultados.length,
+                    limite: limiteNum,
+                    offset: offsetNum,
+                    resultados: paginados,
+                    tipo: 'capitulos'
+                });
+            }
+        }
+        
+        // Verificar se a busca contém nomes de livros (para mostrar os livros encontrados)
+        const livrosEncontrados = [];
+        for (const t of termosBusca) {
+            // Tentar encontrar o livro
+            let livroId = null;
+            const termoSemEspaco = t.replace(/\s/g, '').toLowerCase();
+            
+            // Primeiro tenta direta
+            if (nomeParaId[t]) {
+                livroId = nomeParaId[t];
+            } else if (nomeParaId[termoSemEspaco]) {
+                // Tenta sem espaços
+                livroId = nomeParaId[termoSemEspaco];
+            } else {
+                // Buscar se o termo contém o nome de algum livro
+                for (const [nome, id] of Object.entries(nomeParaId)) {
+                    if (t.includes(nome) || nome.includes(t) || t.includes(nome.replace(/\s/g, '')) || termoSemEspaco.includes(nome)) {
+                        livroId = id;
+                        break;
+                    }
+                }
+            }
+            
+            if (livroId !== null && !livrosEncontrados.includes(livroId)) {
+                livrosEncontrados.push(livroId);
+            }
+        }
+        
+        // Verificar se a busca contém nomes de livros (para mostrar os livros encontrados)
+        if (livrosEncontrados.length > 0 && livrosEncontrados.length === termosBusca.length) {
+            const livrosResponse = livrosEncontrados.map(id => ({
+                id: id,
+                nome: NOMES_LIVROS[id],
+                abreviacao: ABREVIACOES_LIVROS[id]
+            }));
+            
+            return res.json({
+                total: livrosResponse.length,
+                limite: parseInt(limite),
+                offset: parseInt(offset),
+                resultados: [],
+                livros: livrosResponse,
+                tipo: 'livros'
+            });
+        }
+        
+        // Função para buscar em um livro específico
+        function buscarEmLivro(livroTermo, limiteLivro) {
+            const resultadosLivro = [];
+            let livroId = null;
+            
+            // Tentar encontrar o livro pelo nome ou abreviação
+            // Primeiro, verificar se o termo é exatamente um nome de livro
+            if (nomeParaId[livroTermo]) {
+                livroId = nomeParaId[livroTermo];
+            } else {
+                // Buscar se o termo contém o nome de algum livro
+                for (const [nome, id] of Object.entries(nomeParaId)) {
+                    if (livroTermo.includes(nome) || nome.includes(livroTermo)) {
+                        livroId = id;
+                        break;
+                    }
+                }
+            }
+            
+            console.log('Buscando termo:', livroTermo, '-> livroId:', livroId);
+            
+            // Se encontrou um livro específico, buscar apenas nele
+            if (livroId !== null && bibliaLivros[livroId]) {
+                const capitulos = bibliaLivros[livroId];
+                for (const [capituloNum, versosObj] of Object.entries(capitulos)) {
+                    for (const [versoNum, texto] of Object.entries(versosObj)) {
+                        if (typeof texto === 'string' && texto.toLowerCase().includes(livroTermo)) {
+                            resultadosLivro.push({
+                                livro: NOMES_LIVROS[livroId],
+                                abreviacao: ABREVIACOES_LIVROS[livroId],
+                                capitulo: parseInt(capituloNum),
+                                verso: parseInt(versoNum),
+                                texto: texto
+                            });
+                            
+                            if (resultadosLivro.length >= limiteLivro) {
+                                break;
+                            }
+                        }
+                    }
+                    if (resultadosLivro.length >= limiteLivro) {
+                        break;
+                    }
+                }
+            } else {
+                // Buscar em todos os livros (comportamento original)
+                for (const [livroId, capitulos] of Object.entries(bibliaLivros)) {
+                    for (const [capituloNum, versosObj] of Object.entries(capitulos)) {
+                        for (const [versoNum, texto] of Object.entries(versosObj)) {
+                            if (typeof texto === 'string' && texto.toLowerCase().includes(livroTermo)) {
+                                resultadosLivro.push({
+                                    livro: NOMES_LIVROS[parseInt(livroId)],
+                                    abreviacao: ABREVIACOES_LIVROS[parseInt(livroId)],
+                                    capitulo: parseInt(capituloNum),
+                                    verso: parseInt(versoNum),
+                                    texto: texto
+                                });
+                                
+                                if (resultadosLivro.length >= limiteLivro) {
+                                    break;
+                                }
+                            }
+                        }
+                        if (resultadosLivro.length >= limiteLivro) {
                             break;
                         }
+                    }
+                    if (resultadosLivro.length >= limiteLivro) {
+                        break;
+                    }
+                }
+            }
+            
+            return resultadosLivro;
+        }
+        
+        // Se há múltiplos termos de busca (múltiplos livros)
+        if (termosBusca.length > 1) {
+            const limitePorLivro = Math.ceil((parseInt(limite) + parseInt(offset)) / termosBusca.length);
+            
+            for (const termoLivro of termosBusca) {
+                const resultadosLivro = buscarEmLivro(termoLivro, limitePorLivro);
+                resultados.push(...resultadosLivro);
+            }
+        } else {
+            // Busca normal em todos os livros
+            for (const [livroId, capitulos] of Object.entries(bibliaLivros)) {
+                for (const [capituloNum, versosObj] of Object.entries(capitulos)) {
+                    for (const [versoNum, texto] of Object.entries(versosObj)) {
+                        if (typeof texto === 'string' && texto.toLowerCase().includes(termo)) {
+                            resultados.push({
+                                livro: NOMES_LIVROS[parseInt(livroId)],
+                                abreviacao: ABREVIACOES_LIVROS[parseInt(livroId)],
+                                capitulo: parseInt(capituloNum),
+                                verso: parseInt(versoNum),
+                                texto: texto
+                            });
+                            
+                            // Limitar resultados para performance
+                            if (resultados.length >= parseInt(limite) + parseInt(offset)) {
+                                break;
+                            }
+                        }
+                    }
+                    if (resultados.length >= parseInt(limite) + parseInt(offset)) {
+                        break;
                     }
                 }
                 if (resultados.length >= parseInt(limite) + parseInt(offset)) {
                     break;
                 }
-            }
-            if (resultados.length >= parseInt(limite) + parseInt(offset)) {
-                break;
             }
         }
         

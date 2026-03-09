@@ -10,7 +10,7 @@ window.addEventListener('unhandledrejection', function(e) {
     console.error('[ERRO GLOBAL JS] Promise rejeitada não tratada:', e.reason);
 });
 
-console.log('[JS] Script carregado - Version 8');
+console.log('[JS] Script carregado - Version 13 - Biblia');
 
 // Variáveis globais para busca bíblica
 let bibliaLivros = [];

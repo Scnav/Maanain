@@ -76,8 +76,9 @@ function exibirTopicos(topicos) {
         console.log('Agora (UTC):', agora.toISOString());
         console.log('Agora (BRT):', agoraBRT.toISOString());
         
-        // Se tem hora de publicação, verificar o agendamento
-        if (topico.hora_publicacao && topico.hora_publicacao !== '') {
+        // Se tem hora de publicação E não é "00:00" (que significa publicação imediata), verificar o agendamento
+        // "00:00" significa que será publicado imediatamente (sem agendamento)
+        if (topico.hora_publicacao && topico.hora_publicacao !== '' && topico.hora_publicacao !== '00:00') {
             // Determinar a data de publicação em UTC
             let dataPub;
             const horaParts = topico.hora_publicacao.split(':');
@@ -132,8 +133,10 @@ function exibirTopicos(topicos) {
             
             if (dataPub.getTime() > agoraBRT.getTime()) {
                 // Data/hora ainda não chegou - está agendado
-                const dataFormatada = dataPub.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                const horaFormatada = dataPub.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                // Converter de UTC para BRT para exibir corretamente
+                const dataPubBRT = new Date(dataPub.getTime() + (3 * 60 * 60 * 1000));
+                const dataFormatada = dataPubBRT.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const horaFormatada = dataPubBRT.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 return { 
                     status: 'agendado', 
                     label: `⏰ Agendado para ${dataFormatada} às ${horaFormatada}`, 
@@ -178,7 +181,7 @@ function exibirTopicos(topicos) {
                     </div>
                     ${topico.descricao ? `<p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">${topico.descricao}</p>` : ''}
                     <div style="display: flex; gap: 0.5rem;">
-                        <button onclick="editarTopico(${topico.id}, '${escapeHtml(topico.titulo)}', '${escapeHtml(topico.descricao || '')}', '${escapeHtml(topico.conteudo || '')}', '${topico.categoria || 'geral'}', '${topico.icone || 'fas fa-book-bible'}', ${topico.ordem || 0}, ${ativoNum}, '${topico.data_publicacao || ''}', '${topico.hora_publicacao || '00:00'}')" 
+                        <button onclick="editarTopico(${topico.id}, '${escapeHtml(topico.titulo)}', '${escapeHtml(topico.descricao || '')}', '${escapeHtml(topico.conteudo || '')}', '${topico.categoria || 'geral'}', '${topico.icone || 'fas fa-book-bible'}', ${topico.ordem || 0}, ${ativoNum}, '${topico.data_publicacao || ''}', '${topico.hora_publicacao || ''}')" 
                             class="btn-editar-cargo" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">✏️ Editar</button>
                         <button onclick="excluirTopico(${topico.id})" 
                             style="background: #dc3545; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">🗑️ Excluir</button>
@@ -237,7 +240,10 @@ document.getElementById('btnSalvarTopico')?.addEventListener('click', async func
     const data_publicacao = document.getElementById('topicoDataPublicacao').value;
     const hora_publicacao = document.getElementById('topicoHoraPublicacao').value;
     
-    console.log('Salvando - ativo:', ativo, 'data:', data_publicacao, 'hora:', hora_publicacao);
+    // Converter "00:00" para vazio para publicação imediata
+    const horaEnviar = hora_publicacao === '00:00' ? '' : hora_publicacao;
+    
+    console.log('Salvando - ativo:', ativo, 'data:', data_publicacao, 'hora:', horaEnviar);
     
     if (!titulo) {
         alert('Título é obrigatório!');
@@ -260,7 +266,7 @@ document.getElementById('btnSalvarTopico')?.addEventListener('click', async func
                 ordem, 
                 ativo,
                 data_publicacao,
-                hora_publicacao
+                hora_publicacao: horaEnviar
             })
         });
         
@@ -277,7 +283,7 @@ document.getElementById('btnSalvarTopico')?.addEventListener('click', async func
 });
 
 // Editar tópico
-function editarTopico(id, titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao = '', hora_publicacao = '00:00') {
+function editarTopico(id, titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao = '', hora_publicacao = '') {
     document.getElementById('formTopico').style.display = 'block';
     document.getElementById('formTopicoTitle').textContent = 'Editar Tópico';
     document.getElementById('topicoId').value = id;
@@ -289,7 +295,7 @@ function editarTopico(id, titulo, descricao, conteudo, categoria, icone, ordem, 
     document.getElementById('topicoOrdem').value = ordem;
     document.getElementById('topicoAtivo').checked = ativo === 1 || ativo === true || ativo === '1';
     document.getElementById('topicoDataPublicacao').value = data_publicacao;
-    document.getElementById('topicoHoraPublicacao').value = hora_publicacao || '00:00';
+    document.getElementById('topicoHoraPublicacao').value = hora_publicacao || '';
 }
 
 // Excluir tópico

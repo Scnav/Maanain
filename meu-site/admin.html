@@ -369,18 +369,6 @@
             }
         });
 
-        // Registrar Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then((registration) => {
-                        console.log('SW registrado:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.log('SW registro falhou:', error);
-                    });
-            });
-        }
     </script>
 </head>
 <body>
@@ -648,7 +636,7 @@
                             </div>
                             <div>
                                 <label>Hora de Publicação:</label>
-                                <input type="time" id="topicoHoraPublicacao" value="00:00" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                <input type="time" id="topicoHoraPublicacao" value="" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                             </div>
                         </div>
                     </div>
@@ -1035,7 +1023,7 @@
     // que verifica isAdminLoggedIn() e mostra a tela de login se necessário
     </script>
     <script src="js/admin_aulas.js?v=8"></script>
-    <script src="js/admin_biblia.js?v=15"></script>
+    <script src="js/admin_biblia.js?v=16"></script>
     <script src="js/admin.js?v=14"></script>
     <script src="js/admin_area_membro.js?v=8"></script>
     <script src="js/admin_cultos.js"></script>

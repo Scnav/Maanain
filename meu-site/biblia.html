@@ -427,21 +427,8 @@
         </div>
     </footer>
 
-    <script src="js/script.js?v=10"></script>
+    <script src="js/script-biblia.js?v=2"></script>
     <script>
-        // Registrar Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then((registration) => {
-                        console.log('SW registered:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.log('SW registration failed:', error);
-                    });
-            });
-        }
-        
         // Inicializar
         document.addEventListener('DOMContentLoaded', async function() {
             // Resetar selects ao carregar
@@ -941,6 +928,41 @@
                     return;
                 }
                 
+                // Se retornou livros (busca por nomes de livros)
+                console.log('DEBUG - Tipo de resposta:', data.tipo, 'Livros:', data.livros);
+                if (data.tipo === 'livros' && data.livros && data.livros.length > 0) {
+                    console.log('DEBUG - Exibindo livros encontrados:', data.livros);
+                    let html = '<p style="text-align: center; color: #666; margin-bottom: 1rem;">Livros encontrados:</p>';
+                    html += data.livros.map(livro => {
+                        return `
+                            <div class="biblia-result-item" onclick="irParaLivro('${livro.abreviacao}')" style="cursor: pointer;">
+                                <div class="reference">${livro.nome}</div>
+                                <div class="texto-destaque">Clique para navegar neste livro</div>
+                            </div>
+                        `;
+                    }).join('');
+                    resultsContainer.innerHTML = html;
+                    if (paginationContainer) paginationContainer.innerHTML = '';
+                    return;
+                }
+                
+                // Se retornou referências (livro + capítulo)
+                if (data.tipo === 'referencias' && data.referencias && data.referencias.length > 0) {
+                    console.log('DEBUG - Exibindo referências:', data.referencias);
+                    let html = '<p style="text-align: center; color: #666; margin-bottom: 1rem;">Referências encontradas:</p>';
+                    html += data.referencias.map(ref => {
+                        return `
+                            <div class="biblia-result-item" onclick="irParaCapitulo('${ref.abreviacao}', ${ref.capitulo})" style="cursor: pointer;">
+                                <div class="reference">${ref.livro} ${ref.capitulo}</div>
+                                <div class="texto-destaque">Clique para ir ao capítulo</div>
+                            </div>
+                        `;
+                    }).join('');
+                    resultsContainer.innerHTML = html;
+                    if (paginationContainer) paginationContainer.innerHTML = '';
+                    return;
+                }
+                
                 if (data.resultados.length === 0) {
                     resultsContainer.innerHTML = '<p style="text-align: center; color: #666;">Nenhum resultado encontrado.</p>';
                     paginationContainer.innerHTML = '';
@@ -1154,12 +1176,47 @@
                 return { tipo: 'intervalo_versiculos', livro: abrev, capitulo: parseInt(espacoSimples[1]), versiculoInicio: parseInt(espacoSimples[2]), versiculoFim: parseInt(espacoSimples[3]) };
             }
             
+            // NOVO: Se o resto contém " e " seguido de mais texto, pode ser múltiplas referências
+            // Enviar para API processar
+            if (resto.includes(' e ')) {
+                // Deixa a API handled isso
+                console.log('PARSE DEBUG - resto tem " e ", enviando para API');
+                return null; // Vai para busca de API
+            }
+            
             // Apenas capítulo
             const cap = resto.match(/^(\d+)$/);
             if (cap) return { tipo: 'capitulo', livro: abrev, capitulo: parseInt(cap[1]) };
             
             console.log('PARSE DEBUG - returning null');
             return null;
+        }
+        
+        // Ir para livro específico (usado na busca por nomes de livros)
+        function irParaLivro(livro) {
+            // Mudar para tab de leitura
+            document.querySelector('[data-tab="leitura"]').click();
+            
+            // Selecionar livro
+            document.getElementById('livroSelect').value = livro;
+            carregarCapitulos(livro).then(() => {
+                // Carregar primeiro capítulo
+                document.getElementById('capituloSelect').value = 1;
+                carregarCapitulo(livro, 1);
+            });
+        }
+        
+        // Ir para capítulo específico (usado na busca por referências)
+        function irParaCapitulo(livro, capitulo) {
+            // Mudar para tab de leitura
+            document.querySelector('[data-tab="leitura"]').click();
+            
+            // Selecionar livro
+            document.getElementById('livroSelect').value = livro;
+            carregarCapitulos(livro).then(() => {
+                document.getElementById('capituloSelect').value = capitulo;
+                carregarCapitulo(livro, capitulo);
+            });
         }
         
         // Ir para verso específico
