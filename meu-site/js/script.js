@@ -581,6 +581,8 @@ async function carregarMensagensHome() {
         const response = await fetch('/api/mensagens');
         const mensagens = await response.json();
         
+        console.log('Mensagens recebidas:', mensagens);
+        
         // A API já retorna ordenado por data (mais recente primeiro) e só msgs ativas
         const msg = mensagens[0]; // Pegar a mais recente
         
@@ -590,13 +592,16 @@ async function carregarMensagensHome() {
         }
         
         // Se tem vídeo, mostrar thumbnail clicável
-        if (msg.video_url) {
-            const videoId = extractVideoId(msg.video_url);
-            const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+        // Usa o video_id direto se disponível, ou extrai da URL
+        const videoId = msg.video_id || (msg.video_url ? extractVideoId(msg.video_url) : null);
+        const thumbnailUrl = msg.thumbnail || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '');
+        const videoUrl = msg.video_url || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : '');
+        
+        if (videoUrl) {
             container.innerHTML = `
                 <div class="mensagem-video-container" style="margin-top: 1rem;">
                     ${thumbnailUrl ? `
-                        <a href="${msg.video_url}" target="_blank" style="display: block; position: relative;">
+                        <a href="${videoUrl}" target="_blank" style="display: block; position: relative;">
                             <img src="${thumbnailUrl}" alt="${msg.titulo}" style="width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,0,0,0.9); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-play" style="color: white; font-size: 1.5rem; margin-left: 4px;"></i>

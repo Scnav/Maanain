@@ -896,7 +896,7 @@ let youtubeCache = {
 };
 const YOUTUBE_CACHE_TIME = 5 * 60 * 1000; // 5 minutos
 
-// Get YouTube live status (público) - SSR com cache
+// Get YouTube live status (público) - Agora usa RSS (sem API Key)
 console.log('📺 Registrando rota: GET /api/youtube-live');
 app.get('/api/youtube-live', async (req, res) => {
     // Verificar cache
@@ -907,7 +907,6 @@ app.get('/api/youtube-live', async (req, res) => {
     }
     
     try {
-        // Primeiro pega a configuração
         db.get("SELECT channel_id, enabled FROM youtube_config WHERE id = 1", async (err, config) => {
             console.log('📺 YouTube config from DB:', config);
             
@@ -920,55 +919,59 @@ app.get('/api/youtube-live', async (req, res) => {
             
             let channelId = config.channel_id.trim();
             
-            // Detectar se é URL ou @username e converter para ID
+            // Se for URL, extrair o ID
             if (channelId.includes('youtube.com/')) {
-                const match = channelId.match(/@(.[^/]+)|channel\/([^/]+)|c\/([^/]+)/);
-                if (match) {
-                    const identifier = match[1] || match[2] || match[3];
-                    if (identifier.startsWith('UC')) {
-                        channelId = identifier;
-                    } else {
-                        const result = { isLive: false, video: null, message: 'Use o ID do canal (começa com UC)' };
-                        youtubeCache.live = { data: result, timestamp: now };
-                        return res.json(result);
-                    }
-                }
+                const match = channelId.match(/channel\/([^/]+)/);
+                if (match) channelId = match[1];
             }
             
-            console.log('Checking live for channel:', channelId);
+            console.log('Checking live for channel via RSS:', channelId);
             
-            // Usando a API do YouTube com a API Key
-            const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
+            // Usar RSS do YouTube (não requer API Key)
+            const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
             
             try {
-                const response = await fetch(youtubeApiUrl);
-                const data = await response.json();
-                console.log('YouTube API response:', data);
+                const response = await fetch(rssUrl);
+                const text = await response.text();
                 
-                let result;
-                if (data.items && data.items.length > 0) {
-                    const video = data.items[0];
-                    result = {
-                        isLive: true,
+                // Parsear o XML do RSS
+                const videoIdMatch = text.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+                const titleMatch = text.match(/<title>([^<]+)<\/title>/);
+                const publishedMatch = text.match(/<published>([^<]+)<\/published>/);
+                
+                if (videoIdMatch && videoIdMatch[1]) {
+                    const videoId = videoIdMatch[1];
+                    const publishedAt = publishedMatch ? new Date(publishedMatch[1]) : null;
+                    const nowDate = new Date();
+                    const hoursDiff = publishedAt ? (nowDate - publishedAt) / (1000 * 60 * 60) : 999;
+                    
+                    // Se o vídeo tem menos de 2 horas, considerar como live/podcast recente
+                    const isRecent = hoursDiff < 2;
+                    
+                    const result = {
+                        isLive: isRecent,
                         video: {
-                            videoId: video.id.videoId,
-                            title: video.snippet.title,
-                            thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
-                            channelTitle: video.snippet.channelTitle
-                        }
+                            videoId: videoId,
+                            title: titleMatch ? titleMatch[1] : 'Vídeo do YouTube',
+                            thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+                            channelTitle: titleMatch ? titleMatch[1] : 'MAANAIM'
+                        },
+                        message: isRecent ? 'Transmissão ao vivo ou recente' : 'Nenhuma live no momento'
                     };
-                } else {
-                    result = { isLive: false, video: null };
+                    
+                    youtubeCache.live = { data: result, timestamp: now };
+                    return res.json(result);
                 }
                 
-                // Salvar no cache
-                youtubeCache.live = { data: result, timestamp: now };
-                res.json(result);
-            } catch (apiError) {
-                console.error('YouTube API error:', apiError);
                 const result = { isLive: false, video: null };
                 youtubeCache.live = { data: result, timestamp: now };
-                res.json(result);
+                return res.json(result);
+                
+            } catch (rssError) {
+                console.error('Erro ao buscar RSS:', rssError);
+                const result = { isLive: false, video: null };
+                youtubeCache.live = { data: result, timestamp: now };
+                return res.json(result);
             }
         });
     } catch (error) {
@@ -976,7 +979,7 @@ app.get('/api/youtube-live', async (req, res) => {
     }
 });
 
-// Endpoint para buscar o último vídeo uploadado do canal - SSR com cache
+// Endpoint para buscar o último vídeo uploadado do canal via RSS (sem API Key)
 app.get('/api/youtube/latest', async (req, res) => {
     // Verificar cache
     const now = Date.now();
@@ -993,48 +996,38 @@ app.get('/api/youtube/latest', async (req, res) => {
                 return res.json(result);
             }
             
-            const channelId = config.channel_id.trim();
-            console.log('Buscando último vídeo para canal:', channelId);
+            let channelId = config.channel_id.trim();
             
-            const liveUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
+            // Se for URL, extrair o ID
+            if (channelId.includes('youtube.com/')) {
+                const match = channelId.match(/channel\/([^/]+)/);
+                if (match) channelId = match[1];
+            }
+            
+            console.log('Buscando último vídeo via RSS para canal:', channelId);
+            
+            // Usar RSS do YouTube (não requer API Key)
+            const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
             
             try {
-                const liveResponse = await fetch(liveUrl);
-                const liveData = await liveResponse.json();
+                const response = await fetch(rssUrl);
+                const text = await response.text();
                 
-                if (liveData.items && liveData.items.length > 0) {
-                    const video = liveData.items[0];
+                // Parsear o XML do RSS
+                const videoIdMatch = text.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+                const titleMatch = text.match(/<title>([^<]+)<\/title>/);
+                const publishedMatch = text.match(/<published>([^<]+)<\/published>/);
+                
+                if (videoIdMatch && videoIdMatch[1]) {
+                    const videoId = videoIdMatch[1];
                     const result = {
                         video: {
-                            videoId: video.id.videoId,
-                            title: video.snippet.title,
-                            description: video.snippet.description,
-                            thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
-                            channelTitle: video.snippet.channelTitle,
-                            publishedAt: video.snippet.publishedAt,
-                            isLive: true
-                        }
-                    };
-                    youtubeCache.latest = { data: result, timestamp: now };
-                    return res.json(result);
-                }
-                
-                // Se não tem live, buscar última transmissão
-                const broadcastUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=completed&type=video&maxResults=1&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
-                
-                const broadcastResponse = await fetch(broadcastUrl);
-                const broadcastData = await broadcastResponse.json();
-                
-                if (broadcastData.items && broadcastData.items.length > 0) {
-                    const video = broadcastData.items[0];
-                    const result = {
-                        video: {
-                            videoId: video.id.videoId,
-                            title: video.snippet.title,
-                            description: video.snippet.description,
-                            thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
-                            channelTitle: video.snippet.channelTitle,
-                            publishedAt: video.snippet.publishedAt,
+                            videoId: videoId,
+                            title: titleMatch ? titleMatch[1] : 'Vídeo do YouTube',
+                            description: '',
+                            thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+                            channelTitle: titleMatch ? titleMatch[1] : 'MAANAIM',
+                            publishedAt: publishedMatch ? publishedMatch[1] : new Date().toISOString(),
                             isLive: false
                         }
                     };
@@ -1042,97 +1035,53 @@ app.get('/api/youtube/latest', async (req, res) => {
                     return res.json(result);
                 }
                 
-                // Se não tem broadcast, buscar último vídeo normal
-                const videoUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&order=date&maxResults=1&key=AIzaSyDCsgWBLSO56xE0T-HE2vmYvIOwe1nGx-s`;
-                
-                const videoResponse = await fetch(videoUrl);
-                const videoData = await videoResponse.json();
-                
-                let result;
-                if (videoData.items && videoData.items.length > 0) {
-                    const video = videoData.items[0];
-                    result = {
-                        video: {
-                            videoId: video.id.videoId,
-                            title: video.snippet.title,
-                            description: video.snippet.description,
-                            thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium?.url,
-                            channelTitle: video.snippet.channelTitle,
-                            publishedAt: video.snippet.publishedAt,
-                            isLive: false
-                        }
-                    };
-                } else {
-                    result = { video: null, message: 'Nenhum vídeo encontrado' };
-                }
-                
+                // Se não encontrou no RSS, retornar vazio
+                const result = { video: null, message: 'Nenhum vídeo encontrado' };
                 youtubeCache.latest = { data: result, timestamp: now };
-                res.json(result);
-            } catch (apiError) {
-                console.error('YouTube API error:', apiError);
-                const result = { video: null, error: apiError.message };
+                return res.json(result);
+                
+            } catch (rssError) {
+                console.error('Erro ao buscar RSS:', rssError);
+                const result = { video: null, message: 'Erro ao buscar vídeo' };
                 youtubeCache.latest = { data: result, timestamp: now };
-                res.json(result);
+                return res.json(result);
             }
         });
     } catch (error) {
-        res.json({ video: null, error: error.message });
+        res.json({ video: null, message: 'Erro interno' });
     }
 });
 
-// CRUD MENSAGENS
-// Listar todas as mensagens (público - só ativas)
-app.get('/api/mensagens', (req, res) => {
-    db.all("SELECT * FROM mensagens WHERE ativa = 1 ORDER BY data_publicacao DESC", (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
-});
-
-// Listar todas as mensagens (admin)
-app.get('/api/admin/mensagens', verifyAdmin, (req, res) => {
-    db.all("SELECT * FROM mensagens ORDER BY data_publicacao DESC", (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
-});
-
-// Criar mensagem
-app.post('/api/admin/mensagens', verifyAdmin, (req, res) => {
-    const { titulo, conteudo, video_url, ativa } = req.body;
+// Listar todas as mensagens (público) - Busca automaticamente do YouTube
+app.get('/api/mensagens', async (req, res) => {
+    // Primeiro tenta buscar do YouTube
+    try {
+        const response = await fetch('http://localhost:3000/api/youtube/latest');
+        const data = await response.json();
+        
+        if (data.video) {
+            // Retorna no formato de mensagem
+            return res.json([{
+                id: 1,
+                titulo: data.video.title,
+                conteudo: data.video.description || '',
+                video_url: 'https://www.youtube.com/watch?v=' + data.video.videoId,
+                video_id: data.video.videoId,
+                thumbnail: data.video.thumbnail,
+                data_publicacao: data.video.publishedAt,
+                ativa: 1,
+                is_live: data.video.isLive || false
+            }]);
+        }
+    } catch (e) {
+        console.error('Erro ao buscar do YouTube:', e);
+    }
     
-    if (!titulo) {
-        return res.status(400).json({ error: 'Título é obrigatório' });
-    }
-
-    db.run("INSERT INTO mensagens (titulo, conteudo, video_url, ativa) VALUES (?, ?, ?, ?)",
-        [titulo, conteudo || null, video_url || null, ativa !== undefined ? ativa : 1], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ message: 'Mensagem criada!', id: this.lastID });
-    });
+    // Fallback: retorna array vazio se não conseguir buscar
+    res.json([]);
 });
 
-// Atualizar mensagem
-app.put('/api/admin/mensagens/:id', verifyAdmin, (req, res) => {
-    const { id } = req.params;
-    const { titulo, conteudo, video_url, ativa } = req.body;
-
-    db.run("UPDATE mensagens SET titulo = ?, conteudo = ?, video_url = ?, ativa = ? WHERE id = ?",
-        [titulo, conteudo, video_url, ativa, id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Mensagem atualizada!' });
-    });
-});
-
-// Excluir mensagem
-app.delete('/api/admin/mensagens/:id', verifyAdmin, (req, res) => {
-    const { id } = req.params;
-
-    db.run("DELETE FROM mensagens WHERE id = ?", [id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Mensagem excluída!' });
-    });
-});
+// ROTAS ADMIN REMOVIDAS - Mensagens agora são buscadas automaticamente do YouTube
 
 // CRUD MINISTÉRIOS
 app.get('/api/admin/ministerios', verifyAdmin, (req, res) => {
