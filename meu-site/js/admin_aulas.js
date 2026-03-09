@@ -303,24 +303,19 @@ async function saveAula(e) {
     
     try {
         let response;
+        const headers = getAdminHeaders();
         if (editingId) {
             console.log('[DEBUG saveAula] PUT para:', `/api/admin/aulas/${editingId}`);
             response = await fetch(`/api/admin/aulas/${editingId}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-admin-token': getAdminToken()
-                },
+                headers: headers,
                 body: JSON.stringify(data)
             });
         } else {
             console.log('[DEBUG saveAula] POST para: /api/admin/aulas');
             response = await fetch('/api/admin/aulas', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-admin-token': getAdminToken()
-                },
+                headers: headers,
                 body: JSON.stringify(data)
             });
         }

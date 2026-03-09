@@ -107,7 +107,8 @@ body {
     font-weight: 700;
 }
 
-.hero p {
+.hero p,
+.hero .hero-content {
     font-size: 1.1rem;
     color: var(--cinza-escuro);
     max-width: 600px;
@@ -133,13 +134,17 @@ body {
     margin-bottom: 1rem;
 }
 
+.sobre-texto {
+    max-width: 500px;
+}
+
 .sobre-foto {
     text-align: center;
 }
 
 .sobre-foto img {
-    width: 100%;
-    max-width: 400px;
+    width: 80% !important;
+    max-width: 250px !important;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }

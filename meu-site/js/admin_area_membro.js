@@ -139,10 +139,7 @@ async function salvarAreaMembro() {
             
             const uploadResponse = await fetch('/api/admin/upload-pdf-base64', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-admin-token': 'maanaim2026'
-                },
+                headers: getAdminHeaders(),
                 body: JSON.stringify({
                     filename: arquivo.name,
                     data: base64Data

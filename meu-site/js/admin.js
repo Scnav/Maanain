@@ -335,10 +335,15 @@ async function carregarEventos() {
 }
 
 function criarItemEvento(evento) {
+    // Formatar data e hora juntos
+    const dataHora = evento.horario 
+        ? new Date(evento.data).toLocaleDateString('pt-BR') + ' às ' + evento.horario
+        : new Date(evento.data).toLocaleString('pt-BR');
+    
     return `
         <div style="background: white; border: 1px solid #eee; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem;">
             <h4 style="margin: 0 0 1rem 0; color: #dc3545;">${evento.titulo}</h4>
-            <p style="margin: 0 0 0.5rem 0; color: #666;"><strong>Data:</strong> ${new Date(evento.data).toLocaleString('pt-BR')}${evento.horario ? ' às ' + evento.horario : ''}</p>
+            <p style="margin: 0 0 0.5rem 0; color: #666;"><strong>Data:</strong> ${dataHora}</p>
             ${evento.local ? `<p style="margin: 0 0 1rem 0; color: #666;"><strong>Local:</strong> ${evento.local}</p>` : ''}
             <small style="color: #999;">Criado em: ${new Date(evento.created_at).toLocaleString('pt-BR')}</small>
             <div style="margin-top: 1rem;">
@@ -354,22 +359,22 @@ function mostrarFormEvento(evento = null) {
     const id = document.getElementById('eventoId');
     const titulo = document.getElementById('eventoTitulo');
     const data = document.getElementById('eventoData');
-    const horario = document.getElementById('eventoHorario');
     const local = document.getElementById('eventoLocal');
 
     if (evento) {
         title.textContent = 'Editar Evento';
         id.value = evento.id;
         titulo.value = evento.titulo;
-        data.value = new Date(evento.data).toISOString().slice(0, 16);
-        horario.value = evento.horario || '';
+        // Combinar data e horario para o campo datetime-local
+        const dataObj = new Date(evento.data);
+        const hora = evento.horario || '00:00';
+        data.value = `${dataObj.toISOString().slice(0, 10)}T${hora}`;
         local.value = evento.local || '';
     } else {
         title.textContent = 'Novo Evento';
         id.value = '';
         titulo.value = '';
         data.value = '';
-        horario.value = '';
         local.value = '';
     }
 
@@ -383,14 +388,17 @@ function ocultarFormEvento() {
 async function salvarEvento() {
     const id = document.getElementById('eventoId').value;
     const titulo = document.getElementById('eventoTitulo').value;
-    const data = document.getElementById('eventoData').value;
-    const horario = document.getElementById('eventoHorario').value;
+    const dataInput = document.getElementById('eventoData').value;
     const local = document.getElementById('eventoLocal').value;
 
-    if (!titulo || !data) {
+    if (!titulo || !dataInput) {
         mostrarToast('❌ Título e data são obrigatórios', 'error');
         return;
     }
+
+    // Extrair a hora do campo datetime-local (formato: YYYY-MM-DDTHH:MM)
+    const horario = dataInput.includes('T') ? dataInput.split('T')[1] : null;
+    const data = dataInput.split('T')[0]; // Apenas a data (YYYY-MM-DD)
 
     try {
         const method = id ? 'PUT' : 'POST';

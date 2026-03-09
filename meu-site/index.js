@@ -1145,7 +1145,7 @@ app.get('/api/admin/cultos', verifyAdmin, (req, res) => {
 });
 
 app.get('/api/cultos', (req, res) => {
-    db.all("SELECT id, titulo, horario, local FROM cultos ORDER BY id ASC", (err, rows) => {
+    db.all("SELECT id, titulo, SUBSTR(horario, 1, 5) as horario, local FROM cultos ORDER BY id ASC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
@@ -1418,7 +1418,7 @@ app.get('/api/noticias', (req, res) => {
 
 app.get('/api/eventos', (req, res) => {
     console.log('[DEBUG] GET /api/eventos - Buscando eventos');
-    db.all("SELECT id, titulo, data, horario, local, created_at FROM eventos WHERE data >= CURDATE() ORDER BY data ASC", (err, rows) => {
+    db.all("SELECT id, titulo, data, SUBSTR(horario, 1, 5) as horario, local, created_at FROM eventos WHERE data >= CURDATE() ORDER BY data ASC", (err, rows) => {
         if (err) {
             console.log('[DEBUG] ERRO ao buscar eventos:', err.message);
             return res.status(500).json({ error: err.message });
