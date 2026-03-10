@@ -720,6 +720,25 @@ app.put('/api/admin/page-content/:section', verifyAdmin, (req, res) => {
     const { section } = req.params;
     const { title, content, link, image } = req.body;
 
+    // Verificar se é uma atualização apenas do título
+    if (title && content === undefined) {
+        db.run("UPDATE page_content SET title = ?, updated_at = NOW() WHERE section = ?",
+            [title, section], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            // Se não encontrou, insere
+            if (this.changes === 0) {
+                db.run("INSERT INTO page_content (section, title, updated_at) VALUES (?, ?, NOW())",
+                    [section, title], function(err) {
+                    if (err) return res.status(500).json({ error: err.message });
+                    res.json({ message: 'Título criado' });
+                });
+            } else {
+                res.json({ message: 'Título atualizado' });
+            }
+        });
+        return;
+    }
+
     // Verificar se link foi fornecido e não é vazio
     if (link || image) {
         db.run("INSERT INTO page_content (section, title, content, link, image, updated_at) VALUES (?, ?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE title=VALUES(title), content=VALUES(content), link=VALUES(link), image=VALUES(image), updated_at=NOW()",
@@ -734,6 +753,15 @@ app.put('/api/admin/page-content/:section', verifyAdmin, (req, res) => {
             res.json({ message: 'Conteúdo atualizado' });
         });
     }
+});
+
+// Endpoint para limpar conteúdo (sem auth para emergência)
+app.delete('/api/admin/page-content/clear/:section', (req, res) => {
+    const { section } = req.params;
+    db.run("UPDATE page_content SET content = '' WHERE section = ?", [section], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Conteúdo limpo' });
+    });
 });
 
 // Endpoint público para obter conteúdos

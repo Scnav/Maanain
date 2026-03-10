@@ -756,16 +756,18 @@ async function carregarConteudos() {
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <input type="text" id="hero-title" value="${conteudos.hero?.title || 'Bem-vindo à MAANAIM'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                         <button onclick="abrirEditorRico('hero-title', document.getElementById('hero-title').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                        <button onclick="salvarTitulo('hero')" style="padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Salvar</button>
                     </div>
                 </div>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                         Conteúdo:
-                        <button onclick="abrirEditorRico('hero-content', document.getElementById('hero-content').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>
                     </label>
-                    <textarea id="hero-content" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">${conteudos.hero?.content || ''}</textarea>
+                    <input type="hidden" id="hero-content" value="${conteudos.hero?.content || ''}">
+                    <div id="hero-contentPreview" onclick="abrirEditorRico('hero-content', document.getElementById('hero-content').value)" style="background: white; padding: 20px; border-radius: 8px; min-height: 80px; border: 2px dashed #667eea; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #667eea; font-weight: 500;">
+                        ${conteudos.hero?.content ? conteudos.hero.content : '<span style="font-size: 2rem;">🖼️</span><span>Clique para editar o conteúdo</span>'}
+                    </div>
                 </div>
-                <button onclick="salvarConteudo('hero')" class="btn-editar-cargo">💾 Salvar Hero</button>
             </div>
 
             <div style="margin-bottom: 2rem;">
@@ -775,17 +777,18 @@ async function carregarConteudos() {
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <input type="text" id="sobre-title" value="${conteudos.sobre?.title || 'Sobre Nós'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                         <button onclick="abrirEditorRico('sobre-title', document.getElementById('sobre-title').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                        <button onclick="salvarTitulo('sobre')" style="padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Salvar</button>
                     </div>
                 </div>
                 <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                         Conteúdo:
-                        <button onclick="abrirEditorRico('sobre-content', document.getElementById('sobre-content').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>
                     </label>
-                    <textarea id="sobre-content" rows="4" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">${conteudos.sobre?.content || ''}</textarea>
-                    <small style="color: #666;">Use: [img]URL[/img], [img-left], [img-right], [img-center]</small>
+                    <input type="hidden" id="sobre-content" value="${conteudos.sobre?.content || ''}">
+                    <div id="sobre-contentPreview" onclick="abrirEditorRico('sobre-content', document.getElementById('sobre-content').value)" style="background: white; padding: 20px; border-radius: 8px; min-height: 80px; border: 2px dashed #667eea; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #667eea; font-weight: 500;">
+                        ${conteudos.sobre?.content ? conteudos.sobre.content : '<span style="font-size: 2rem;">🖼️</span><span>Clique para editar o conteúdo</span>'}
+                    </div>
                 </div>
-                <button onclick="salvarConteudo('sobre')" class="btn-editar-cargo">💾 Salvar Sobre</button>
             </div>
 
             <div style="margin-bottom: 2rem;">
@@ -795,9 +798,9 @@ async function carregarConteudos() {
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <input type="text" id="ministerios-title" value="${conteudos.ministerios?.title || 'Nossos Ministérios'}" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                         <button onclick="abrirEditorRico('ministerios-title', document.getElementById('ministerios-title').value)" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️</button>
+                        <button onclick="salvarTitulo('ministerios')" style="padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Salvar</button>
                     </div>
                 </div>
-                <button onclick="salvarConteudo('ministerios')" class="btn-editar-cargo">💾 Salvar Título</button>
             </div>
 
             <p style="color: #666; font-style: italic; margin-bottom: 2rem;">
@@ -813,41 +816,7 @@ async function carregarConteudos() {
     }
 }
 
-async function salvarConteudo(section) {
-    try {
-        let title, content, link, image;
-
-        if (section === 'hero') {
-            title = document.getElementById('hero-title').value;
-            content = document.getElementById('hero-content').value;
-            link = null;
-            image = '';
-        } else if (section === 'sobre') {
-            title = document.getElementById('sobre-title').value;
-            content = document.getElementById('sobre-content').value;
-            link = null;
-            image = null;
-        } else if (section === 'ministerios') {
-            title = document.getElementById('ministerios-title').value;
-            content = '';
-            link = null;
-            image = null;
-        }
-
-        const response = await fetch(`/api/admin/page-content/${section}`, {
-            method: 'PUT',
-            headers: getAdminHeaders(),
-            body: JSON.stringify({ title, content, link, image })
-        });
-
-        if (!response.ok) throw new Error('Erro ao salvar conteúdo');
-
-        mostrarToast(`✅ ${section.charAt(0).toUpperCase() + section.slice(1)} salvo com sucesso!`, 'success');
-    } catch (error) {
-        console.error('Erro ao salvar conteúdo:', error);
-        mostrarToast('❌ Erro ao salvar conteúdo', 'error');
-    }
-}
+// Funções auxiliares
 
 function mostrarToast(msg, type = 'info') {
     const toast = document.createElement('div');
@@ -945,6 +914,34 @@ async function salvarYoutubeConfig() {
     } catch (error) {
         console.error('Erro ao salvar config do YouTube:', error);
         mostrarToast('❌ Erro ao salvar configuração', 'error');
+    }
+}
+
+async function salvarTitulo(section) {
+    const titleInput = document.getElementById(`${section}-title`);
+    if (!titleInput) {
+        mostrarToast('❌ Campo de título não encontrado', 'error');
+        return;
+    }
+    
+    const title = titleInput.value;
+    
+    try {
+        const response = await fetch(`/api/admin/page-content/${section}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAdminHeaders()
+            },
+            body: JSON.stringify({ title })
+        });
+        
+        if (!response.ok) throw new Error('Erro ao salvar');
+        
+        mostrarToast('✅ Título salvo com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar título:', error);
+        mostrarToast('❌ Erro ao salvar título', 'error');
     }
 }
 

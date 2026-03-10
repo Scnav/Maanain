@@ -61,31 +61,33 @@
             font-weight: 600;
         }
         
-        .btn-voltar {
-            background: #6c757d;
-            color: white;
+        .btn-voltar { background: #6c757d; color: white; }
+        .btn-voltar:hover { background: #5a6268; }
+        
+        .btn-salvar { background: #28a745; color: white; }
+        .btn-salvar:hover { background: #218838; }
+        
+        .btn-limpar { background: #dc3545; color: white; }
+        .btn-limpar:hover { background: #c82333; }
+
+        .btn-zona {
+            padding: 10px 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
         }
         
-        .btn-voltar:hover {
-            background: #5a6268;
+        .btn-zona:hover {
+            background: #f8f9fa;
         }
         
-        .btn-salvar {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-salvar:hover {
-            background: #218838;
-        }
-        
-        .btn-limpar {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .btn-limpar:hover {
-            background: #c82333;
+        .btn-zona.active {
+            border-color: #28a745;
+            background: #d4edda;
+            color: #155724;
         }
         
         .main-content {
@@ -95,9 +97,7 @@
         }
         
         @media (max-width: 900px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
+            .main-content { grid-template-columns: 1fr; }
         }
         
         .galeria {
@@ -133,13 +133,18 @@
             height: 100px;
             object-fit: cover;
             border-radius: 10px;
-            cursor: grab;
+            cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
         }
         
         .galeria-img:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .galeria-img.selected {
+            border-color: #667eea;
         }
         
         .upload-area {
@@ -156,14 +161,14 @@
             font-weight: 600;
             color: #333;
         }
-        
+
         .upload-area input {
             width: 100%;
             padding: 10px;
             border: 1px solid #dee2e6;
             border-radius: 8px;
         }
-        
+
         .editor-container {
             background: white;
             border-radius: 15px;
@@ -178,6 +183,7 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            align-items: center;
         }
         
         .toolbar-btn {
@@ -200,54 +206,125 @@
             color: white;
             border-color: #667eea;
         }
+
+        .position-controls {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
         
-        .editor {
-            min-height: 500px;
+        .position-controls label {
+            font-weight: 600;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .editor-content {
+            min-height: 400px;
             padding: 25px;
             outline: none;
             font-size: 1.1rem;
             line-height: 1.8;
             color: #333;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            cursor: text;
         }
         
-        .editor:focus {
-            background: #fafafa;
+        .editor-content:focus {
+            background: #fff;
+            border-color: #667eea;
         }
         
-        .editor:empty:before {
-            content: attr(placeholder);
+        .editor-content:empty:before {
+            content: attr(data-placeholder);
             color: #999;
             pointer-events: none;
         }
         
-        .editor img.inserted-img {
+        .editor-content img {
             max-width: 100%;
             height: auto;
             border-radius: 8px;
             margin: 10px 0;
-            cursor: move;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .editor-content img:hover {
+            outline: 2px solid #667eea;
+        }
+        
+        .editor-content img.selected {
+            outline: 3px solid #28a745;
+            outline-offset: 2px;
+        }
+        
+        .editor-content img[data-position="left"] {
+            float: left;
+            margin-right: 15px;
+            max-width: 45%;
+        }
+        
+        .editor-content img[data-position="right"] {
+            float: right;
+            margin-left: 15px;
+            max-width: 45%;
+        }
+        
+        .editor-content img[data-position="center"] {
             display: block;
+            margin: 15px auto;
+            max-width: 80%;
         }
         
-        .drop-zone {
-            border: 3px dashed #667eea;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            color: #667eea;
-            margin: 10px;
-            transition: all 0.3s;
+        .editor-content::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .size-controls {
+            display: flex;
+            gap: 5px;
         }
         
-        .drop-zone.drag-over {
+        .size-btn {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .size-btn:hover {
+            background: #f8f9fa;
+        }
+        
+        .size-btn.active {
             background: #667eea;
             color: white;
+            border-color: #667eea;
         }
-        
+
         .loading {
             text-align: center;
             padding: 50px;
             color: #666;
+        }
+        
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            padding: 10px 20px;
+            background: #fff3cd;
+            border-bottom: 1px solid #ffc107;
         }
     </style>
 </head>
@@ -256,196 +333,29 @@
         <div class="header">
             <h1>✏️ Editor MAANAIM</h1>
             <div class="header-actions">
-                <button onclick="voltar()" class="btn btn-voltar">↩️ Voltar</button>
-                <button onclick="salvar()" class="btn btn-salvar">💾 Salvar</button>
-                <button onclick="limpar()" class="btn btn-limpar">🗑️ Limpar</button>
+                <button onclick="voltar()" class="btn btn-voltar">&#8617; Voltar</button>
+                <button onclick="salvar()" class="btn btn-salvar">&#128190; Salvar</button>
+                <button onclick="limpar()" class="btn btn-limpar">&#128465; Limpar</button>
             </div>
         </div>
         
         <div class="main-content">
             <!-- Galeria de Imagens -->
             <div class="galeria">
-                <h2>🖼️ Galeria de Imagens</h2>
-                <p>Arraste para o editor!</p>
-                <div class="galeria-images" id="galeria">
-                    <!-- Imagens carregadas da API -->
+                <h2>🖼️ Galeria</h2>
+                <p>Clique em uma imagem para selecioná-la</p>
+                <div class="galeria-images" id="galeria"></div>
+                
+                <div class="upload-area">
+                    <label>&#128279; Inserir imagem por URL:</label>
+                    <input type="text" id="imgUrl" placeholder="https://exemplo.com/imagem.jpg">
+                    <button onclick="inserirImagemUrl()" class="btn btn-salvar" style="width: 100%; margin-top: 10px;">&#10133; Inserir</button>
                 </div>
                 
                 <div class="upload-area">
-                    <label>📤 Upload sua imagem:</label>
+                    <label>&#128229; Upload sua imagem:</label>
                     <input type="file" id="uploadImg" accept="image/*">
-                    <button onclick="uploadImage()" class="btn btn-salvar" style="margin-top: 10px; width: 100%;">⬆️ Enviar</button>
-                </div>
-                
-                <!-- Teclado de Emojis -->
-                <div class="upload-area" style="margin-top: 15px;">
-                    <label>😀 Faces & Emoções:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('😊')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😊</button>
-                        <button onclick="inserirEmoji('😄')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😄</button>
-                        <button onclick="inserirEmoji('😃')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😃</button>
-                        <button onclick="inserirEmoji('😀')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😀</button>
-                        <button onclick="inserirEmoji('😁')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😁</button>
-                        <button onclick="inserirEmoji('😅')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😅</button>
-                        <button onclick="inserirEmoji('😂')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😂</button>
-                        <button onclick="inserirEmoji('🤣')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤣</button>
-                        <button onclick="inserirEmoji('😉')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😉</button>
-                        <button onclick="inserirEmoji('😌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😌</button>
-                        <button onclick="inserirEmoji('😍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😍</button>
-                        <button onclick="inserirEmoji('🥰')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🥰</button>
-                        <button onclick="inserirEmoji('😘')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😘</button>
-                        <button onclick="inserirEmoji('😎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😎</button>
-                        <button onclick="inserirEmoji('🤔')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤔</button>
-                        <button onclick="inserirEmoji('🤨')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤨</button>
-                        <button onclick="inserirEmoji('😕')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😕</button>
-                        <button onclick="inserirEmoji('😟')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😟</button>
-                        <button onclick="inserirEmoji('😮')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😮</button>
-                        <button onclick="inserirEmoji('😯')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😯</button>
-                    </div>
-                    <label style="margin-top: 10px; display: block;">❤️ Corações:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('❤️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">❤️</button>
-                        <button onclick="inserirEmoji('🧡')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🧡</button>
-                        <button onclick="inserirEmoji('💛')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💛</button>
-                        <button onclick="inserirEmoji('💚')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💚</button>
-                        <button onclick="inserirEmoji('💙')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💙</button>
-                        <button onclick="inserirEmoji('💜')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💜</button>
-                        <button onclick="inserirEmoji('🖤')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🖤</button>
-                        <button onclick="inserirEmoji('🤍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤍</button>
-                        <button onclick="inserirEmoji('🤎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤎</button>
-                        <button onclick="inserirEmoji('💔')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💔</button>
-                        <button onclick="inserirEmoji('❤️‍🔥')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">❤️‍🔥</button>
-                        <button onclick="inserirEmoji('💕')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💕</button>
-                        <button onclick="inserirEmoji('💞')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💞</button>
-                        <button onclick="inserirEmoji('💗')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💗</button>
-                        <button onclick="inserirEmoji('💖')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💖</button>
-                    </div>
-                    <label style="margin-top: 10px; display: block;">✝️ Religião & Espiritual:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('✝️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✝️</button>
-                        <button onclick="inserirEmoji('☪️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">☪️</button>
-                        <button onclick="inserirEmoji('🕉️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕉️</button>
-                        <button onclick="inserirEmoji('☸️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">☸️</button>
-                        <button onclick="inserirEmoji('✡️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✡️</button>
-                        <button onclick="inserirEmoji('🔯')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🔯</button>
-                        <button onclick="inserirEmoji('🕎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕎</button>
-                        <button onclick="inserirEmoji('☯️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">☯️</button>
-                        <button onclick="inserirEmoji('🙏')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🙏</button>
-                        <button onclick="inserirEmoji('🙌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🙌</button>
-                        <button onclick="inserirEmoji('🧘')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🧘</button>
-                        <button onclick="inserirEmoji('👼')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👼</button>
-                        <button onclick="inserirEmoji('😇')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">😇</button>
-                        <button onclick="inserirEmoji('🤩')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤩</button>
-                        <button onclick="inserirEmoji('🥳')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🥳</button>
-                    </div>
-                    <label style="margin-top: 10px; display: block;">🎵 Música & Artes:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('🎵')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎵</button>
-                        <button onclick="inserirEmoji('🎶')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎶</button>
-                        <button onclick="inserirEmoji('🎼')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎼</button>
-                        <button onclick="inserirEmoji('🎸')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎸</button>
-                        <button onclick="inserirEmoji('🎹')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎹</button>
-                        <button onclick="inserirEmoji('🎺')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎺</button>
-                        <button onclick="inserirEmoji('🎻')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎻</button>
-                        <button onclick="inserirEmoji('🥁')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🥁</button>
-                        <button onclick="inserirEmoji('📖')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📖</button>
-                        <button onclick="inserirEmoji('📚')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📚</button>
-                        <button onclick="inserirEmoji('📝')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📝</button>
-                        <button onclick="inserirEmoji('✏️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✏️</button>
-                        <button onclick="inserirEmoji('🎨')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎨</button>
-                        <button onclick="inserirEmoji('🖼️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🖼️</button>
-                        <button onclick="inserirEmoji('📷')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📷</button>
-                    </div>
-                    <label style="margin-top: 10px; display: block;">⛪ Igreja & Ministério:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('⛪')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⛪</button>
-                        <button onclick="inserirEmoji('🛕')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🛕</button>
-                        <button onclick="inserirEmoji('🕌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕌</button>
-                        <button onclick="inserirEmoji('🕍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕍</button>
-                        <button onclick="inserirEmoji('👨‍⚖️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👨‍⚖️</button>
-                        <button onclick="inserirEmoji('👩‍⚖️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👩‍⚖️</button>
-                        <button onclick="inserirEmoji('🎓')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎓</button>
-                        <button onclick="inserirEmoji('👨‍🏫')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👨‍🏫</button>
-                        <button onclick="inserirEmoji('👩‍🏫')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👩‍🏫</button>
-                        <button onclick="inserirEmoji('👏')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👏</button>
-                        <button onclick="inserirEmoji('🙌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🙌</button>
-                        <button onclick="inserirEmoji('🤝')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤝</button>
-                        <button onclick="inserirEmoji('💪')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💪</button>
-                        <button onclick="inserirEmoji('✊')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✊</button>
-                        <button onclick="inserirEmoji('✋')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✋</button>
-                    </div>
-                    <label style="margin-top: 10px; display: block;">✨ Símbolos & Outros:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('✨')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✨</button>
-                        <button onclick="inserirEmoji('🔥')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🔥</button>
-                        <button onclick="inserirEmoji('💫')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💫</button>
-                        <button onclick="inserirEmoji('⭐')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⭐</button>
-                        <button onclick="inserirEmoji('🌟')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌟</button>
-                        <button onclick="inserirEmoji('💯')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💯</button>
-                        <button onclick="inserirEmoji('✅')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✅</button>
-                        <button onclick="inserirEmoji('❇️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">❇️</button>
-                        <button onclick="inserirEmoji('💒')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">💒</button>
-                        <button onclick="inserirEmoji('🎪')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎪</button>
-                        <button onclick="inserirEmoji('🎭')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎭</button>
-                        <button onclick="inserirEmoji('🎰')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎰</button>
-                        <button onclick="inserirEmoji('🎯')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎯</button>
-                        <button onclick="inserirEmoji('🏆')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🏆</button>
-                        <button onclick="inserirEmoji('🎗')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🎗</button>
-                    </div>
-                    <label style="margin-top: 10px; display: block;">📅 Tempo & Eventos:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('📅')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📅</button>
-                        <button onclick="inserirEmoji('📆')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📆</button>
-                        <button onclick="inserirEmoji('⏰')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⏰</button>
-                        <button onclick="inserirEmoji('⏱️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⏱️</button>
-                        <button onclick="inserirEmoji('⏲️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⏲️</button>
-                        <button onclick="inserirEmoji('🕐')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕐</button>
-                        <button onclick="inserirEmoji('🕑')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕑</button>
-                        <button onclick="inserirEmoji('🕒')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕒</button>
-                        <button onclick="inserirEmoji('🕓')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕓</button>
-                        <button onclick="inserirEmoji('📢')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📢</button>
-                        <button onclick="inserirEmoji('📣')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📣</button>
-                        <button onclick="inserirEmoji('🔔')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🔔</button>
-                        <button onclick="inserirEmoji('📍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📍</button>
-                        <button onclick="inserirEmoji('📌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📌</button>
-                        <button onclick="inserirEmoji('📎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">📎</button>
-                    </div>
-                    <label style="margin-top: 10px; display: block;">🌿 Natureza & Animais:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('🌿')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌿</button>
-                        <button onclick="inserirEmoji('🌱')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌱</button>
-                        <button onclick="inserirEmoji('🌳')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌳</button>
-                        <button onclick="inserirEmoji('🌲')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌲</button>
-                        <button onclick="inserirEmoji('🌺')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌺</button>
-                        <button onclick="inserirEmoji('🌸')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌸</button>
-                        <button onclick="inserirEmoji('🌹')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌹</button>
-                        <button onclick="inserirEmoji('🌻')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌻</button>
-                        <button onclick="inserirEmoji('☀️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">☀️</button>
-                        <button onclick="inserirEmoji('🌤️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌤️</button>
-                        <button onclick="inserirEmoji('🌈')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌈</button>
-                        <button onclick="inserirEmoji('🌙')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🌙</button>
-                        <button onclick="inserirEmoji('⭐')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">⭐</button>
-                        <button onclick="inserirEmoji('🐑')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🐑</button>
-                        <button onclick="inserirEmoji('🕊️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🕊️</button>
-                    </div>
-                    <label style="margin-top: 10px; display: block;">👥 Pessoas & Gestos:</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;">
-                        <button onclick="inserirEmoji('👋')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👋</button>
-                        <button onclick="inserirEmoji('🤚')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤚</button>
-                        <button onclick="inserirEmoji('🖐️')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🖐️</button>
-                        <button onclick="inserirEmoji('✋')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">✋</button>
-                        <button onclick="inserirEmoji('🖖')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🖖</button>
-                        <button onclick="inserirEmoji('👌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👌</button>
-                        <button onclick="inserirEmoji('🤌')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤌</button>
-                        <button onclick="inserirEmoji('👈')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👈</button>
-                        <button onclick="inserirEmoji('👉')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👉</button>
-                        <button onclick="inserirEmoji('👆')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👆</button>
-                        <button onclick="inserirEmoji('👇')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👇</button>
-                        <button onclick="inserirEmoji('👍')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👍</button>
-                        <button onclick="inserirEmoji('👎')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👎</button>
-                        <button onclick="inserirEmoji('🤲')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">🤲</button>
-                        <button onclick="inserirEmoji('👐')" style="padding: 8px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 4px;">👐</button>
-                    </div>
+                    <button onclick="uploadImage()" class="btn btn-salvar" style="margin-top: 10px; width: 100%;">&#11014; Enviar</button>
                 </div>
             </div>
             
@@ -460,63 +370,284 @@
                     <button class="toolbar-btn" onclick="formatDoc('insertOrderedList')" title="Lista numerada">1. Lista</button>
                     <button class="toolbar-btn" onclick="formatDoc('h2')" title="Título">Título</button>
                     <button class="toolbar-btn" onclick="formatDoc('p')" title="Parágrafo">P</button>
+                    <button class="toolbar-btn" onclick="insertEmoji()" title="Emoji">😀 Emoji</button>
                 </div>
-                <div id="editor" class="editor" contenteditable="true" placeholder="Digite seu conteúdo aqui... Arraste imagens da galeria!">
+                
+                <!-- Emoji Picker -->
+                <div id="emojiPicker" style="display: none; position: absolute; background: white; border: 1px solid #ccc; border-radius: 8px; padding: 10px; max-width: 300px; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; margin-top: 5px;">
+                    <div style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px;">
+                        <span onclick="addEmoji('😀')" style="cursor: pointer; font-size: 20px; padding: 3px;" title="sorriso">😀</span>
+                        <span onclick="addEmoji('😃')" style="cursor: pointer; font-size: 20px; padding: 3px;">😃</span>
+                        <span onclick="addEmoji('😄')" style="cursor: pointer; font-size: 20px; padding: 3px;">😄</span>
+                        <span onclick="addEmoji('😁')" style="cursor: pointer; font-size: 20px; padding: 3px;">😁</span>
+                        <span onclick="addEmoji('😆')" style="cursor: pointer; font-size: 20px; padding: 3px;">😆</span>
+                        <span onclick="addEmoji('😅')" style="cursor: pointer; font-size: 20px; padding: 3px;">😅</span>
+                        <span onclick="addEmoji('🤣')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤣</span>
+                        <span onclick="addEmoji('😂')" style="cursor: pointer; font-size: 20px; padding: 3px;">😂</span>
+                        <span onclick="addEmoji('🙂')" style="cursor: pointer; font-size: 20px; padding: 3px;">🙂</span>
+                        <span onclick="addEmoji('😊')" style="cursor: pointer; font-size: 20px; padding: 3px;">😊</span>
+                        <span onclick="addEmoji('😇')" style="cursor: pointer; font-size: 20px; padding: 3px;">😇</span>
+                        <span onclick="addEmoji('🥰')" style="cursor: pointer; font-size: 20px; padding: 3px;">🥰</span>
+                        <span onclick="addEmoji('😍')" style="cursor: pointer; font-size: 20px; padding: 3px;">😍</span>
+                        <span onclick="addEmoji('🤩')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤩</span>
+                        <span onclick="addEmoji('😘')" style="cursor: pointer; font-size: 20px; padding: 3px;">😘</span>
+                        <span onclick="addEmoji('😋')" style="cursor: pointer; font-size: 20px; padding: 3px;">😋</span>
+                        <span onclick="addEmoji('😛')" style="cursor: pointer; font-size: 20px; padding: 3px;">😛</span>
+                        <span onclick="addEmoji('😜')" style="cursor: pointer; font-size: 20px; padding: 3px;">😜</span>
+                        <span onclick="addEmoji('🤪')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤪</span>
+                        <span onclick="addEmoji('😝')" style="cursor: pointer; font-size: 20px; padding: 3px;">😝</span>
+                        <span onclick="addEmoji('🤑')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤑</span>
+                        <span onclick="addEmoji('🤗')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤗</span>
+                        <span onclick="addEmoji('🤭')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤭</span>
+                        <span onclick="addEmoji('🤔')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤔</span>
+                        <span onclick="addEmoji('🤐')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤐</span>
+                        <span onclick="addEmoji('🤨')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤨</span>
+                        <span onclick="addEmoji('😐')" style="cursor: pointer; font-size: 20px; padding: 3px;">😐</span>
+                        <span onclick="addEmoji('😑')" style="cursor: pointer; font-size: 20px; padding: 3px;">😑</span>
+                        <span onclick="addEmoji('😶')" style="cursor: pointer; font-size: 20px; padding: 3px;">😶</span>
+                        <span onclick="addEmoji('😏')" style="cursor: pointer; font-size: 20px; padding: 3px;">😏</span>
+                        <span onclick="addEmoji('😒')" style="cursor: pointer; font-size: 20px; padding: 3px;">😒</span>
+                        <span onclick="addEmoji('🙄')" style="cursor: pointer; font-size: 20px; padding: 3px;">🙄</span>
+                        <span onclick="addEmoji('😬')" style="cursor: pointer; font-size: 20px; padding: 3px;">😬</span>
+                        <span onclick="addEmoji('🤥')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤥</span>
+                        <span onclick="addEmoji('😌')" style="cursor: pointer; font-size: 20px; padding: 3px;">😌</span>
+                        <span onclick="addEmoji('😔')" style="cursor: pointer; font-size: 20px; padding: 3px;">😔</span>
+                        <span onclick="addEmoji('😪')" style="cursor: pointer; font-size: 20px; padding: 3px;">😪</span>
+                        <span onclick="addEmoji('🤤')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤤</span>
+                        <span onclick="addEmoji('😴')" style="cursor: pointer; font-size: 20px; padding: 3px;">😴</span>
+                        <span onclick="addEmoji('😷')" style="cursor: pointer; font-size: 20px; padding: 3px;">😷</span>
+                        <span onclick="addEmoji('🤒')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤒</span>
+                        <span onclick="addEmoji('🤕')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤕</span>
+                        <span onclick="addEmoji('🤢')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤢</span>
+                        <span onclick="addEmoji('🤮')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤮</span>
+                        <span onclick="addEmoji('🤧')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤧</span>
+                        <span onclick="addEmoji('🥵')" style="cursor: pointer; font-size: 20px; padding: 3px;">🥵</span>
+                        <span onclick="addEmoji('🥶')" style="cursor: pointer; font-size: 20px; padding: 3px;">🥶</span>
+                        <span onclick="addEmoji('🥴')" style="cursor: pointer; font-size: 20px; padding: 3px;">🥴</span>
+                        <span onclick="addEmoji('😵')" style="cursor: pointer; font-size: 20px; padding: 3px;">😵</span>
+                        <span onclick="addEmoji('🤯')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤯</span>
+                        <span onclick="addEmoji('🤠')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤠</span>
+                        <span onclick="addEmoji('🥳')" style="cursor: pointer; font-size: 20px; padding: 3px;">🥳</span>
+                        <span onclick="addEmoji('🥸')" style="cursor: pointer; font-size: 20px; padding: 3px;">🥸</span>
+                        <span onclick="addEmoji('😎')" style="cursor: pointer; font-size: 20px; padding: 3px;">😎</span>
+                        <span onclick="addEmoji('🤓')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤓</span>
+                        <span onclick="addEmoji('🧐')" style="cursor: pointer; font-size: 20px; padding: 3px;">🧐</span>
+                        <span onclick="addEmoji('😕')" style="cursor: pointer; font-size: 20px; padding: 3px;">😕</span>
+                        <span onclick="addEmoji('😟')" style="cursor: pointer; font-size: 20px; padding: 3px;">😟</span>
+                        <span onclick="addEmoji('🙁')" style="cursor: pointer; font-size: 20px; padding: 3px;">🙁</span>
+                        <span onclick="addEmoji('☹️')" style="cursor: pointer; font-size: 20px; padding: 3px;">☹️</span>
+                        <span onclick="addEmoji('😮')" style="cursor: pointer; font-size: 20px; padding: 3px;">😮</span>
+                        <span onclick="addEmoji('😯')" style="cursor: pointer; font-size: 20px; padding: 3px;">😯</span>
+                        <span onclick="addEmoji('😲')" style="cursor: pointer; font-size: 20px; padding: 3px;">😲</span>
+                        <span onclick="addEmoji('😳')" style="cursor: pointer; font-size: 20px; padding: 3px;">😳</span>
+                        <span onclick="addEmoji('🥺')" style="cursor: pointer; font-size: 20px; padding: 3px;">🥺</span>
+                        <span onclick="addEmoji('😦')" style="cursor: pointer; font-size: 20px; padding: 3px;">😦</span>
+                        <span onclick="addEmoji('😧')" style="cursor: pointer; font-size: 20px; padding: 3px;">😧</span>
+                        <span onclick="addEmoji('😨')" style="cursor: pointer; font-size: 20px; padding: 3px;">😨</span>
+                        <span onclick="addEmoji('😰')" style="cursor: pointer; font-size: 20px; padding: 3px;">😰</span>
+                        <span onclick="addEmoji('😥')" style="cursor: pointer; font-size: 20px; padding: 3px;">😥</span>
+                        <span onclick="addEmoji('😢')" style="cursor: pointer; font-size: 20px; padding: 3px;">😢</span>
+                        <span onclick="addEmoji('😭')" style="cursor: pointer; font-size: 20px; padding: 3px;">😭</span>
+                        <span onclick="addEmoji('😱')" style="cursor: pointer; font-size: 20px; padding: 3px;">😱</span>
+                        <span onclick="addEmoji('😖')" style="cursor: pointer; font-size: 20px; padding: 3px;">😖</span>
+                        <span onclick="addEmoji('😣')" style="cursor: pointer; font-size: 20px; padding: 3px;">😣</span>
+                        <span onclick="addEmoji('😞')" style="cursor: pointer; font-size: 20px; padding: 3px;">😞</span>
+                        <span onclick="addEmoji('😓')" style="cursor: pointer; font-size: 20px; padding: 3px;">😓</span>
+                        <span onclick="addEmoji('😩')" style="cursor: pointer; font-size: 20px; padding: 3px;">😩</span>
+                        <span onclick="addEmoji('😫')" style="cursor: pointer; font-size: 20px; padding: 3px;">😫</span>
+                        <span onclick="addEmoji('🥱')" style="cursor: pointer; font-size: 20px; padding: 3px;">🥱</span>
+                        <span onclick="addEmoji('😤')" style="cursor: pointer; font-size: 20px; padding: 3px;">😤</span>
+                        <span onclick="addEmoji('😡')" style="cursor: pointer; font-size: 20px; padding: 3px;">😡</span>
+                        <span onclick="addEmoji('😠')" style="cursor: pointer; font-size: 20px; padding: 3px;">😠</span>
+                        <span onclick="addEmoji('🤬')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤬</span>
+                        <span onclick="addEmoji('😈')" style="cursor: pointer; font-size: 20px; padding: 3px;">😈</span>
+                        <span onclick="addEmoji('👿')" style="cursor: pointer; font-size: 20px; padding: 3px;">👿</span>
+                        <span onclick="addEmoji('💀')" style="cursor: pointer; font-size: 20px; padding: 3px;">💀</span>
+                        <span onclick="addEmoji('☠️')" style="cursor: pointer; font-size: 20px; padding: 3px;">☠️</span>
+                        <span onclick="addEmoji('💩')" style="cursor: pointer; font-size: 20px; padding: 3px;">💩</span>
+                        <span onclick="addEmoji('🤡')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤡</span>
+                        <span onclick="addEmoji('👹')" style="cursor: pointer; font-size: 20px; padding: 3px;">👹</span>
+                        <span onclick="addEmoji('👺')" style="cursor: pointer; font-size: 20px; padding: 3px;">👺</span>
+                        <span onclick="addEmoji('👻')" style="cursor: pointer; font-size: 20px; padding: 3px;">👻</span>
+                        <span onclick="addEmoji('👽')" style="cursor: pointer; font-size: 20px; padding: 3px;">👽</span>
+                        <span onclick="addEmoji('👾')" style="cursor: pointer; font-size: 20px; padding: 3px;">👾</span>
+                        <span onclick="addEmoji('🤖')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤖</span>
+                        <span onclick="addEmoji('💋')" style="cursor: pointer; font-size: 20px; padding: 3px;">💋</span>
+                        <span onclick="addEmoji('💌')" style="cursor: pointer; font-size: 20px; padding: 3px;">💌</span>
+                        <span onclick="addEmoji('💘')" style="cursor: pointer; font-size: 20px; padding: 3px;">💘</span>
+                        <span onclick="addEmoji('💝')" style="cursor: pointer; font-size: 20px; padding: 3px;">💝</span>
+                        <span onclick="addEmoji('💖')" style="cursor: pointer; font-size: 20px; padding: 3px;">💖</span>
+                        <span onclick="addEmoji('💗')" style="cursor: pointer; font-size: 20px; padding: 3px;">💗</span>
+                        <span onclick="addEmoji('💓')" style="cursor: pointer; font-size: 20px; padding: 3px;">💓</span>
+                        <span onclick="addEmoji('💞')" style="cursor: pointer; font-size: 20px; padding: 3px;">💞</span>
+                        <span onclick="addEmoji('💕')" style="cursor: pointer; font-size: 20px; padding: 3px;">💕</span>
+                        <span onclick="addEmoji('💟')" style="cursor: pointer; font-size: 20px; padding: 3px;">💟</span>
+                        <span onclick="addEmoji('❣️')" style="cursor: pointer; font-size: 20px; padding: 3px;">❣️</span>
+                        <span onclick="addEmoji('💔')" style="cursor: pointer; font-size: 20px; padding: 3px;">💔</span>
+                        <span onclick="addEmoji('❤️')" style="cursor: pointer; font-size: 20px; padding: 3px;">❤️</span>
+                        <span onclick="addEmoji('🧡')" style="cursor: pointer; font-size: 20px; padding: 3px;">🧡</span>
+                        <span onclick="addEmoji('💛')" style="cursor: pointer; font-size: 20px; padding: 3px;">💛</span>
+                        <span onclick="addEmoji('💚')" style="cursor: pointer; font-size: 20px; padding: 3px;">💚</span>
+                        <span onclick="addEmoji('💙')" style="cursor: pointer; font-size: 20px; padding: 3px;">💙</span>
+                        <span onclick="addEmoji('💜')" style="cursor: pointer; font-size: 20px; padding: 3px;">💜</span>
+                        <span onclick="addEmoji('🤎')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤎</span>
+                        <span onclick="addEmoji('🖤')" style="cursor: pointer; font-size: 20px; padding: 3px;">🖤</span>
+                        <span onclick="addEmoji('🤍')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤍</span>
+                        <span onclick="addEmoji('💯')" style="cursor: pointer; font-size: 20px; padding: 3px;">💯</span>
+                        <span onclick="addEmoji('💢')" style="cursor: pointer; font-size: 20px; padding: 3px;">💢</span>
+                        <span onclick="addEmoji('💥')" style="cursor: pointer; font-size: 20px; padding: 3px;">💥</span>
+                        <span onclick="addEmoji('💫')" style="cursor: pointer; font-size: 20px; padding: 3px;">💫</span>
+                        <span onclick="addEmoji('💦')" style="cursor: pointer; font-size: 20px; padding: 3px;">💦</span>
+                        <span onclick="addEmoji('💨')" style="cursor: pointer; font-size: 20px; padding: 3px;">💨</span>
+                        <span onclick="addEmoji('💣')" style="cursor: pointer; font-size: 20px; padding: 3px;">💣</span>
+                        <span onclick="addEmoji('💬')" style="cursor: pointer; font-size: 20px; padding: 3px;">💬</span>
+                        <span onclick="addEmoji('💭')" style="cursor: pointer; font-size: 20px; padding: 3px;">💭</span>
+                        <span onclick="addEmoji('💤')" style="cursor: pointer; font-size: 20px; padding: 3px;">💤</span>
+                        <span onclick="addEmoji('👋')" style="cursor: pointer; font-size: 20px; padding: 3px;">👋</span>
+                        <span onclick="addEmoji('🤚')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤚</span>
+                        <span onclick="addEmoji('🖐️')" style="cursor: pointer; font-size: 20px; padding: 3px;">🖐️</span>
+                        <span onclick="addEmoji('✋')" style="cursor: pointer; font-size: 20px; padding: 3px;">✋</span>
+                        <span onclick="addEmoji('🖖')" style="cursor: pointer; font-size: 20px; padding: 3px;">🖖</span>
+                        <span onclick="addEmoji('👌')" style="cursor: pointer; font-size: 20px; padding: 3px;">👌</span>
+                        <span onclick="addEmoji('✌️')" style="cursor: pointer; font-size: 20px; padding: 3px;">✌️</span>
+                        <span onclick="addEmoji('🤞')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤞</span>
+                        <span onclick="addEmoji('🤟')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤟</span>
+                        <span onclick="addEmoji('🤘')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤘</span>
+                        <span onclick="addEmoji('🤙')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤙</span>
+                        <span onclick="addEmoji('👈')" style="cursor: pointer; font-size: 20px; padding: 3px;">👈</span>
+                        <span onclick="addEmoji('👉')" style="cursor: pointer; font-size: 20px; padding: 3px;">👉</span>
+                        <span onclick="addEmoji('👆')" style="cursor: pointer; font-size: 20px; padding: 3px;">👆</span>
+                        <span onclick="addEmoji('🖕')" style="cursor: pointer; font-size: 20px; padding: 3px;">🖕</span>
+                        <span onclick="addEmoji('👇')" style="cursor: pointer; font-size: 20px; padding: 3px;">👇</span>
+                        <span onclick="addEmoji('☝️')" style="cursor: pointer; font-size: 20px; padding: 3px;">☝️</span>
+                        <span onclick="addEmoji('👍')" style="cursor: pointer; font-size: 20px; padding: 3px;">👍</span>
+                        <span onclick="addEmoji('👎')" style="cursor: pointer; font-size: 20px; padding: 3px;">👎</span>
+                        <span onclick="addEmoji('✊')" style="cursor: pointer; font-size: 20px; padding: 3px;">✊</span>
+                        <span onclick="addEmoji('👊')" style="cursor: pointer; font-size: 20px; padding: 3px;">👊</span>
+                        <span onclick="addEmoji('👏')" style="cursor: pointer; font-size: 20px; padding: 3px;">👏</span>
+                        <span onclick="addEmoji('🙌')" style="cursor: pointer; font-size: 20px; padding: 3px;">🙌</span>
+                        <span onclick="addEmoji('👐')" style="cursor: pointer; font-size: 20px; padding: 3px;">👐</span>
+                        <span onclick="addEmoji('🤲')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤲</span>
+                        <span onclick="addEmoji('🤝')" style="cursor: pointer; font-size: 20px; padding: 3px;">🤝</span>
+                        <span onclick="addEmoji('🙏')" style="cursor: pointer; font-size: 20px; padding: 3px;">🙏</span>
+                        <span onclick="addEmoji('💪')" style="cursor: pointer; font-size: 20px; padding: 3px;">💪</span>
+                        <span onclick="addEmoji('🦾')" style="cursor: pointer; font-size: 20px; padding: 3px;">🦾</span>
+                        <span onclick="addEmoji('🦿')" style="cursor: pointer; font-size: 20px; padding: 3px;">🦿</span>
+                        <span onclick="addEmoji('🦵')" style="cursor: pointer; font-size: 20px; padding: 3px;">🦵</span>
+                        <span onclick="addEmoji('🦶')" style="cursor: pointer; font-size: 20px; padding: 3px;">🦶</span>
+                        <span onclick="addEmoji('👂')" style="cursor: pointer; font-size: 20px; padding: 3px;">👂</span>
+                        <span onclick="addEmoji('🦻')" style="cursor: pointer; font-size: 20px; padding: 3px;">🦻</span>
+                        <span onclick="addEmoji('👃')" style="cursor: pointer; font-size: 20px; padding: 3px;">👃</span>
+                        <span onclick="addEmoji('🧠')" style="cursor: pointer; font-size: 20px; padding: 3px;">🧠</span>
+                        <span onclick="addEmoji('🫀')" style="cursor: pointer; font-size: 20px; padding: 3px;">🫀</span>
+                        <span onclick="addEmoji('🦷')" style="cursor: pointer; font-size: 20px; padding: 3px;">🦷</span>
+                        <span onclick="addEmoji('🦴')" style="cursor: pointer; font-size: 20px; padding: 3px;">🦴</span>
+                        <span onclick="addEmoji('👀')" style="cursor: pointer; font-size: 20px; padding: 3px;">👀</span>
+                        <span onclick="addEmoji('👁️')" style="cursor: pointer; font-size: 20px; padding: 3px;">👁️</span>
+                        <span onclick="addEmoji('👅')" style="cursor: pointer; font-size: 20px; padding: 3px;">👅</span>
+                        <span onclick="addEmoji('👄')" style="cursor: pointer; font-size: 20px; padding: 3px;">👄</span>
+                    </div>
                 </div>
+                
+                <div class="help-text">
+                    &#128161; <b>Como usar:</b> Digite seu texto normalmente. Para adicionar uma imagem, clique na imagem da galeria. Depois clique em uma posi&#231;&#227;o (Esquerda/Centro/Direita) para posicionar a imagem selecionada.
+                </div>
+                
+                <div class="position-controls">
+                    <label>Posição da imagem:</label>
+                    <button class="btn-zona" onclick="setImagePosition('left')">&#11013; Esquerda</button>
+                    <button class="btn-zona active" onclick="setImagePosition('center')">&#11014; Centro</button>
+                    <button class="btn-zona" onclick="setImagePosition('right')">&#10145; Direita</button>
+                    
+                    <div style="margin-left: 20px;">
+                        <label>Tamanho:</label>
+                        <div class="size-controls">
+                            <button class="size-btn" onclick="setImageSize('30%')">P</button>
+                            <button class="size-btn active" onclick="setImageSize('50%')">M</button>
+                            <button class="size-btn" onclick="setImageSize('80%')">G</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="editorContent" class="editor-content" contenteditable="true" data-placeholder="Digite seu conteúdo aqui..."></div>
             </div>
         </div>
     </div>
 
     <script>
-        // ============================================
-        // LOGS DE DEBUG - EDITOR
-        // ============================================
-        console.log('📝 EDITOR CARREGADO');
-        console.log('📝 URL:', window.location.href);
-        console.log('📝 Params:', JSON.stringify(Object.fromEntries(new URLSearchParams(window.location.search))));
+        console.log('📝 EDITOR CARREGADO - Sistema Simplificado');
         
-        // Capture global errors
-        window.onerror = function(msg, url, line, col, error) {
-            console.error('❌ ERRO GLOBAL:', {msg, url, line, col, error});
-            return false;
-        };
-        
-        window.onunhandledrejection = function(event) {
-            console.error('❌ PROMETE REJEITADO:', event.reason);
-        };
-        
-        // Função para obter headers com JWT
-        function getAdminHeaders() {
-            const token = localStorage.getItem('maanaim_admin_token');
-            const expiry = localStorage.getItem('maanaim_admin_expiry');
-            
-            if (token && expiry && Date.now() < parseInt(expiry)) {
-                return {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                };
-            }
-            
-            return { 'Content-Type': 'application/json' };
-        }
+        // Estado
+        let currentPosition = 'center';
+        let currentSize = '50%';
+        let selectedImage = null;
+        let selectedGalleryImage = null;
         
         // Obter parâmetros da URL
         const urlParams = new URLSearchParams(window.location.search);
         const fieldId = urlParams.get('field');
-        const content = urlParams.get('content');
+        const contentParam = urlParams.get('content');
         
         // Carregar conteúdo inicial
-        if (content) {
-            document.getElementById('editor').innerHTML = decodeURIComponent(content);
-        } else {
-            // Deixar vazio se não houver conteúdo
-            document.getElementById('editor').innerHTML = '';
+        async function loadInitialContent() {
+            // Mapeamento de fieldId para nome da seção no banco
+            const fieldToSectionMap = {
+                'hero-title': 'hero', 'hero-content': 'hero',
+                'sobre-title': 'sobre', 'sobre-content': 'sobre',
+                'ministerios-title': 'ministerios',
+                'mensagem-title': 'mensagem', 'mensagem-content': 'mensagem'
+            };
+            
+            // Determina a seção usando o mapeamento ou normalização simples
+            const section = fieldToSectionMap[fieldId] || (fieldId ? fieldId.replace('-content', '') : fieldId);
+            console.log('Carregando conteúdo para fieldId:', fieldId, 'section:', section);
+            
+            // Primeiro tenta o parâmetro da URL
+            if (contentParam) {
+                const content = decodeURIComponent(contentParam);
+                if (content) {
+                    document.getElementById('editorContent').innerHTML = content;
+                    return;
+                }
+            }
+            
+            // Se não tem conteúdo na URL, busca do banco de dados
+            if (section) {
+                try {
+                    const headers = getAdminHeaders();
+                    const response = await fetch('/api/admin/page-content', {
+                        headers: headers
+                    });
+                    if (response.ok) {
+                        const sections = await response.json();
+                        // Tenta encontrar a seção pelo nome mapeado
+                        let foundSection = sections.find(s => s.section === section);
+                        console.log('Found section:', foundSection);
+                        if (foundSection && foundSection.content) {
+                            document.getElementById('editorContent').innerHTML = foundSection.content;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar conteúdo:', error);
+                }
+            }
         }
         
-        const editor = document.getElementById('editor');
+        loadInitialContent();
+        
+        // Funções auxiliares
+        function getAdminHeaders() {
+            const token = localStorage.getItem('maanaim_admin_token');
+            const expiry = localStorage.getItem('maanaim_admin_expiry');
+            if (token && expiry && Date.now() < parseInt(expiry)) {
+                return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+            }
+            return { 'Content-Type': 'application/json' };
+        }
+        
+        // Carregar galeria
         const galeria = document.getElementById('galeria');
         
-        // Carregar imagens da galeria ao iniciar
         async function loadGallery() {
             try {
                 const response = await fetch('/api/gallery?_t=' + Date.now());
@@ -526,36 +657,27 @@
                 galeria.innerHTML = '';
                 const timestamp = Date.now();
                 images.forEach(img => {
-                    // Container para imagem e botão
                     const container = document.createElement('div');
                     container.style.position = 'relative';
                     container.style.display = 'inline-block';
-                    container.style.margin = '5px';
                     
                     const imgEl = document.createElement('img');
                     imgEl.src = img.url + '?v=' + timestamp;
                     imgEl.alt = img.original_name || 'Imagem';
                     imgEl.className = 'galeria-img';
-                    imgEl.draggable = true;
-                    imgEl.title = 'Arraste para o editor';
+                    imgEl.onclick = () => selectGalleryImage(imgEl, img.url);
                     
-                    // Botão de excluir
+                    // Botão excluir
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.innerHTML = '×';
-                    deleteBtn.style.position = 'absolute';
-                    deleteBtn.style.top = '-5px';
-                    deleteBtn.style.right = '-5px';
-                    deleteBtn.style.background = 'red';
-                    deleteBtn.style.color = 'white';
-                    deleteBtn.style.border = 'none';
-                    deleteBtn.style.borderRadius = '50%';
-                    deleteBtn.style.width = '20px';
-                    deleteBtn.style.height = '20px';
-                    deleteBtn.style.cursor = 'pointer';
-                    deleteBtn.style.fontSize = '14px';
-                    deleteBtn.style.lineHeight = '1';
+                    deleteBtn.innerHTML = '✕';
                     deleteBtn.title = 'Excluir imagem';
-                    deleteBtn.onclick = () => excluirImagem(img.id, img.url);
+                    deleteBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteGalleryImage(img.id);
+                    };
+                    container.onmouseenter = () => deleteBtn.style.opacity = '1';
+                    container.onmouseleave = () => deleteBtn.style.opacity = '0';
                     
                     container.appendChild(imgEl);
                     container.appendChild(deleteBtn);
@@ -566,28 +688,179 @@
             }
         }
         
-        // Excluir imagem
-        async function excluirImagem(id, url) {
+        // Excluir imagem da galeria
+        async function deleteGalleryImage(id) {
             if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
             
+            const token = localStorage.getItem('maanaim_admin_token');
             try {
                 const response = await fetch('/api/admin/gallery/' + id, {
                     method: 'DELETE',
-                    headers: getAdminHeaders()
+                    headers: { 'Authorization': 'Bearer ' + token }
                 });
                 
-                if (!response.ok) throw new Error('Erro ao excluir');
-                
-                alert('✅ Imagem excluída!');
-                loadGallery();
+                if (response.ok) {
+                    alert('Imagem excluída!');
+                    loadGallery();
+                } else {
+                    alert('Erro ao excluir imagem');
+                }
             } catch (error) {
-                console.error('Erro excluir:', error);
-                alert('❌ Erro ao excluir imagem.');
+                console.error('Erro ao excluir imagem:', error);
+                alert('Erro ao excluir imagem');
             }
         }
+        
         loadGallery();
         
-        // Upload de imagem para a galeria
+        // Selecionar imagem da galeria
+        function selectGalleryImage(imgEl, url) {
+            // Remover seleção anterior
+            document.querySelectorAll('.galeria-img').forEach(img => img.classList.remove('selected'));
+            
+            // Selecionar nova
+            imgEl.classList.add('selected');
+            selectedGalleryImage = url;
+            
+            // Adicionar ao editor
+            addImageToEditor(url);
+        }
+        
+        // Adicionar imagem ao editor
+        function addImageToEditor(src) {
+            const editor = document.getElementById('editorContent');
+            const img = document.createElement('img');
+            img.src = src;
+            img.dataset.position = currentPosition;
+            img.dataset.size = currentSize;
+            img.style.width = currentSize;
+            img.onclick = (e) => selectImageInEditor(e.target);
+            
+            // Inserir no final do conteúdo
+            editor.appendChild(img);
+            
+            // Selecionar a imagem
+            selectImageInEditor(img);
+        }
+        
+        // Selecionar imagem no editor
+        function selectImageInEditor(img) {
+            // Remover seleção anterior
+            if (selectedImage) {
+                selectedImage.classList.remove('selected');
+            }
+            
+            selectedImage = img;
+            img.classList.add('selected');
+            
+            // Atualizar botões de posição
+            currentPosition = img.dataset.position || 'center';
+            currentSize = img.dataset.size || '50%';
+            updatePositionButtons();
+            updateSizeButtons();
+        }
+        
+        // Atualizar botões de posição
+        function updatePositionButtons() {
+            document.querySelectorAll('.btn-zona').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(currentPosition)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        // Atualizar botões de tamanho
+        function updateSizeButtons() {
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === 'P' && currentSize === '30%') btn.classList.add('active');
+                if (btn.textContent === 'M' && currentSize === '50%') btn.classList.add('active');
+                if (btn.textContent === 'G' && currentSize === '80%') btn.classList.add('active');
+            });
+        }
+        
+        // Definir posição da imagem
+        function setImagePosition(position) {
+            currentPosition = position;
+            
+            // Atualizar botões
+            document.querySelectorAll('.btn-zona').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(position)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Se há uma imagem selecionada, atualizar sua posição
+            if (selectedImage) {
+                selectedImage.dataset.position = position;
+                selectedImage.style.width = currentSize;
+            }
+        }
+        
+        // Definir tamanho da imagem
+        function setImageSize(size) {
+            currentSize = size;
+            
+            // Atualizar botões
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === 'P' && size === '30%') btn.classList.add('active');
+                if (btn.textContent === 'M' && size === '50%') btn.classList.add('active');
+                if (btn.textContent === 'G' && size === '80%') btn.classList.add('active');
+            });
+            
+            // Se há uma imagem selecionada, atualizar seu tamanho
+            if (selectedImage) {
+                selectedImage.dataset.size = size;
+                selectedImage.style.width = size;
+            }
+        }
+        
+        // Clicar no editor para deselecionar imagem
+        document.getElementById('editorContent').addEventListener('click', function(e) {
+            if (e.target === this) {
+                if (selectedImage) {
+                    selectedImage.classList.remove('selected');
+                    selectedImage = null;
+                }
+            }
+        });
+        
+        // Formatar documento
+        function formatDoc(cmd, value = null) {
+            document.execCommand(cmd, false, value);
+        }
+        
+        // Inserir emoji
+        function insertEmoji() {
+            const picker = document.getElementById('emojiPicker');
+            picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Adicionar emoji selecionado
+        function addEmoji(emoji) {
+            // Foca no editor primeiro
+            const editor = document.getElementById('editorContent');
+            editor.focus();
+            
+            // Usa execCommand para inserir o emoji (mais compatível com contentEditable)
+            document.execCommand('insertText', false, emoji);
+            
+            document.getElementById('emojiPicker').style.display = 'none';
+        }
+        
+        // Fechar emoji picker ao clicar fora
+        document.addEventListener('click', function(e) {
+            const picker = document.getElementById('emojiPicker');
+            const btn = e.target.closest('[onclick*="insertEmoji"]');
+            if (picker && !picker.contains(e.target) && !btn) {
+                picker.style.display = 'none';
+            }
+        });
+        
+        // Upload de imagem
         async function uploadImage() {
             const input = document.getElementById('uploadImg');
             const file = input.files[0];
@@ -596,10 +869,7 @@
                 return;
             }
             
-            // Obter token do localStorage
             const token = localStorage.getItem('maanaim_admin_token');
-            
-            // Converter para base64
             const reader = new FileReader();
             reader.onload = async (ev) => {
                 try {
@@ -609,18 +879,14 @@
                             'Content-Type': 'application/json',
                             'Authorization': token ? `Bearer ${token}` : ''
                         },
-                        body: JSON.stringify({
-                            image: ev.target.result,
-                            filename: file.name
-                        })
+                        body: JSON.stringify({ image: ev.target.result, filename: file.name })
                     });
                     
                     if (!response.ok) throw new Error('Erro ao fazer upload');
                     
-                    const result = await response.json();
                     alert('✅ Imagem enviada!');
-                    loadGallery(); // Recarregar galeria
-                    input.value = ''; // Limpar input
+                    loadGallery();
+                    input.value = '';
                 } catch (error) {
                     console.error('Erro upload:', error);
                     alert('❌ Erro ao enviar imagem. Faça login como admin.');
@@ -629,168 +895,62 @@
             reader.readAsDataURL(file);
         }
         
-        // Formatar documento
-        function formatDoc(cmd, value = null) {
-            document.execCommand(cmd, false, value);
-            editor.focus();
-        }
-        
-        // Inserir emoji no cursor
-        function inserirEmoji(emoji) {
-            editor.focus();
-            const sel = window.getSelection();
-            if (sel.rangeCount > 0) {
-                const range = sel.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(document.createTextNode(emoji));
-                range.collapse(false);
-            } else {
-                editor.appendChild(document.createTextNode(emoji));
-            }
-        }
-        
-        // 1. DRAG START das imagens da galeria
-        galeria.addEventListener('dragstart', (e) => {
-            if (e.target.tagName === 'IMG') {
-                e.dataTransfer.setData('text/plain', e.target.src);
-                e.dataTransfer.setData('image-url', e.target.src);
-                e.dataTransfer.effectAllowed = 'copy';
-            }
-        });
-        
-        // 2. DRAG OVER no editor
-        editor.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-            editor.style.backgroundColor = '#f0f0f0';
-        });
-        
-        // 3. DRAG LEAVE
-        editor.addEventListener('dragleave', () => {
-            editor.style.backgroundColor = '';
-        });
-        
-        // 4. DROP - Inserir imagem no cursor
-        editor.addEventListener('drop', (e) => {
-            e.preventDefault();
-            editor.style.backgroundColor = '';
+        // Inserir imagem por URL
+        function inserirImagemUrl() {
+            const urlInput = document.getElementById('imgUrl');
+            const url = urlInput.value.trim();
             
-            const imgSrc = e.dataTransfer.getData('image-url') || e.dataTransfer.getData('text/plain');
-            if (imgSrc) {
-                inserirImagem(imgSrc);
+            if (!url) {
+                alert('Por favor, insira uma URL de imagem válida');
+                return;
             }
-        });
-        
-        // Inserir imagem no cursor
-        function inserirImagem(src) {
-            const img = document.createElement('img');
-            img.src = src;
-            img.className = 'inserted-img';
-            img.draggable = false;
             
-            const sel = window.getSelection();
-            if (sel.rangeCount) {
-                const range = sel.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(img);
-                range.setStartAfter(img);
-                range.setEndAfter(img);
-                sel.removeAllRanges();
-                sel.addRange(range);
-            } else {
-                editor.appendChild(img);
-            }
-            editor.focus();
+            addImageToEditor(url);
+            urlInput.value = '';
         }
         
-        // 5. Upload de arquivo (modo temporário sem servidor)
-        document.getElementById('uploadImg').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    // Adicionar à galeria temporária
-                    const img = document.createElement('img');
-                    img.src = ev.target.result;
-                    img.className = 'galeria-img';
-                    img.draggable = true;
-                    img.title = 'Arraste para o editor';
-                    galeria.appendChild(img);
-                    
-                    // Inserir no editor também
-                    inserirImagem(ev.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        // Mapeamento de campos do admin para seções do page-content
-        const fieldToSectionMap = {
-            'hero-title': 'hero',
-            'hero-content': 'hero',
-            'sobre-title': 'sobre',
-            'sobre-content': 'sobre',
-            'ministerios-title': 'ministerios',
-            'mensagem-title': 'mensagem',
-            'mensagem-content': 'mensagem'
-        };
-        
-        // Seções do page-content que salvam diretamente na API
-        const pageContentSections = ['hero', 'sobre', 'mensagem', 'ministerios'];
-        
-        // Determinar qual seção usar
-        const section = fieldToSectionMap[fieldId] || fieldId;
-        const isPageContent = pageContentSections.includes(section);
-        
-        // Função para obter headers de admin
-        function getAdminHeaders() {
-            const token = localStorage.getItem('maanaim_admin_token');
-            if (token) {
-                return {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                };
-            }
-            return { 'Content-Type': 'application/json' };
-        }
-        
-        // Salvar e voltar
+        // Salvar conteúdo
         async function salvar() {
-            let conteudo = editor.innerHTML;
+            const editor = document.getElementById('editorContent');
             
-            // Remover o placeholder padrão se for o único conteúdo
-            const placeholderText = 'Comece escrevendo seu conteúdo...';
-            if (conteudo.includes(placeholderText)) {
-                conteudo = '';
-            }
+            // Processar todas as imagens para garantir que estão com os atributos corretos
+            const images = editor.querySelectorAll('img');
+            images.forEach(img => {
+                // Garantir que tem os atributos data-position e data-size
+                if (!img.dataset.position) img.dataset.position = 'center';
+                if (!img.dataset.size) img.dataset.size = '50%';
+                img.style.width = img.dataset.size;
+            });
             
-            // Se for seção de page-content, salvar diretamente na API
-            if (isPageContent) {
+            const conteudo = editor.innerHTML;
+            
+            // Seção de page-content
+            const pageContentSections = ['hero', 'sobre', 'mensagem', 'ministerios'];
+            const fieldToSectionMap = {
+                'hero-title': 'hero', 'hero-content': 'hero',
+                'sobre-title': 'sobre', 'sobre-content': 'sobre',
+                'ministerios-title': 'ministerios',
+                'mensagem-title': 'mensagem', 'mensagem-content': 'mensagem'
+            };
+            const section = fieldToSectionMap[fieldId] || fieldId;
+            
+            if (pageContentSections.includes(section)) {
                 try {
-                    // Obter o título do campo correspondente (se for campo de conteúdo)
                     let title = '';
                     const titleFieldId = fieldId.replace('content', 'title');
                     const titleField = window.opener?.document.getElementById(titleFieldId);
-                    if (titleField) {
-                        title = titleField.value;
-                    }
+                    if (titleField) title = titleField.value;
                     
                     const response = await fetch('/api/admin/page-content/' + section, {
                         method: 'PUT',
                         headers: getAdminHeaders(),
-                        body: JSON.stringify({ 
-                            title: title, 
-                            content: conteudo 
-                        })
+                        body: JSON.stringify({ title: title, content: conteudo })
                     });
                     
                     if (response.ok) {
-                        // Atualizar o campo no admin também
                         if (window.opener) {
                             const field = window.opener.document.getElementById(fieldId);
-                            if (field) {
-                                field.value = conteudo;
-                            }
+                            if (field) field.value = conteudo;
                         }
                         alert('✅ Conteúdo salvo com sucesso!');
                     } else {
@@ -803,39 +963,24 @@
                 return;
             }
             
-            // Salvar no localStorage para recuperação
             localStorage.setItem('editor_content_' + fieldId, conteudo);
-            
-            // Enviar para a página anterior via localStorage e fechar
             localStorage.setItem('saved_content_' + fieldId, conteudo);
             
             alert('✅ Conteúdo salvo!');
             voltar();
         }
         
-        // Voltar para página anterior
+        // Voltar
         function voltar() {
-            // Verificar se há conteúdo salvo e notificar
-            const conteudo = editor.innerHTML;
-            if (conteudo && fieldId) {
-                localStorage.setItem('saved_content_' + fieldId, conteudo);
-            }
             window.close();
         }
         
-        // Limpar editor
+        // Limpar
         function limpar() {
             if (confirm('Tem certeza que deseja limpar todo o conteúdo?')) {
-                editor.innerHTML = '';
+                document.getElementById('editorContent').innerHTML = '';
             }
         }
-        
-        // Verificar se há conteúdo salvo ao carregar (para quando volta do editor)
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'saved_content_' + fieldId && e.newValue) {
-                // O conteúdo foi salvo, a página pai irá recuperá-lo
-            }
-        });
     </script>
 </body>
 </html>

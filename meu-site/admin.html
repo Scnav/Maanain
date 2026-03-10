@@ -349,6 +349,9 @@
                 if (savedContent) {
                     const field = document.getElementById(fieldId);
                     if (field) field.value = savedContent;
+                    // Atualizar a prévia se existir
+                    const preview = document.getElementById(fieldId + 'Preview');
+                    if (preview) preview.innerHTML = savedContent || '<em style="color:#999">Clique em Abrir Editor para adicionar conteúdo</em>';
                     localStorage.removeItem('saved_content_' + fieldId);
                     clearInterval(checkInterval);
                 }
@@ -364,8 +367,11 @@
                     const field = document.getElementById(fieldId);
                     if (field) {
                         field.value = savedContent;
-                        localStorage.removeItem('saved_content_' + fieldId);
+                        // Atualizar a prévia se existir
+                        const preview = document.getElementById(fieldId + 'Preview');
+                        if (preview) preview.innerHTML = savedContent || '<em style="color:#999">Clique em Abrir Editor para adicionar conteúdo</em>';
                     }
+                    localStorage.removeItem('saved_content_' + fieldId);
                 }
             }
         });
@@ -817,9 +823,10 @@
                         <div style="margin-bottom: 1rem;">
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                 Descrição
-                                <button onclick="abrirEditorRico('aulaDescricao', document.getElementById('aulaDescricao').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>
                             </label>
-                            <textarea id="aulaDescricao" rows="3" style="width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; resize: vertical;"></textarea>
+                            <input type="hidden" id="aulaDescricao">
+                            <div id="aulaDescricaoPreview" style="background: #f8f9fa; padding: 10px; border-radius: 5px; min-height: 50px; margin-bottom: 10px;"></div>
+                            <button onclick="abrirEditorRico('aulaDescricao', document.getElementById('aulaDescricao').value)" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">🖼️ Abrir Editor</button>
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -859,10 +866,11 @@
                     <div style="margin-bottom: 1rem;">
                         <label>
                             Conteúdo:
-                            <button onclick="abrirEditorRico('noticiaConteudo', document.getElementById('noticiaConteudo').value)" style="margin-left: 10px; padding: 4px 8px; font-size: 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">🖼️ Editor</button>
                         </label>
-                        <textarea id="noticiaConteudo" rows="6" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;"></textarea>
-                        <small style="color: #666;">
+                        <input type="hidden" id="noticiaConteudo">
+                        <div id="noticiaConteudoPreview" style="background: #f8f9fa; padding: 10px; border-radius: 5px; min-height: 50px; margin-bottom: 10px;"></div>
+                        <button onclick="abrirEditorRico('noticiaConteudo', document.getElementById('noticiaConteudo').value)" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">🖼️ Abrir Editor</button>
+                        <small style="color: #666; display: block; margin-top: 10px;">
                             Para adicionar imagens use:<br>
                             • [img]URL[/img] - imagem inline<br>
                             • [img-left]URL[/img-left] - esquerda<br>

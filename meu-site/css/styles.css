@@ -111,8 +111,16 @@ body {
 .hero .hero-content {
     font-size: 1.1rem;
     color: var(--cinza-escuro);
-    max-width: 600px;
+    max-width: 100%;
     margin: 0 auto;
+    text-align: center;
+}
+
+/* Permitir imagens posicionadas no hero */
+.hero .hero-content img[data-position="left"],
+.hero .hero-content img[data-position="right"] {
+    max-width: 45%;
+    width: 45%;
 }
 
 /* SEÇÃO SOBRE NÓS COM FOTO */
@@ -683,13 +691,107 @@ body.admin-mode .nav a:hover {
 }
 
 /* ========== IMAGENS NO CONTEÚDO ========== */
+.conteudo-texto,
+.noticia-conteudo,
+.content-positioned,
+#heroSubtitle,
+.hero-content,
+.sobre-texto,
+.mensagens-card {
+    position: relative;
+}
+
+/* Imagens com data-position do editor */
+.conteudo-texto img[data-position="left"],
+#heroSubtitle img[data-position="left"],
+.hero-content img[data-position="left"],
+.noticia-conteudo img[data-position="left"],
+.hero .hero-content img[data-position="left"],
+.sobre-texto img[data-position="left"] {
+    float: left;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+    max-width: 45%;
+    width: auto;
+}
+
+.conteudo-texto img[data-position="right"],
+#heroSubtitle img[data-position="right"],
+.hero-content img[data-position="right"],
+.noticia-conteudo img[data-position="right"],
+.hero .hero-content img[data-position="right"],
+.sobre-texto img[data-position="right"] {
+    float: right;
+    margin-left: 1rem;
+    margin-bottom: 0.5rem;
+    max-width: 45%;
+    width: auto;
+}
+
+.conteudo-texto img[data-position="center"],
+#heroSubtitle img[data-position="center"],
+.hero-content img[data-position="center"],
+.noticia-conteudo img[data-position="center"],
+.hero .hero-content img[data-position="center"],
+.sobre-texto img[data-position="center"] {
+    display: block;
+    margin: 1rem auto;
+    max-width: 80%;
+    width: auto;
+}
+
+/* Tamanho das imagens (data-size) */
+.conteudo-texto img[data-size="30%"],
+#heroSubtitle img[data-size="30%"],
+.hero-content img[data-size="30%"],
+.noticia-conteudo img[data-size="30%"],
+.hero .hero-content img[data-size="30%"],
+.sobre-texto img[data-size="30%"] {
+    width: 30% !important;
+    max-width: 30% !important;
+}
+
+.conteudo-texto img[data-size="50%"],
+#heroSubtitle img[data-size="50%"],
+.hero-content img[data-size="50%"],
+.noticia-conteudo img[data-size="50%"],
+.hero .hero-content img[data-size="50%"],
+.sobre-texto img[data-size="50%"] {
+    width: 50% !important;
+    max-width: 50% !important;
+}
+
+.conteudo-texto img[data-size="80%"],
+#heroSubtitle img[data-size="80%"],
+.hero-content img[data-size="80%"],
+.noticia-conteudo img[data-size="80%"],
+.hero .hero-content img[data-size="80%"],
+.sobre-texto img[data-size="80%"] {
+    width: 80% !important;
+    max-width: 80% !important;
+}
+
+/* Limpar floats */
+.conteudo-texto::after,
+#heroSubtitle::after,
+.hero-content::after,
+.noticia-conteudo::after,
+.sobre-texto::after,
+.mensagens-card::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
 .conteudo-texto img,
+#heroSubtitle img,
+.hero-content img,
 .noticia-conteudo img,
 .content-image,
 .conteudo-section img {
-    max-width: 100% !important;
-    width: auto !important;
-    height: auto !important;
+    max-width: 100%;
+    width: auto;
+    height: auto;
     border-radius: 8px;
     margin: 1rem 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
