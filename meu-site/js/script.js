@@ -1,16 +1,3 @@
-// DESREGISTRAR SERVICE WORKERS ANTIGOS - Corrige problema de cache
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-            registration.unregister().then(() => {
-                console.log('[SW] Service worker desregistrado com sucesso');
-            });
-        }
-    }).catch(err => {
-        console.error('[SW] Erro ao desregistrar service workers:', err);
-    });
-}
-
 // VARIÁVEL GLOBAL para controle
 window.MAANAIM_AUTH = { usuario: null, atualizarHeader: null };
 

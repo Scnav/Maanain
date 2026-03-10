@@ -855,30 +855,8 @@
                 
                 <div style="margin-bottom: 2rem;">
                     <h3 style="margin-bottom: 1rem;">📊 Estatísticas por Vídeo</h3>
-                    <div id="bibliotecaEstatisticas" class="stats-grid">
+                    <div id="bibliotecaEstatisticas" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
                         <p style="color: #666;">Carregando estatísticas...</p>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 2rem;">
-                    <h3 style="margin-bottom: 1rem;">📋 Histórico de Visualizações</h3>
-                    <div class="table-container">
-                        <table class="aulas-table">
-                            <thead>
-                                <tr>
-                                    <th>Vídeo</th>
-                                    <th>Usuário</th>
-                                    <th>IP</th>
-                                    <th>Data</th>
-                                    <th>Tempo</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bibliotecaTableBody">
-                                <tr>
-                                    <td colspan="5" style="text-align: center; color: #666;">Carregando histórico...</td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </section>
@@ -1027,7 +1005,7 @@
     </script>
     <script src="js/admin_aulas.js?v=9"></script>
     <script src="js/admin_biblia.js?v=16"></script>
-    <script src="js/admin_biblioteca.js?v=3"></script>
+    <script src="js/admin_biblioteca.js?v=14"></script>
     <script src="js/admin.js?v=16"></script>
     <script src="js/admin_area_membro.js?v=9"></script>
     <script src="js/admin_cultos.js"></script>

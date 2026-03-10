@@ -202,6 +202,7 @@ app.use((req, res, next) => {
     }
     jsonMiddleware(req, res, next);
 });
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ============================================
@@ -2419,6 +2420,52 @@ app.post('/api/aulas/:id/views', (req, res) => {
                 res.json({ message: 'Visualização registrada' });
             });
     });
+});
+
+// Atualizar tempo assistido (sem incrementar visualização)
+app.post('/api/aulas/:id/tempo', (req, res) => {
+    const { id } = req.params;
+    const tempoAssistido = req.body && req.body.tempo_assistido ? parseInt(req.body.tempo_assistido) : 0;
+    const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+    
+    console.log('[DEBUG API] POST /api/aulas/' + id + '/tempo - tempo:', tempoAssistido, '- IP:', ipAddress);
+    
+    // Primeiro verifica se já existe registro recente (últimos 30 minutos)
+    const trintaMinutosAtras = Date.now() - (30 * 60 * 1000);
+    
+    db.get(`SELECT id, tempo_assistido FROM visualizacoes_aulas 
+            WHERE aula_id = ? AND ip_address = ? AND data_visualizacao > DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+            ORDER BY data_visualizacao DESC LIMIT 1`, 
+        [id, ipAddress], 
+        function(err, row) {
+            if (err) {
+                console.error('[DEBUG API] Erro ao buscar visualização:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            
+            if (row) {
+                // Atualiza o tempo existente (substitui pelo novo tempo enviado)
+                // O frontend envia o tempo total desde o início, não o incremento
+                db.run("UPDATE visualizacoes_aulas SET tempo_assistido = ? WHERE id = ?", 
+                    [tempoAssistido, row.id], 
+                    function(err2) {
+                        if (err2) {
+                            console.error('[DEBUG API] Erro ao atualizar tempo:', err2);
+                        }
+                        res.json({ message: 'Tempo atualizado', tempo: tempoAssistido });
+                    });
+            } else {
+                // Se não encontrou registro recente, cria um novo
+                db.run("INSERT INTO visualizacoes_aulas (aula_id, usuario_id, ip_address, tempo_assistido) VALUES (?, ?, ?, ?)", 
+                    [id, null, ipAddress, tempoAssistido], 
+                    function(err2) {
+                        if (err2) {
+                            console.error('[DEBUG API] Erro ao registrar tempo:', err2);
+                        }
+                        res.json({ message: 'Tempo registrado' });
+                    });
+            }
+        });
 });
 
 // Listar visualizações de todas as aulas (admin) - agrupadas por vídeo

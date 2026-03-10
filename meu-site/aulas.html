@@ -292,7 +292,7 @@
             <!-- Player de Vídeo -->
             <div class="glass rounded-2xl p-4 neon-glow mb-6">
                 <div class="player-container bg-black rounded-xl overflow-hidden">
-                    <iframe id="mainVideo" class="player-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <iframe id="mainVideo" class="player-iframe" src="" tabindex="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
             </div>
             
@@ -428,16 +428,189 @@
             return match ? match[1] : '';
         }
         
+        let currentVideoId = null;
+        let currentAulaId = null;
+        let watchStartTime = null;
+        let watchTimer = null;
+        let totalWatchTime = 0;
+        
+        console.log('[DEBUG TEMPO] aulas.html carregado - iniciando tracking!');
+        
+        // Variáveis para o player YouTube
+        var player;
+        
+        // Carregar API do YouTube
+        var tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        
+        // Listener para mensagens do YouTube (funciona com iframe direto)
+        window.addEventListener('message', function(event) {
+            // Verificar se a mensagem vem do YouTube
+            if (!event.data || typeof event.data !== 'string') return;
+            
+            try {
+                var data = JSON.parse(event.data);
+                // playerState: 1=playing, 2=paused, 0=ended, 3=buffering
+                if (data.event === 'infoDelivery' && data.info && data.info.playerState !== undefined) {
+                    console.log('[DEBUG TEMPO] Estado do player:', data.info.playerState);
+                    if (data.info.playerState === 1) {
+                        startWatchTimer();
+                    } else if (data.info.playerState === 2 || data.info.playerState === 0) {
+                        stopWatchTimer();
+                    }
+                }
+            } catch(e) {
+                // Não é JSON válido
+            }
+        });
+        
+        // SOLUÇÃO: Usar MutationObserver para detectar quando o src do iframe muda
+        var videoIframe = document.getElementById('mainVideo');
+        var lastSrc = '';
+        
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                    var newSrc = videoIframe.src;
+                    if (newSrc && newSrc !== lastSrc && newSrc.includes('youtube.com/embed')) {
+                        console.log('[DEBUG TEMPO] Novo vídeo detectado no iframe!');
+                        lastSrc = newSrc;
+                        // Iniciar timer após 2 segundos
+                        setTimeout(function() {
+                            if (currentAulaId) {
+                                console.log('[DEBUG TEMPO] Vídeo carregado, iniciando timer automaticamente');
+                                startWatchTimer();
+                            }
+                        }, 2000);
+                    }
+                }
+            });
+        });
+        
+        observer.observe(videoIframe, { 
+            attributes: true, 
+            attributeFilter: ['src'] 
+        });
+        
+        // Também detectar quando a página fica visível/invisível
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                console.log('[DEBUG TEMPO] Página oculta - parando timer');
+                stopWatchTimer();
+            } else if (currentAulaId && videoIframe.src && videoIframe.src.includes('youtube.com/embed')) {
+                console.log('[DEBUG TEMPO] Página visível - iniciando timer');
+                startWatchTimer();
+            }
+        });
+        
+        function onYouTubeIframeAPIReady() {
+            console.log('[DEBUG TEMPO] YouTube API Ready, criando player...');
+            player = new YT.Player('mainVideo', {
+                events: {
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+            console.log('[DEBUG TEMPO] Player criado!');
+        }
+        
+        function onPlayerStateChange(event) {
+            console.log('[DEBUG TEMPO] Estado do player mudou:', event.data);
+            // YT.PlayerState.PLAYING = 1
+            if (event.data === 1) {
+                startWatchTimer();
+            } else if (event.data === 2 || event.data === 0) {
+                // PAUSED = 2, ENDED = 0
+                stopWatchTimer();
+            }
+        }
+        
+        function startWatchTimer() {
+            if (watchTimer) return; // Já está contando
+            console.log('[DEBUG TEMPO] Timer iniciado!');
+            watchStartTime = Date.now();
+            watchTimer = setInterval(function() {
+                const elapsed = Math.floor((Date.now() - watchStartTime) / 1000);
+                totalWatchTime = elapsed;
+                
+                // Enviar tempo a cada 10 segundos
+                if (elapsed > 0 && elapsed % 10 === 0) {
+                    sendWatchTime();
+                }
+            }, 1000);
+        }
+        
+        function stopWatchTimer() {
+            if (watchTimer) {
+                clearInterval(watchTimer);
+                watchTimer = null;
+            }
+            if (totalWatchTime > 0) {
+                sendWatchTime();
+            }
+        }
+        
+        async function sendWatchTime() {
+            if (!currentAulaId || totalWatchTime < 1) return;
+            
+            console.log('[DEBUG TEMPO] Enviando tempo:', totalWatchTime, 'para aula:', currentAulaId);
+            
+            try {
+                // Buscar token JWT do admin ou usuário logado
+                const adminToken = localStorage.getItem('maanaim_admin_token');
+                const userData = localStorage.getItem('maanaim_user');
+                let token = adminToken;
+                
+                // Se não tem token admin, mas tem usuário logado, tenta usar
+                if (!token && userData) {
+                    try {
+                        const user = JSON.parse(userData);
+                        // Para usuários, precisamos gerar um token JWT ou usar o IP
+                        // Por agora, we'll send without auth (o backend usa IP)
+                        token = null;
+                    } catch(e) {
+                        token = null;
+                    }
+                }
+                
+                const response = await fetch('/api/aulas/' + currentAulaId + '/tempo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? 'Bearer ' + token : ''
+                    },
+                    body: JSON.stringify({
+                        tempo_assistido: totalWatchTime
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.log('Tempo enviado (IP registrado)');
+                }
+            } catch (e) {
+                console.log('Erro ao enviar tempo:', e);
+            }
+        }
+        
         function showVideoById(id) {
+            // Resetar timer
+            stopWatchTimer();
+            totalWatchTime = 0;
+            
             const video = allVideos.find(v => v.id === id);
             if (video) showVideo(video);
         }
         
         function showVideo(video) {
             currentPdfPath = video.pdf_path || '';
+            currentAulaId = video.id;
+            currentVideoId = extractVideoId(video.video_url);
             
-            const videoId = extractVideoId(video.video_url);
-            document.getElementById('mainVideo').src = 'https://www.youtube.com/embed/' + videoId + '?rel=0';
+            // Usar API do YouTube - incluir origin para postMessage funcionar
+            // Usar http://localhost:3000 diretamente pois o servidor é HTTP
+            var videoUrl = 'https://www.youtube.com/embed/' + currentVideoId + '?rel=0&enablejsapi=1&origin=http://localhost:3000';
+            document.getElementById('mainVideo').src = videoUrl;
             document.getElementById('mainVideoTitle').textContent = video.titulo;
             document.getElementById('mainVideoAuthor').innerHTML = '<i class="fas fa-user mr-1"></i> ' + (video.autor || 'MAANAIM');
             document.getElementById('mainVideoViews').textContent = (video.visualizacoes || 0) + ' visualizações';
@@ -465,6 +638,7 @@
             
             if (page === 'inicio') {
                 document.getElementById('mainVideo').src = '';
+                stopWatchTimer(); // Parar o timer quando sair do player
             }
         }
         
