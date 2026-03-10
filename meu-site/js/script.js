@@ -448,11 +448,16 @@ async function carregarEventos() {
 
 // Carregar conteúdos da página inicial
 async function carregarConteudosPaginaInicial() {
+    console.log('=== DEBUG: Carregando conteúdos da página inicial ===');
     try {
         const response = await fetch('/api/page-content?_t=' + Date.now());
         if (!response.ok) throw new Error('Erro ao carregar conteúdos');
 
         const conteudos = await response.json();
+        console.log('=== DEBUG: Conteudos recebidos ===');
+        console.log('Hero:', conteudos.hero ? 'EXISTS' : 'NOT FOUND');
+        console.log('Sobre:', conteudos.sobre ? 'EXISTS' : 'NOT FOUND');
+        console.log('Mensagem:', conteudos.mensagem ? 'EXISTS' : 'NOT FOUND');
 
         // Atualizar Hero
         const heroTitle = document.getElementById('heroTitle');
