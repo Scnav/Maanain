@@ -2550,8 +2550,31 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/", express.static(path.join(__dirname)));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Servir arquivos estáticos com cache desabilitado para desenvolvimento
+app.use("/", express.static(path.join(__dirname), {
+    maxAge: 0,
+    etag: false,
+    lastModified: false,
+    setHeaders: function (res, path) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
+}));
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+    maxAge: 0,
+    etag: false,
+    lastModified: false,
+    setHeaders: function (res, path) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
+}));
+
+// Servir node_modules (bibliotecas) com cache
+app.use("/node_modules", express.static(path.join(__dirname, "node_modules")));
 
 // ROTAS PARA PÁGINAS HTML (sem extensão)
 app.get('/login', (req, res) => {
