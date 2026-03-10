@@ -458,13 +458,24 @@ async function carregarConteudosPaginaInicial() {
         const heroTitle = document.getElementById('heroTitle');
         const heroSubtitle = document.getElementById('heroSubtitle');
         if (heroTitle && conteudos.hero?.title) heroTitle.textContent = conteudos.hero.title;
-        if (heroSubtitle && conteudos.hero?.content) heroSubtitle.innerHTML = conteudos.hero.content;
+        if (heroSubtitle && conteudos.hero?.content) {
+            console.log('=== DEBUG: Hero Content ===');
+            console.log('Content length:', conteudos.hero.content.length);
+            console.log('Content preview:', conteudos.hero.content.substring(0, 200));
+            console.log('Full content:', conteudos.hero.content);
+            heroSubtitle.innerHTML = conteudos.hero.content;
+        }
 
         // Atualizar Sobre
         const sobreTitle = document.getElementById('sobreTitle');
         const sobreContent = document.getElementById('sobreContent');
         if (sobreTitle && conteudos.sobre?.title) sobreTitle.textContent = conteudos.sobre.title;
-        if (sobreContent && conteudos.sobre?.content) sobreContent.innerHTML = conteudos.sobre.content;
+        if (sobreContent && conteudos.sobre?.content) {
+            console.log('=== DEBUG: Sobre Content ===');
+            console.log('Content length:', conteudos.sobre.content.length);
+            console.log('Content preview:', conteudos.sobre.content.substring(0, 200));
+            sobreContent.innerHTML = conteudos.sobre.content;
+        }
 
         // Atualizar Mensagem
         const mensagemTitle = document.getElementById('mensagemTitle');
