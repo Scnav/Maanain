@@ -129,6 +129,43 @@
             border: none;
         }
         
+        /* Responsividade para mobile */
+        @media (max-width: 768px) {
+            .player-container {
+                aspect-ratio: 16/9;
+                min-height: 200px;
+            }
+            
+            .grid-aulas {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .video-info {
+                padding: 0.5rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .category-filters {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .category-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .player-container {
+                min-height: 180px;
+            }
+        }
+        
         .scanline { 
             position: absolute; 
             top: 0; height: 2px; 

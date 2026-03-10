@@ -334,6 +334,56 @@
             color: white !important;
             border-right: 4px solid #ffc107;
         }
+        
+        /* Responsividade para mobile */
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: relative;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group {
+                margin-bottom: 1rem;
+            }
+            
+            input, textarea, select {
+                width: 100%;
+                font-size: 14px;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .sidebar {
+                max-height: 150px;
+            }
+            
+            h1, h2, h3 {
+                font-size: 1.2rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+        }
     </style>
     <script>
         // ABRIR EDITOR EM NOVA JANELA
