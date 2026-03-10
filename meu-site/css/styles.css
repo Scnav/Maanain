@@ -98,6 +98,8 @@ body {
     padding: 3rem 2rem;
     box-shadow: var(--sombra);
     margin-bottom: 4rem;
+    overflow: hidden; /* Evita vazamento de conteúdo */
+    position: relative;
 }
 
 .hero h2 {
@@ -108,12 +110,38 @@ body {
 }
 
 .hero p,
-.hero .hero-content {
+.hero .hero-content,
+#heroSubtitle,
+#heroSubtitle * {
     font-size: 1.1rem;
     color: var(--cinza-escuro);
     max-width: 100%;
     margin: 0 auto;
     text-align: center;
+    position: relative !important; /* Impede posicionamento absolute */
+    float: none !important;
+}
+
+/* Limitar estilos do conteúdo do hero */
+#heroSubtitle img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 1rem auto !important;
+    position: relative !important;
+    float: none !important;
+}
+
+/* Limitar estilos do conteúdo do sobre */
+#sobreContent,
+#sobreContent * {
+    position: relative !important;
+    float: none !important;
+}
+
+#sobreContent img {
+    max-width: 100% !important;
+    height: auto !important;
 }
 
 /* Permitir imagens posicionadas no hero */
