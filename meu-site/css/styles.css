@@ -728,18 +728,40 @@ body.admin-mode .nav a:hover {
     position: relative;
 }
 
+/* Conteúdo do editor - permitir estilos avançados */
+#sobreContent,
+.conteudo-texto,
+.hero-content,
+.mensagem-content,
+.noticia-conteudo,
+.sobre-texto {
+    overflow: visible !important;
+    max-width: 100% !important;
+}
+
+/* Garantir que estilos inline funcionem */
+#sobreContent *,
+.conteudo-texto *,
+.hero-content *,
+.mensagem-content *,
+.noticia-conteudo *,
+.sobre-texto * {
+    max-width: 100% !important;
+}
+
 /* Imagens com data-position do editor */
 .conteudo-texto img[data-position="left"],
 #heroSubtitle img[data-position="left"],
 .hero-content img[data-position="left"],
 .noticia-conteudo img[data-position="left"],
 .hero .hero-content img[data-position="left"],
-.sobre-texto img[data-position="left"] {
-    float: left;
-    margin-right: 1rem;
-    margin-bottom: 0.5rem;
-    max-width: 45%;
-    width: auto;
+.sobre-texto img[data-position="left"],
+#sobreContent img[data-position="left"] {
+    float: left !important;
+    margin-right: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    max-width: 45% !important;
+    width: auto !important;
 }
 
 .conteudo-texto img[data-position="right"],
@@ -747,12 +769,13 @@ body.admin-mode .nav a:hover {
 .hero-content img[data-position="right"],
 .noticia-conteudo img[data-position="right"],
 .hero .hero-content img[data-position="right"],
-.sobre-texto img[data-position="right"] {
-    float: right;
-    margin-left: 1rem;
-    margin-bottom: 0.5rem;
-    max-width: 45%;
-    width: auto;
+.sobre-texto img[data-position="right"],
+#sobreContent img[data-position="right"] {
+    float: right !important;
+    margin-left: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    max-width: 45% !important;
+    width: auto !important;
 }
 
 .conteudo-texto img[data-position="center"],
@@ -760,11 +783,13 @@ body.admin-mode .nav a:hover {
 .hero-content img[data-position="center"],
 .noticia-conteudo img[data-position="center"],
 .hero .hero-content img[data-position="center"],
-.sobre-texto img[data-position="center"] {
-    display: block;
-    margin: 1rem auto;
-    max-width: 80%;
-    width: auto;
+.sobre-texto img[data-position="center"],
+#sobreContent img[data-position="center"] {
+    display: block !important;
+    margin: 1rem auto !important;
+    max-width: 80% !important;
+    width: auto !important;
+    float: none !important;
 }
 
 /* Tamanho das imagens (data-size) */
@@ -773,7 +798,8 @@ body.admin-mode .nav a:hover {
 .hero-content img[data-size="30%"],
 .noticia-conteudo img[data-size="30%"],
 .hero .hero-content img[data-size="30%"],
-.sobre-texto img[data-size="30%"] {
+.sobre-texto img[data-size="30%"],
+#sobreContent img[data-size="30%"] {
     width: 30% !important;
     max-width: 30% !important;
 }
@@ -783,7 +809,8 @@ body.admin-mode .nav a:hover {
 .hero-content img[data-size="50%"],
 .noticia-conteudo img[data-size="50%"],
 .hero .hero-content img[data-size="50%"],
-.sobre-texto img[data-size="50%"] {
+.sobre-texto img[data-size="50%"],
+#sobreContent img[data-size="50%"] {
     width: 50% !important;
     max-width: 50% !important;
 }
@@ -793,7 +820,8 @@ body.admin-mode .nav a:hover {
 .hero-content img[data-size="80%"],
 .noticia-conteudo img[data-size="80%"],
 .hero .hero-content img[data-size="80%"],
-.sobre-texto img[data-size="80%"] {
+.sobre-texto img[data-size="80%"],
+#sobreContent img[data-size="80%"] {
     width: 80% !important;
     max-width: 80% !important;
 }

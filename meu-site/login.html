@@ -117,5 +117,47 @@
     </footer>
 
     <script src="js/script.js"></script>
+    <script>
+        // Tratamento do formulário de login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = this.username.value;
+            const password = this.password.value;
+            const btn = this.querySelector('button');
+            const originalText = btn.textContent;
+            
+            btn.disabled = true;
+            btn.textContent = 'Entrando...';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user) {
+                    // Salvar dados do usuário no localStorage
+                    localStorage.setItem('maanaim_user', JSON.stringify(data.user));
+                    
+                    // Redirecionar para área de membro ou página anterior
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect') || 'membro.html';
+                    window.location.href = redirect;
+                } else {
+                    alert(data.error || 'Erro ao fazer login');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (err) {
+                alert('Erro de conexão. Tente novamente.');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    </script>
 </body>
 </html>

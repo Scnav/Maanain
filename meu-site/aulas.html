@@ -329,7 +329,7 @@
         </div>
     </div>
 
-    <script src="js/script.js"></script>
+    <script src="js/script.js?v=11"></script>
     <script>
         let allVideos = [];
         let currentPdfPath = '';
@@ -491,8 +491,40 @@
         }
         
         async function incrementViews(id) {
+            console.log('[AULAS] incrementViews chamado para ID:', id);
             try {
-                await fetch('/api/aulas/' + id + '/views', { method: 'POST' });
+                // Verificar se há usuário logado
+                let usuarioId = null;
+                try {
+                    const userFromStorage = localStorage.getItem('maanaim_user');
+                    console.log('[AULAS] localStorage maanaim_user:', userFromStorage);
+                    if (userFromStorage && userFromStorage !== 'null') {
+                        const usuarioLogado = JSON.parse(userFromStorage);
+                        if (usuarioLogado && usuarioLogado.id) {
+                            usuarioId = usuarioLogado.id;
+                            console.log('[AULAS] Usuário logado ID:', usuarioId);
+                        }
+                    }
+                } catch (e) {
+                    console.log('[AULAS] Erro ao ler usuário do localStorage:', e);
+                }
+                
+                console.log('[AULAS] Enviando requisição para /api/aulas/' + id + '/views');
+                await fetch('/api/aulas/' + id + '/views', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ usuario_id: usuarioId })
+                }).then(response => {
+                    console.log('[AULAS] Response status:', response.status);
+                    return response.json();
+                }).then(data => {
+                    console.log('[AULAS] Visualização registrada:', data);
+                }).catch(err => {
+                    console.error('[AULAS] Erro ao registrar visualização:', err);
+                });
             } catch (e) {
                 console.error('Erro ao incrementar visualizações:', e);
             }

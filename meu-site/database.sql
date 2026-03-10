@@ -171,6 +171,20 @@ CREATE TABLE IF NOT EXISTS aulas (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================
+-- TABELA DE VISUALIZAÇÕES DE AULAS (BIBLIOTECA)
+-- ============================================
+CREATE TABLE IF NOT EXISTS visualizacoes_aulas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    aula_id INT NOT NULL,
+    usuario_id INT,
+    ip_address VARCHAR(45),
+    data_visualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tempo_assistido INT DEFAULT 0,
+    FOREIGN KEY (aula_id) REFERENCES aulas(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================
 -- TABELA DE GALERIA DE IMAGENS
 -- ============================================
 CREATE TABLE IF NOT EXISTS gallery (

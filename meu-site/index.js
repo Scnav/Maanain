@@ -188,6 +188,23 @@ let bibliaDb = null;
 const app = express();
 
 // ============================================
+// MIDDLEWARE DE PARSING JSON (antes do logging)
+// ============================================
+// Middleware - não processar JSON para FormData
+const jsonMiddleware = express.json({ limit: '50mb' });
+app.use((req, res, next) => {
+    if (req.method === 'POST' || req.method === 'PUT') {
+        const contentType = req.headers['content-type'] || '';
+        if (contentType.includes('multipart/form-data')) {
+            // Não usar express.json para FormData, deixe o multer tratar
+            return next();
+        }
+    }
+    jsonMiddleware(req, res, next);
+});
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// ============================================
 // MIDDLEWARE DE LOGGING DETALHADO
 // ============================================
 app.use((req, res, next) => {
@@ -199,20 +216,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
-        // Middleware - não processar JSON para FormData
-        const jsonMiddleware = express.json({ limit: '50mb' });
-        app.use((req, res, next) => {
-            if (req.method === 'POST' || req.method === 'PUT') {
-                const contentType = req.headers['content-type'] || '';
-                if (contentType.includes('multipart/form-data')) {
-                    // Não usar express.json para FormData, deixe o multer tratar
-                    return next();
-                }
-            }
-            jsonMiddleware(req, res, next);
-        });
-        app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
         // CORS - permitir todas as origens para desenvolvimento
 app.use(cors({
@@ -2387,13 +2390,105 @@ app.delete('/api/admin/aulas/:id', verifyAdmin, (req, res) => {
     });
 });
 
-// Incrementar visualizações
+// Incrementar visualizações e registrar quem assistiu
 app.post('/api/aulas/:id/views', (req, res) => {
     const { id } = req.params;
+    const usuarioId = req.body && req.body.usuario_id ? req.body.usuario_id : null;
+    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const tempoAssistido = req.body && req.body.tempo_assistido ? req.body.tempo_assistido : 0;
     
+    console.log('[DEBUG API] POST /api/aulas/' + id + '/views');
+    console.log('[DEBUG API] - usuario_id recebido:', usuarioId);
+    console.log('[DEBUG API] - ip:', ipAddress);
+    console.log('[DEBUG API] - req.body completo:', JSON.stringify(req.body));
+    
+    // Incrementar visualizações na tabela de aulas
     db.run("UPDATE aulas SET visualizacoes = visualizacoes + 1 WHERE id = ?", [id], function(err) {
+        if (err) {
+            console.error('[DEBUG API] Erro ao atualizar visualizações:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        
+        // Registrar visualização detalhada
+        db.run("INSERT INTO visualizacoes_aulas (aula_id, usuario_id, ip_address, tempo_assistido) VALUES (?, ?, ?, ?)", 
+            [id, usuarioId, ipAddress, tempoAssistido], 
+            function(err2) {
+                if (err2) {
+                    console.error('[DEBUG API] Erro ao registrar visualização:', err2);
+                }
+                res.json({ message: 'Visualização registrada' });
+            });
+    });
+});
+
+// Listar visualizações de todas as aulas (admin) - agrupadas por vídeo
+app.get('/api/admin/biblioteca/visualizacoes', verifyAdmin, (req, res) => {
+    console.log('[DEBUG API] GET /api/admin/biblioteca/visualizacoes');
+    db.all(`
+        SELECT 
+            v.id as visualizacao_id,
+            v.aula_id,
+            v.usuario_id,
+            v.ip_address,
+            v.data_visualizacao,
+            v.tempo_assistido,
+            a.titulo as aula_titulo,
+            a.thumbnail as aula_thumbnail,
+            u.username as usuario_nome,
+            u.email as usuario_email
+        FROM visualizacoes_aulas v
+        LEFT JOIN aulas a ON v.aula_id = a.id
+        LEFT JOIN users u ON v.usuario_id = u.id
+        ORDER BY a.titulo, v.data_visualizacao DESC
+    `, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Visualização registrada' });
+        console.log('[DEBUG API] Visualizações encontradas:', rows.length);
+        
+        // Agrupar por aula_id
+        const grouped = {};
+        rows.forEach(row => {
+            if (!grouped[row.aula_id]) {
+                grouped[row.aula_id] = {
+                    aula_id: row.aula_id,
+                    aula_titulo: row.aula_titulo,
+                    aula_thumbnail: row.aula_thumbnail,
+                    visualizacoes: []
+                };
+            }
+            grouped[row.aula_id].visualizacoes.push({
+                visualizacao_id: row.visualizacao_id,
+                usuario_id: row.usuario_id,
+                usuario_nome: row.usuario_nome,
+                usuario_email: row.usuario_email,
+                ip_address: row.ip_address,
+                data_visualizacao: row.data_visualizacao,
+                tempo_assistido: row.tempo_assistido
+            });
+        });
+        
+        // Converter para array
+        const resultado = Object.values(grouped);
+        res.json(resultado);
+    });
+});
+
+// Estatísticas da biblioteca (admin)
+app.get('/api/admin/biblioteca/estatisticas', verifyAdmin, (req, res) => {
+    console.log('[DEBUG API] GET /api/admin/biblioteca/estatisticas');
+    db.all(`
+        SELECT 
+            a.id,
+            a.titulo,
+            a.visualizacoes as visualizacoes_total,
+            COUNT(DISTINCT v.usuario_id) as usuarios_unicos,
+            COUNT(v.id) as total_visualizacoes
+        FROM aulas a
+        LEFT JOIN visualizacoes_aulas v ON a.id = v.aula_id
+        GROUP BY a.id, a.titulo, a.visualizacoes
+        ORDER BY a.visualizacoes DESC
+    `, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
     });
 });
 
