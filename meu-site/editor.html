@@ -600,13 +600,18 @@
             
             // Determina a seção usando o mapeamento ou normalização simples
             const section = fieldToSectionMap[fieldId] || (fieldId ? fieldId.replace('-content', '') : fieldId);
-            console.log('Carregando conteúdo para fieldId:', fieldId, 'section:', section);
+            console.log('=== DEBUG LOAD ===');
+            console.log('fieldId:', fieldId);
+            console.log('contentParam:', contentParam);
+            console.log('section:', section);
             
             // Primeiro tenta o parâmetro da URL
             if (contentParam) {
                 const content = decodeURIComponent(contentParam);
+                console.log('Content from URL:', content.substring(0, 100) + '...');
                 if (content) {
                     document.getElementById('editorContent').innerHTML = content;
+                    console.log('Loaded from URL');
                     return;
                 }
             }
@@ -620,17 +625,24 @@
                     });
                     if (response.ok) {
                         const sections = await response.json();
+                        console.log('Sections from DB:', sections.map(s => s.section));
                         // Tenta encontrar a seção pelo nome mapeado
                         let foundSection = sections.find(s => s.section === section);
-                        console.log('Found section:', foundSection);
+                        console.log('Found section:', foundSection ? foundSection.section : 'NOT FOUND');
                         if (foundSection && foundSection.content) {
+                            console.log('Content length:', foundSection.content.length);
+                            console.log('Content preview:', foundSection.content.substring(0, 100) + '...');
                             document.getElementById('editorContent').innerHTML = foundSection.content;
+                            console.log('Loaded from DB');
+                        } else {
+                            console.log('No content found for section');
                         }
                     }
                 } catch (error) {
                     console.error('Erro ao carregar conteúdo:', error);
                 }
             }
+            console.log('=== END DEBUG LOAD ===');
         }
         
         loadInitialContent();
