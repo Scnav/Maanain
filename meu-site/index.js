@@ -2578,6 +2578,21 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
 // Servir node_modules (bibliotecas) com cache
 app.use("/node_modules", express.static(path.join(__dirname, "node_modules")));
 
+// Endpoint para servir CSS com cache desabilitado
+app.get('/api/css', (req, res) => {
+    const cssPath = path.join(__dirname, 'css', 'styles.css');
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Content-Type', 'text/css');
+    fs.readFile(cssPath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).send('CSS not found');
+        }
+        res.send(data);
+    });
+});
+
 // ROTAS PARA PÁGINAS HTML (sem extensão) - sem cache
 app.get('/login', (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
