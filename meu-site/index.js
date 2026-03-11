@@ -248,8 +248,10 @@ app.use((req, res, next) => {
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
     } else {
-        // Arquivos estáticos podem ser cacheados
-        res.set('Cache-Control', 'public, max-age=3600');
+        // Arquivos estáticos - não cachear durante desenvolvimento
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
     }
     next();
 });
