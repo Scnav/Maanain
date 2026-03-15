@@ -900,6 +900,18 @@ app.get('/api/admin/youtube-config', verifyAdmin, (req, res) => {
     });
 });
 
+// DEBUG: Rota pública para verificar config (sem necessidade de admin)
+console.log('📺 Registrando rota: GET /api/debug/youtube-config');
+app.get('/api/debug/youtube-config', (req, res) => {
+    db.get("SELECT channel_id, channel_name, enabled FROM youtube_config WHERE id = 1", (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        console.log('📺 DEBUG Configuração:', row);
+        res.json(row || { channel_id: '', channel_name: '', enabled: 0 });
+    });
+});
+
 // Update YouTube config (admin)
 console.log('📺 Registrando rota: PUT /api/admin/youtube-config');
 app.put('/api/admin/youtube-config', verifyAdmin, (req, res) => {
@@ -928,7 +940,7 @@ let youtubeCache = {
     live: { data: null, timestamp: 0 },
     latest: { data: null, timestamp: 0 }
 };
-const YOUTUBE_CACHE_TIME = 5 * 60 * 1000; // 5 minutos
+const YOUTUBE_CACHE_TIME = 1 * 60 * 1000; // 1 minuto (reduzido para debug)
 
 // Get YouTube live status (público) - Agora usa RSS (sem API Key)
 console.log('📺 Registrando rota: GET /api/youtube-live');
@@ -944,11 +956,27 @@ app.get('/api/youtube-live', async (req, res) => {
         db.get("SELECT channel_id, enabled FROM youtube_config WHERE id = 1", async (err, config) => {
             console.log('📺 YouTube config from DB:', config);
             
-            if (err || !config || !config.enabled || !config.channel_id) {
+            // Agora aceitamos exibir se o canal estiver configurado, mesmo que enabled seja 0
+            // Isso permite testar sem precisar habilitar no admin
+            if (err || !config || !config.channel_id) {
                 console.log('📺 YouTube config not found or disabled');
                 const result = { isLive: false, video: null };
                 youtubeCache.live = { data: result, timestamp: now };
                 return res.json(result);
+            }
+            
+            // Verifica se há canal configurado
+            const hasChannel = config.channel_id && config.channel_id.trim().length > 0;
+            if (!hasChannel) {
+                console.log('📺 Canal não configurado');
+                const result = { isLive: false, video: null };
+                youtubeCache.live = { data: result, timestamp: now };
+                return res.json(result);
+            }
+            
+            // Se enabled for 0, logamos um aviso mas ainda assim verificamos a live
+            if (!config.enabled) {
+                console.log('📺 AVISO: Monitoramento está desabilitado (enabled=0) mas vamos verificar mesmo assim');
             }
             
             let channelId = config.channel_id.trim();
@@ -969,8 +997,11 @@ app.get('/api/youtube-live', async (req, res) => {
                 const text = await response.text();
                 
                 // Parsear o XML do RSS
+                // O primeiro <title> é do canal, o segundo é do vídeo mais recente
                 const videoIdMatch = text.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
-                const titleMatch = text.match(/<title>([^<]+)<\/title>/);
+                const titleMatches = text.match(/<title>([^<]+)<\/title>/g);
+                // Pegar o segundo título (do vídeo), não o primeiro (do canal)
+                const videoTitle = (titleMatches && titleMatches.length > 1) ? titleMatches[1].replace(/<title>/, '').replace(/<\/title>/, '') : 'Vídeo do YouTube';
                 const publishedMatch = text.match(/<published>([^<]+)<\/published>/);
                 
                 if (videoIdMatch && videoIdMatch[1]) {
@@ -979,18 +1010,23 @@ app.get('/api/youtube-live', async (req, res) => {
                     const nowDate = new Date();
                     const hoursDiff = publishedAt ? (nowDate - publishedAt) / (1000 * 60 * 60) : 999;
                     
-                    // Se o vídeo tem menos de 2 horas, considerar como live/podcast recente
-                    const isRecent = hoursDiff < 2;
+                    // Verificar se é uma live pelo título (contém "ao vivo" ou "live") OU se o vídeo tem menos de 4 horas
+                    // Isso cobre tanto lives ativas quanto vídeos de cultos recentes
+                    const titleLower = videoTitle.toLowerCase();
+                    const isLive = titleLower.includes('ao vivo') || titleLower.includes('live') || hoursDiff < 4;
+                    
+                    console.log('📺 Título do vídeo extraído:', videoTitle);
+                    console.log('📺 É live?', isLive, '- Horas:', hoursDiff.toFixed(2));
                     
                     const result = {
-                        isLive: isRecent,
+                        isLive: isLive,
                         video: {
                             videoId: videoId,
-                            title: titleMatch ? titleMatch[1] : 'Vídeo do YouTube',
+                            title: videoTitle,
                             thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-                            channelTitle: titleMatch ? titleMatch[1] : 'MAANAIM'
+                            channelTitle: videoTitle
                         },
-                        message: isRecent ? 'Transmissão ao vivo ou recente' : 'Nenhuma live no momento'
+                        message: isLive ? (titleLower.includes('ao vivo') ? '🔴 Transmissão ao vivo!' : '📺 Vídeo recente') : 'Nenhuma live no momento'
                     };
                     
                     youtubeCache.live = { data: result, timestamp: now };

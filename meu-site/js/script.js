@@ -106,9 +106,9 @@ async function checkYoutubeLive() {
     }
 }
 
-// Verificar a cada 60 segundos
+// Verificar a cada 30 segundos (reduzido para debug)
 checkYoutubeLive();
-setInterval(checkYoutubeLive, 60000);
+setInterval(checkYoutubeLive, 30000);
 
 document.addEventListener("DOMContentLoaded", () => {
     let usuarioLogado = null;
