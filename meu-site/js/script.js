@@ -27,6 +27,101 @@ function extractVideoId(url) {
     return match ? match[1] : null;
 }
 
+// Função para detectar a proporção da imagem e ajustar o aspect-ratio automaticamente
+function setupImageAspectRatio(imgElement) {
+    if (!imgElement || imgElement.dataset.aspectRatioSet) return;
+    
+    const img = new Image();
+    img.onload = function() {
+        const width = this.width;
+        const height = this.height;
+        const ratio = width / height;
+        
+        if (ratio > 1.1) {
+            // Imagem horizontal (paisagem) - usa 16:9
+            img.style.aspectRatio = '16/9';
+        } else if (ratio < 0.9) {
+            // Imagem vertical (retrato) - usa 9:16
+            img.style.aspectRatio = '9/16';
+        } else {
+            // Imagem quadrada ou próxima - usa 1:1
+            img.style.aspectRatio = '1/1';
+        }
+        
+        img.dataset.aspectRatioSet = 'true';
+    };
+    img.onerror = function() {
+        // Mantém o aspect-ratio original em caso de erro
+    };
+    img.src = imgElement.src;
+}
+
+// Função para configurar todas as imagens de um container
+function setupAllImages(container) {
+    const images = container.querySelectorAll('img');
+    images.forEach(img => {
+        if (img.complete) {
+            setupImageAspectRatio(img);
+        } else {
+            img.addEventListener('load', () => setupImageAspectRatio(img));
+        }
+    });
+}
+
+// Função para detectar a proporção da imagem e retornar estilos CSS
+// Retorna objeto com width, height, objectFit e aspectRatio
+function getImageStyleByProportion(imgUrl, maxWidth = '100%', maxHeight = '100%') {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = function() {
+            const width = this.width;
+            const height = this.height;
+            const ratio = width / height;
+            
+            let style = {
+                width: maxWidth,
+                height: maxHeight,
+                objectFit: 'contain',
+                aspectRatio: 'auto'
+            };
+            
+            if (ratio > 1.1) {
+                // Imagem horizontal (paisagem)
+                style.aspectRatio = '16/9';
+                style.objectFit = 'contain';
+                style.height = 'auto';
+            } else if (ratio < 0.9) {
+                // Imagem vertical (retrato) - como stories do Instagram
+                style.aspectRatio = '9/16';
+                style.objectFit = 'contain';
+                style.width = 'auto';
+            } else {
+                // Imagem quadrada ou próxima
+                style.aspectRatio = '1/1';
+                style.objectFit = 'contain';
+            }
+            
+            resolve(style);
+        };
+        img.onerror = function() {
+            // Em caso de erro, retorna estilo padrão
+            resolve({
+                width: maxWidth,
+                height: maxHeight,
+                objectFit: 'cover',
+                aspectRatio: 'auto'
+            });
+        };
+        img.src = imgUrl;
+    });
+}
+
+// Função síncrona simplificada que retorna estilo base (sem detectar proporção)
+// Útil para uso em templates onde não podemos usar Promise
+function getImageStyleBase(maxWidth = '100%', aspectRatio = 'auto', objectFit = 'contain') {
+    return `width: ${maxWidth}; aspect-ratio: ${aspectRatio}; object-fit: ${objectFit};`;
+}
+
 // Função para converter tags de imagem em HTML
 // Formatos suportados:
 // [img]URL[/img] - imagem inline
@@ -108,6 +203,39 @@ async function checkYoutubeLive() {
 // Verificar a cada 30 segundos (reduzido para debug)
 checkYoutubeLive();
 setInterval(checkYoutubeLive, 30000);
+
+// Funções de Lightbox para imagens
+function abrirLightbox(src) {
+    let lightbox = document.getElementById('lightboxModal');
+    if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'lightboxModal';
+        lightbox.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+        lightbox.innerHTML = '<img id="lightboxImage" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 10px;" onclick="fecharLightbox()">';
+        lightbox.onclick = function(e) {
+            if (e.target === lightbox) fecharLightbox();
+        };
+        document.body.appendChild(lightbox);
+    }
+    document.getElementById('lightboxImage').src = src;
+    lightbox.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharLightbox() {
+    const lightbox = document.getElementById('lightboxModal');
+    if (lightbox) {
+        lightbox.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Fechar lightbox ao pressionar ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        fecharLightbox();
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     let usuarioLogado = null;
@@ -376,11 +504,24 @@ async function carregarEventos() {
             // Adicionar eventos especiais
             if (eventos.length > 0) {
                 eventos.slice(0, 2).forEach(evento => {
-                    // Extrair a data diretamente da string ISO sem conversão de fuso horário
-                    const dataPart = evento.data.split('T')[0];
-                    const [ano, mes, dia] = dataPart.split('-');
-                    const dataFormatada = `${dia}/${mes}/${ano}`;
-                    html += `<p><strong>${evento.titulo}</strong><br>${dataFormatada}${evento.horario ? ' às ' + evento.horario : ''} ${evento.local ? '- ' + evento.local : ''}</p>`;
+                    let dataFormatada = '';
+                    if (evento.data) {
+                        // Extrair a data diretamente da string ISO sem conversão de fuso horário
+                        const dataPart = evento.data.split('T')[0];
+                        const [ano, mes, dia] = dataPart.split('-');
+                        dataFormatada = `${dia}/${mes}/${ano}`;
+                    }
+                    let infoEvento = `<strong>${evento.titulo}</strong>`;
+                    if (dataFormatada) {
+                        infoEvento += `<br>${dataFormatada}${evento.horario ? ' às ' + evento.horario : ''}`;
+                    } else if (evento.horario) {
+                        infoEvento += `<br>${evento.horario}`;
+                    }
+                    if (evento.local) {
+                        infoEvento += ` - ${evento.local}`;
+                    }
+                    // Sempre adicionar o evento se tiver título
+                    html += `<p>${infoEvento}</p>`;
                 });
             }
             
@@ -397,24 +538,127 @@ async function carregarEventos() {
             if (eventos.length === 0) {
                 containerProgramacao.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; grid-column: 1 / -1;">Nenhum evento especial programado.</p>';
             } else {
-                containerProgramacao.innerHTML = eventos.map(evento => {
-                    // Extrair a data diretamente da string ISO sem conversão de fuso horário
-                    const dataPart = evento.data.split('T')[0];
-                    const [ano, mes, dia] = dataPart.split('-');
-                    const dataFormatada = new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    return `
-                    <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
-                        <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
+                containerProgramacao.innerHTML = eventos.map((evento, idx) => {
+                    // Formatar data apenas se existir
+                    let dataFormatada = '';
+                    let diaSemana = '';
+                    if (evento.data) {
+                        // Extrair a data diretamente da string ISO sem conversão de fuso horário
+                        const dataPart = evento.data.split('T')[0];
+                        const [ano, mes, dia] = dataPart.split('-');
+                        dataFormatada = new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                        diaSemana = new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { weekday: 'short' });
+                    }
+                    
+                    // Gerar HTML do carrossel de imagens com Swiper
+                    let carouselHtml = '';
+                    const imagens = evento.imagens ? (typeof evento.imagens === 'string' ? JSON.parse(evento.imagens) : evento.imagens) : [];
+                    const temImagens = imagens.length > 0 || evento.imagem;
+                    const uniqueId = `evento-swiper-${evento.id}-${idx}`;
+                    
+                    if (temImagens) {
+                        const todasImagens = evento.imagem ? [evento.imagem, ...imagens] : imagens;
+                        if (todasImagens.length > 1) {
+                            // Carrossel Swiper com múltiplas imagens - proporção automática com object-fit: contain
+                            carouselHtml = `
+                                <div class="swiper-container swiper-evento-${evento.id}" id="${uniqueId}" style="width: 100%; max-width: 250px; aspect-ratio: 9 / 16; margin: 0 auto 1rem auto; border-radius: 10px; overflow: hidden; position: relative;">
+                                    <div class="swiper-wrapper">
+                                        ${todasImagens.map(img => `
+                                            <div class="swiper-slide">
+                                                <img src="${img}" style="width: 100%; height: 100%; object-fit: contain; background: #f0f0f0;" onerror="this.style.display='none'" onload="setupImageAspectRatio(this)">
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <div class="swiper-pagination" style="bottom: 10px; z-index: 10;"></div>
+                                    <div class="swiper-button-next" style="right: 10px; z-index: 10; color: white; width: 40px; height: 40px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;"></div>
+                                    <div class="swiper-button-prev" style="left: 10px; z-index: 10; color: white; width: 40px; height: 40px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;"></div>
+                                </div>
+                            `;
+                        } else {
+                            // Imagem única com clique para ampliar - object-fit: contain para não cortar
+                            carouselHtml = `
+                                <img src="${todasImagens[0]}" style="width: 100%; max-width: 250px; aspect-ratio: 9 / 16; object-fit: contain; background: #f0f0f0; border-radius: 10px; margin: 0 auto 1rem auto; display: block; cursor: pointer;" onclick="abrirLightbox(this.src)" onerror="this.style.display='none'" onload="setupImageAspectRatio(this)">
+                            `;
+                        }
+                    }
+                    
+                    // Verificar se há informações de texto (título, data, horario, local)
+                    const temTexto = evento.titulo || evento.data || evento.horario || evento.local;
+                    
+                    // Se não tem nenhuma informação de texto, mostra apenas a imagem (se houver)
+                    const infoHtml = (temTexto || temImagens) ? `
+                        ${evento.titulo ? `<div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
                             <i class="fas fa-calendar-alt"></i>
                         </div>
-                        <h4>${evento.titulo}</h4>
-                        <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                        <h4>${evento.titulo}</h4>` : ''}
+                        ${evento.data ? `<p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
                             ${dataFormatada}${evento.horario ? ' às ' + evento.horario : ''}
-                        </p>
-                        <p>${evento.local || 'Local a definir'}</p>
-                        <button onclick="abrirInscricao(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" style="background: var(--verde-principal); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; margin-top: 1rem;">📝 Inscrever-se</button>
+                        </p>` : ''}
+                        ${evento.local ? `<p>${evento.local}</p>` : ''}
+                        ${evento.data ? `<button onclick="abrirInscricao(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" style="background: var(--verde-principal); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; margin-top: 1rem;">📝 Inscrever-se</button>` : ''}
+                    ` : '';
+                    
+                    return `
+                    <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
+                        ${carouselHtml}
+                        ${infoHtml}
                     </div>
-                `}).join('');
+                `}).join('') + (() => {
+                    // Usar MutationObserver para detectar quando osSwiper containers são adicionados
+                    const initSwipers = () => {
+                        const swiperContainers = document.querySelectorAll('.swiper-container');
+                        console.log('[DEBUG] MutationObserver: Swiper containers encontrados:', swiperContainers.length);
+                        
+                        if (swiperContainers.length > 0) {
+                            swiperContainers.forEach(swiperContainer => {
+                                if (swiperContainer.swiper) {
+                                    console.log('[DEBUG] Swiper já inicializado para:', swiperContainer.className);
+                                    return;
+                                }
+                                
+                                const nextBtn = swiperContainer.querySelector('.swiper-button-next');
+                                const prevBtn = swiperContainer.querySelector('.swiper-button-prev');
+                                console.log('[DEBUG] Botões encontrados - next:', !!nextBtn, 'prev:', !!prevBtn);
+                                
+                                try {
+                                    const swiper = new Swiper(swiperContainer, {
+                                        loop: true,
+                                        observer: true,
+                                        observeParents: true,
+                                        autoplay: { delay: 3000, disableOnInteraction: false },
+                                        pagination: { 
+                                            el: swiperContainer.querySelector('.swiper-pagination'),
+                                            clickable: true 
+                                        },
+                                        navigation: {
+                                            nextEl: nextBtn,
+                                            prevEl: prevBtn,
+                                        },
+                                        grabCursor: true
+                                    });
+                                    console.log('[DEBUG] Swiper inicializado com sucesso!');
+                                    
+                                    // Configurar aspect-ratio das imagens após inicialização
+                                    setupAllImages(swiperContainer);
+                                } catch (e) {
+                                    console.error('[DEBUG] Erro ao inicializar Swiper:', e);
+                                }
+                            });
+                        }
+                    };
+                    
+                    // Tentar inicializar imediatamente
+                    initSwipers();
+                    
+                    // Também observar mudanças no DOM
+                    const observer = new MutationObserver(initSwipers);
+                    const container = document.getElementById('eventosEspeciaisContainer');
+                    if (container) {
+                        observer.observe(container, { childList: true, subtree: true });
+                    }
+                    
+                    return '';
+                })();
             }
         }
 
@@ -527,18 +771,96 @@ async function carregarCultos() {
             return;
         }
 
-        container.innerHTML = cultos.map(culto => `
-            <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
-                <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
+        container.innerHTML = cultos.map((culto, idx) => {
+            // Gerar HTML do carrossel de imagens com Swiper - proporção 9:16 com limite
+            let carouselHtml = '';
+            const imagens = culto.imagens ? (typeof culto.imagens === 'string' ? JSON.parse(culto.imagens) : culto.imagens) : [];
+            const temImagens = imagens.length > 0 || culto.imagem;
+            const uniqueId = `culto-swiper-${culto.id}-${idx}`;
+            
+            if (temImagens) {
+                const todasImagens = culto.imagem ? [culto.imagem, ...imagens] : imagens;
+                if (todasImagens.length > 1) {
+                    // Carrossel Swiper com múltiplas imagens - proporção automática com object-fit: contain
+                    carouselHtml = `
+                        <div class="swiper-container swiper-${culto.id}" id="${uniqueId}" style="width: 100%; max-width: 250px; aspect-ratio: 9 / 16; margin: 0 auto 1rem auto; border-radius: 10px; overflow: hidden; position: relative;">
+                            <div class="swiper-wrapper">
+                                ${todasImagens.map(img => `
+                                    <div class="swiper-slide">
+                                        <img src="${img}" style="width: 100%; height: 100%; object-fit: contain; background: #f0f0f0;" onerror="this.style.display='none'" onload="setupImageAspectRatio(this)">
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="swiper-pagination" style="bottom: 10px; z-index: 10;"></div>
+                            <div class="swiper-button-next" style="right: 10px; z-index: 10; color: white; width: 40px; height: 40px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;"></div>
+                            <div class="swiper-button-prev" style="left: 10px; z-index: 10; color: white; width: 40px; height: 40px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;"></div>
+                        </div>
+                    `;
+                } else {
+                    // Imagem única com clique para ampliar - object-fit: contain para não cortar
+                    carouselHtml = `
+                        <img src="${todasImagens[0]}" style="width: 100%; max-width: 250px; aspect-ratio: 9 / 16; object-fit: contain; background: #f0f0f0; border-radius: 10px; margin: 0 auto 1rem auto; display: block; cursor: pointer;" onclick="abrirLightbox(this.src)" onerror="this.style.display='none'" onload="setupImageAspectRatio(this)">
+                    `;
+                }
+            }
+            
+            // Verificar se há informações de texto (título, horário, local) ou imagens
+            const temTexto = culto.titulo || culto.horario || culto.local;
+            
+            // Se não tem nenhuma informação de texto, mostra apenas a imagem (se houver)
+            const infoHtml = (temTexto || temImagens) ? `
+                ${culto.titulo ? `<div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
                     <i class="fas fa-music"></i>
                 </div>
-                <h4>${culto.titulo}</h4>
-                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                <h4>${culto.titulo}</h4>` : ''}
+                ${culto.horario ? `<p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
                     ${culto.horario}
-                </p>
-                <p>${culto.local || 'Local a definir'}</p>
-            </div>
-        `).join('');
+                </p>` : ''}
+                ${culto.local ? `<p>${culto.local}</p>` : ''}
+            ` : '';
+            
+            return `
+                <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
+                    ${carouselHtml}
+                    ${infoHtml}
+                </div>
+            `;
+        }).join('') + (() => {
+            // Inicializar Swipers após renderização
+            setTimeout(() => {
+                cultos.forEach((culto, idx) => {
+                    const swiperContainer = document.getElementById(`culto-swiper-${culto.id}-${idx}`);
+                    if (!swiperContainer || swiperContainer.swiper) return;
+                    
+                    const imagens = culto.imagens ? (typeof culto.imagens === 'string' ? JSON.parse(culto.imagens) : culto.imagens) : [];
+                    const temImagens = imagens.length > 0 || culto.imagem;
+                    if (!temImagens) return;
+                    
+                    const todasImagens = culto.imagem ? [culto.imagem, ...imagens] : imagens;
+                    if (todasImagens.length <= 1) return;
+                    
+                    new Swiper(swiperContainer, {
+                        loop: true,
+                        observer: true,
+                        observeParents: true,
+                        autoplay: { delay: 3000, disableOnInteraction: false },
+                        pagination: { 
+                            el: swiperContainer.querySelector('.swiper-pagination'),
+                            clickable: true 
+                        },
+                        navigation: {
+                            nextEl: swiperContainer.querySelector('.swiper-button-next'),
+                            prevEl: swiperContainer.querySelector('.swiper-button-prev'),
+                        },
+                        grabCursor: true
+                    });
+                    
+                    // Configurar aspect-ratio das imagens após inicialização
+                    setupAllImages(swiperContainer);
+                });
+            }, 100);
+            return '';
+        })();
     } catch (error) {
         console.error('Erro ao carregar cultos:', error);
         const container = document.getElementById('cultosContainer');
@@ -1400,6 +1722,40 @@ function irParaVersiculo(livro, capitulo, versiculo) {
         }, 500);
     });
 }
+
+// Função para abrir imagem em tela cheia (Lightbox)
+function abrirLightbox(src) {
+    // Criar o modal se não existir
+    let lightbox = document.getElementById('lightboxModal');
+    if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'lightboxModal';
+        lightbox.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+        lightbox.innerHTML = '<img id="lightboxImage" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 10px;" onclick="fecharLightbox()">';
+        lightbox.onclick = function(e) {
+            if (e.target === lightbox) fecharLightbox();
+        };
+        document.body.appendChild(lightbox);
+    }
+    document.getElementById('lightboxImage').src = src;
+    lightbox.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharLightbox() {
+    const lightbox = document.getElementById('lightboxModal');
+    if (lightbox) {
+        lightbox.style.display = 'none';
+    }
+    document.body.style.overflow = 'auto';
+}
+
+// Fechar lightbox com ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        fecharLightbox();
+    }
+});
 
 // Funções para inscrição em eventos
 function abrirInscricao(eventoId, eventoTitulo) {

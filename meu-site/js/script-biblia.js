@@ -377,11 +377,24 @@ async function carregarEventos() {
             // Adicionar eventos especiais
             if (eventos.length > 0) {
                 eventos.slice(0, 2).forEach(evento => {
-                    // Extrair a data diretamente da string ISO sem conversão de fuso horário
-                    const dataPart = evento.data.split('T')[0];
-                    const [ano, mes, dia] = dataPart.split('-');
-                    const dataFormatada = `${dia}/${mes}/${ano}`;
-                    html += `<p><strong>${evento.titulo}</strong><br>${dataFormatada}${evento.horario ? ' às ' + evento.horario : ''} ${evento.local ? '- ' + evento.local : ''}</p>`;
+                    let dataFormatada = '';
+                    if (evento.data) {
+                        // Extrair a data diretamente da string ISO sem conversão de fuso horário
+                        const dataPart = evento.data.split('T')[0];
+                        const [ano, mes, dia] = dataPart.split('-');
+                        dataFormatada = `${dia}/${mes}/${ano}`;
+                    }
+                    let infoEvento = `<strong>${evento.titulo}</strong>`;
+                    if (dataFormatada) {
+                        infoEvento += `<br>${dataFormatada}${evento.horario ? ' às ' + evento.horario : ''}`;
+                    } else if (evento.horario) {
+                        infoEvento += `<br>${evento.horario}`;
+                    }
+                    if (evento.local) {
+                        infoEvento += ` - ${evento.local}`;
+                    }
+                    // Sempre adicionar o evento se tiver título
+                    html += `<p>${infoEvento}</p>`;
                 });
             }
             
@@ -399,23 +412,36 @@ async function carregarEventos() {
                 containerProgramacao.innerHTML = '<p style="text-align: center; color: #666; font-style: italic; grid-column: 1 / -1;">Nenhum evento especial programado.</p>';
             } else {
                 containerProgramacao.innerHTML = eventos.map(evento => {
-                    // Extrair a data diretamente da string ISO sem conversão de fuso horário
-                    const dataPart = evento.data.split('T')[0];
-                    const [ano, mes, dia] = dataPart.split('-');
-                    const dataFormatada = new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    return `
-                    <div class="evento-card" style="background: white; border-radius: 20px; padding: 2.5rem; box-shadow: var(--sombra);">
-                        <div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
+                    // Verificar se tem imagens
+                    const imagens = evento.imagens ? (typeof evento.imagens === 'string' ? JSON.parse(evento.imagens) : evento.imagens) : [];
+                    const temImagens = imagens.length > 0 || evento.imagem;
+                    
+                    let dataFormatada = '';
+                    if (evento.data) {
+                        // Extrair a data diretamente da string ISO sem conversão de fuso horário
+                        const dataPart = evento.data.split('T')[0];
+                        const [ano, mes, dia] = dataPart.split('-');
+                        dataFormatada = new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    }
+                    
+                    // Verificar se há informações de texto (título, data, horario, local) ou imagens
+                    const temTexto = evento.titulo || evento.data || evento.horario || evento.local;
+                    
+                    // Se não tem nenhuma informação de texto, mostra apenas a imagem (se houver)
+                    const infoHtml = (temTexto || temImagens) ? `
+                        ${evento.titulo ? `<div style="font-size: 3rem; color: var(--dourado); margin-bottom: 1rem;">
                             <i class="fas fa-calendar-alt"></i>
                         </div>
-                        <h4>${evento.titulo}</h4>
-                        <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                        <h4>${evento.titulo}</h4>` : ''}
+                        ${dataFormatada ? `<p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
                             ${dataFormatada}${evento.horario ? ' às ' + evento.horario : ''}
-                        </p>
-                        <p>${evento.local || 'Local a definir'}</p>
-                        <button onclick="abrirInscricao(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" style="background: var(--verde-principal); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; margin-top: 1rem;">📝 Inscrever-se</button>
-                    </div>
-                `}).join('');
+                        </p>` : ''}
+                        ${evento.local ? `<p>${evento.local}</p>` : ''}
+                        ${dataFormatada ? `<button onclick="abrirInscricao(${evento.id}, '${evento.titulo.replace(/'/g, "\\'")}')" style="background: var(--verde-principal); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; margin-top: 1rem;">📝 Inscrever-se</button>` : ''}
+                    ` : '';
+                    
+                    return infoHtml;
+                }).join('');
             }
         }
 
@@ -518,10 +544,10 @@ async function carregarCultos() {
                     <i class="fas fa-music"></i>
                 </div>
                 <h4>${culto.titulo}</h4>
-                <p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
+                ${culto.horario ? `<p style="font-size: 1.2rem; font-weight: 600; color: var(--verde-principal); margin-bottom: 1rem;">
                     ${culto.horario}
-                </p>
-                <p>${culto.local || 'Local a definir'}</p>
+                </p>` : ''}
+                ${culto.local ? `<p>${culto.local}</p>` : ''}
             </div>
         `).join('');
     } catch (error) {

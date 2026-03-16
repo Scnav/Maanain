@@ -627,27 +627,62 @@ app.delete('/api/admin/noticias/:id', verifyAdmin, (req, res) => {
 app.get('/api/admin/eventos', verifyAdmin, (req, res) => {
     db.all("SELECT * FROM eventos ORDER BY created_at DESC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
+        // Parse imagens JSON para cada evento
+        rows = rows.map(row => {
+            if (row.imagens) {
+                try {
+                    row.imagens = typeof row.imagens === 'string' ? JSON.parse(row.imagens) : row.imagens;
+                } catch (e) {
+                    row.imagens = [];
+                }
+            }
+            return row;
+        });
         res.json(rows);
     });
 });
 
 app.post('/api/admin/eventos', verifyAdmin, (req, res) => {
-    const { titulo, data, horario, local } = req.body;
-    if (!titulo || !data) {
-        return res.status(400).json({ error: 'Título e data obrigatórios' });
+    const { titulo, data, horario, local, imagem, imagens } = req.body;
+    // Validar: pelo menos título ou imagem(s) deve ser fornecido
+    if (!titulo && !imagem && (!imagens || imagens.length === 0)) {
+        return res.status(400).json({ error: 'Título ou imagem é obrigatório' });
     }
 
-    db.run("INSERT INTO eventos (titulo, data, horario, local) VALUES (?, ?, ?, ?)", [titulo, data, horario || null, local || null], function(err) {
+    const imagensJson = imagens ? JSON.stringify(imagens) : null;
+    
+    // Tratar valores vazios como null
+    const dataValue = data || null;
+    const horarioValue = horario || null;
+
+    db.run("INSERT INTO eventos (titulo, data, horario, local, imagem, imagens) VALUES (?, ?, ?, ?, ?, ?)", 
+        [titulo, dataValue, horarioValue, local || null, imagem || null, imagensJson], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: this.lastID, titulo, data, horario, local, created_at: new Date().toISOString() });
+        res.status(201).json({ 
+            id: this.lastID, 
+            titulo, 
+            data: dataValue, 
+            horario: horarioValue, 
+            local, 
+            imagem, 
+            imagens: imagens || [],
+            created_at: new Date().toISOString() 
+        });
     });
 });
 
 app.put('/api/admin/eventos/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
-    const { titulo, data, horario, local } = req.body;
+    const { titulo, data, horario, local, imagem, imagens } = req.body;
 
-    db.run("UPDATE eventos SET titulo = ?, data = ?, horario = ?, local = ? WHERE id = ?", [titulo, data, horario, local, id], function(err) {
+    const imagensJson = imagens ? JSON.stringify(imagens) : null;
+    
+    // Tratar valores vazios como null
+    const dataValue = data || null;
+    const horarioValue = horario || null;
+
+    db.run("UPDATE eventos SET titulo = ?, data = ?, horario = ?, local = ?, imagem = ?, imagens = ? WHERE id = ?", 
+        [titulo, dataValue, horarioValue, local || null, imagem || null, imagensJson, id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Evento não encontrado' });
         res.json({ message: 'Evento atualizado' });
@@ -661,6 +696,19 @@ app.delete('/api/admin/eventos/:id', verifyAdmin, (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Evento não encontrado' });
         res.json({ message: 'Evento excluído' });
+    });
+});
+
+// Rota para corrigir estrutura da tabela eventos (permitir data nula)
+app.post('/api/admin/eventos/fix-structure', verifyAdmin, (req, res) => {
+    db.run("ALTER TABLE eventos MODIFY COLUMN data DATE NULL", function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        // Também atualizar registros com data 1899-01-01 ou similar para null
+        db.run("UPDATE eventos SET data = NULL WHERE data = '1899-01-01' OR data = '0000-00-00' OR data < '1900-01-01'", function(err2) {
+            if (err2) return res.status(500).json({ error: err2.message });
+            res.json({ message: 'Estrutura corrigida! Data allowing null' });
+        });
     });
 });
 
@@ -862,6 +910,14 @@ app.post('/api/admin/gallery', verifyAdmin, (req, res) => {
     });
 });
 
+// Buscar todas as imagens da galeria (admin)
+app.get('/api/admin/gallery', verifyAdmin, (req, res) => {
+    db.all("SELECT * FROM gallery ORDER BY created_at DESC", (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
 // Excluir imagem (admin)
 app.delete('/api/admin/gallery/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
@@ -1010,10 +1066,12 @@ app.get('/api/youtube-live', async (req, res) => {
                     const nowDate = new Date();
                     const hoursDiff = publishedAt ? (nowDate - publishedAt) / (1000 * 60 * 60) : 999;
                     
-                    // Verificar se é uma live pelo título (contém "ao vivo" ou "live") OU se o vídeo tem menos de 4 horas
-                    // Isso cobre tanto lives ativas quanto vídeos de cultos recentes
+                    // Verificar se é uma live:
+                    // 1. Título contém "ao vivo" ou "live" E vídeo tem menos de 8 horas = LIVE ATIVA
+                    // 2. OU vídeo tem menos de 2 horas = Vídeo recente (pode ser culto gravado)
                     const titleLower = videoTitle.toLowerCase();
-                    const isLive = titleLower.includes('ao vivo') || titleLower.includes('live') || hoursDiff < 4;
+                    const hasLiveInTitle = titleLower.includes('ao vivo') || titleLower.includes('live');
+                    const isLive = (hasLiveInTitle && hoursDiff < 8) || hoursDiff < 2;
                     
                     console.log('📺 Título do vídeo extraído:', videoTitle);
                     console.log('📺 É live?', isLive, '- Horas:', hoursDiff.toFixed(2));
@@ -1210,23 +1268,47 @@ app.get('/api/admin/cultos', verifyAdmin, (req, res) => {
 
     db.all("SELECT * FROM cultos ORDER BY id ASC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
+        // Parse imagens JSON para cada culto
+        rows = rows.map(row => {
+            if (row.imagens) {
+                try {
+                    row.imagens = typeof row.imagens === 'string' ? JSON.parse(row.imagens) : row.imagens;
+                } catch (e) {
+                    row.imagens = [];
+                }
+            }
+            return row;
+        });
         res.json(rows);
     });
 });
 
 app.get('/api/cultos', (req, res) => {
-    db.all("SELECT id, titulo, SUBSTR(horario, 1, 5) as horario, local FROM cultos ORDER BY id ASC", (err, rows) => {
+    db.all("SELECT id, titulo, SUBSTR(horario, 1, 5) as horario, local, imagem, imagens FROM cultos ORDER BY id ASC", (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
+        // Parse imagens JSON para cada culto
+        rows = rows.map(row => {
+            if (row.imagens) {
+                try {
+                    row.imagens = typeof row.imagens === 'string' ? JSON.parse(row.imagens) : row.imagens;
+                } catch (e) {
+                    row.imagens = [];
+                }
+            }
+            return row;
+        });
         res.json(rows);
     });
 });
 
 app.put('/api/admin/cultos/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
-    const { titulo, horario, local } = req.body;
+    const { titulo, horario, local, imagem, imagens } = req.body;
 
-    db.run("UPDATE cultos SET titulo = ?, horario = ?, local = ?, updated_at = NOW() WHERE id = ?",
-        [titulo, horario, local, id], function(err) {
+    const imagensJson = imagens ? JSON.stringify(imagens) : null;
+
+    db.run("UPDATE cultos SET titulo = ?, horario = ?, local = ?, imagem = ?, imagens = ?, updated_at = NOW() WHERE id = ?",
+        [titulo, horario, local, imagem || null, imagensJson, id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Culto não encontrado' });
         res.json({ message: 'Culto atualizado' });
@@ -1234,15 +1316,18 @@ app.put('/api/admin/cultos/:id', verifyAdmin, (req, res) => {
 });
 
 app.post('/api/admin/cultos', verifyAdmin, (req, res) => {
-    const { titulo, horario, local } = req.body;
-    if (!titulo) {
-        return res.status(400).json({ error: 'Título obrigatório' });
+    const { titulo, horario, local, imagem, imagens } = req.body;
+    // Validar: pelo menos título ou imagem(s) deve ser fornecido
+    if (!titulo && !imagem && (!imagens || imagens.length === 0)) {
+        return res.status(400).json({ error: 'Título ou imagem é obrigatório' });
     }
 
-    db.run("INSERT INTO cultos (titulo, horario, local) VALUES (?, ?, ?)",
-        [titulo, horario || '', local || ''], function(err) {
+    const imagensJson = imagens ? JSON.stringify(imagens) : null;
+
+    db.run("INSERT INTO cultos (titulo, horario, local, imagem, imagens) VALUES (?, ?, ?, ?, ?)",
+        [titulo, horario || '', local || '', imagem || null, imagensJson], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: this.lastID, titulo, horario, local });
+        res.status(201).json({ id: this.lastID, titulo, horario, local, imagem, imagens: imagens || [] });
     });
 });
 
@@ -1488,11 +1573,22 @@ app.get('/api/noticias', (req, res) => {
 
 app.get('/api/eventos', (req, res) => {
     console.log('[DEBUG] GET /api/eventos - Buscando eventos');
-    db.all("SELECT id, titulo, data, SUBSTR(horario, 1, 5) as horario, local, created_at FROM eventos WHERE data >= CURDATE() ORDER BY data ASC", (err, rows) => {
+    db.all("SELECT id, titulo, data, SUBSTR(horario, 1, 5) as horario, local, imagem, imagens, created_at FROM eventos ORDER BY COALESCE(data, '9999-12-31') ASC", (err, rows) => {
         if (err) {
             console.log('[DEBUG] ERRO ao buscar eventos:', err.message);
             return res.status(500).json({ error: err.message });
         }
+        // Parse imagens JSON para cada evento
+        rows = rows.map(row => {
+            if (row.imagens) {
+                try {
+                    row.imagens = typeof row.imagens === 'string' ? JSON.parse(row.imagens) : row.imagens;
+                } catch (e) {
+                    row.imagens = [];
+                }
+            }
+            return row;
+        });
         console.log('[DEBUG] Eventos encontrados:', rows.length);
         if (rows.length > 0) {
             console.log('[DEBUG] Primeiro evento:', JSON.stringify(rows[0]));

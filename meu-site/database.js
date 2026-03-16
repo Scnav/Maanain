@@ -246,9 +246,11 @@ function createMySQLTables(pool, callback) {
         `CREATE TABLE IF NOT EXISTS eventos (
             id INT AUTO_INCREMENT PRIMARY KEY,
             titulo TEXT NOT NULL,
-            data DATE NOT NULL,
+            data DATE,
             horario VARCHAR(50),
             local VARCHAR(255),
+            imagem VARCHAR(500),
+            imagens JSON,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
@@ -297,6 +299,8 @@ function createMySQLTables(pool, callback) {
             titulo TEXT NOT NULL,
             horario VARCHAR(50),
             local VARCHAR(255),
+            imagem VARCHAR(500),
+            imagens JSON,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
@@ -388,7 +392,15 @@ function createMySQLTables(pool, callback) {
                 // Adicionar coluna 'local' em eventos
                 "ALTER TABLE eventos ADD COLUMN local VARCHAR(255)",
                 // Adicionar coluna 'local' em cultos
-                "ALTER TABLE cultos ADD COLUMN local VARCHAR(255)"
+                "ALTER TABLE cultos ADD COLUMN local VARCHAR(255)",
+                // Adicionar coluna 'imagem' em eventos
+                "ALTER TABLE eventos ADD COLUMN imagem VARCHAR(500)",
+                // Adicionar coluna 'imagens' em eventos
+                "ALTER TABLE eventos ADD COLUMN imagens JSON",
+                // Adicionar coluna 'imagem' em cultos
+                "ALTER TABLE cultos ADD COLUMN imagem VARCHAR(500)",
+                // Adicionar coluna 'imagens' em cultos
+                "ALTER TABLE cultos ADD COLUMN imagens JSON"
             ];
             
             function runAlterTable(i) {

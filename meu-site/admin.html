@@ -182,6 +182,11 @@
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px;
             padding: 30px;
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
         }
         
         .section-title {
@@ -973,6 +978,17 @@
                             <label>Local:</label>
                             <input type="text" id="cultoLocal" placeholder="Ex: Salão Principal" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
                         </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label>Imagem do Culto:</label>
+                            <div id="cultoImagensContainer" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;"></div>
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <input type="text" id="cultoNovaImagem" placeholder="URL da imagem ou faça upload" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                                <button type="button" onclick="abrirGaleria('culto')" style="background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">📁 Galeria</button>
+                                <button type="button" id="btnAddCultoImagem" style="background: var(--verde-principal); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">➕ Adicionar</button>
+                            </div>
+                            <input type="file" id="cultoUploadImagem" accept="image/*" style="margin-top: 5px;">
+                            <small style="color: #666;">Adicione a URL da imagem ou faça upload. Para carousel, adicione múltiplas imagens.</small>
+                        </div>
                         <button id="btnSalvarCulto" class="btn-editar-cargo">💾 Salvar</button>
                         <button id="btnCancelarCulto" style="background: #6c757d; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer;">❌ Cancelar</button>
                     </div>
@@ -999,6 +1015,17 @@
                     <div style="margin-bottom: 1rem;">
                         <label>Local:</label>
                         <input type="text" id="eventoLocal" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Imagem do Evento:</label>
+                        <div id="eventoImagensContainer" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;"></div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="eventoNovaImagem" placeholder="URL da imagem ou faça upload" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+                            <button type="button" onclick="abrirGaleria('evento')" style="background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">📁 Galeria</button>
+                            <button type="button" id="btnAddEventoImagem" style="background: var(--verde-principal); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">➕ Adicionar</button>
+                        </div>
+                        <input type="file" id="eventoUploadImagem" accept="image/*" style="margin-top: 5px;">
+                        <small style="color: #666;">Adicione a URL da imagem ou faça upload. Para carousel, adicione múltiplas imagens.</small>
                     </div>
                     <button id="btnSalvarEvento" class="btn-editar-cargo">💾 Salvar</button>
                     <button id="btnCancelarEvento" style="background: #6c757d; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer;">❌ Cancelar</button>
@@ -1052,13 +1079,65 @@
     <script>
     // O sistema de autenticação já é tratado pelo código acima
     // que verifica isAdminLoggedIn() e mostra a tela de login se necessário
+    
+    // Sistema de navegação entre seções
+    document.addEventListener('DOMContentLoaded', function() {
+        const links = document.querySelectorAll('.sidebar-link');
+        const sections = document.querySelectorAll('.content-section');
+        
+        // Função para mostrar uma seção
+        function showSection(targetSectionId) {
+            // Remover classe active dos links
+            links.forEach(l => l.classList.remove('active'));
+            // Ocultar todas as seções
+            sections.forEach(section => {
+                section.style.display = 'none';
+                section.classList.remove('active');
+            });
+            
+            // Mostrar a seção selecionada
+            const target = document.getElementById(targetSectionId);
+            if (target) {
+                target.style.display = 'block';
+                target.classList.add('active');
+            }
+            
+            // Adicionar classe active ao link correspondente
+            const activeLink = document.querySelector(`.sidebar-link[data-section="${targetSectionId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            // Carregar dados específicos da seção
+            if (targetSectionId === 'programacao') {
+                if (typeof carregarCultos === 'function') {
+                    carregarCultos();
+                }
+                if (typeof carregarEventos === 'function') {
+                    carregarEventos();
+                }
+            }
+        }
+        
+        // Adicionar event listeners aos links
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetSection = this.getAttribute('data-section');
+                showSection(targetSection);
+            });
+        });
+        
+        // Mostrar a seção inicial (dashboard)
+        showSection('dashboard');
+    });
     </script>
     <script src="js/admin_aulas.js?v=9"></script>
     <script src="js/admin_biblia.js?v=16"></script>
     <script src="js/admin_biblioteca.js?v=14"></script>
     <script src="js/admin.js?v=16"></script>
     <script src="js/admin_area_membro.js?v=9"></script>
-    <script src="js/admin_cultos.js"></script>
+    <script src="js/admin_cultos.js?v=3"></script>
     <script src="js/admin_inscricoes.js"></script>
     <script>
     window.onload = function() {
@@ -1073,6 +1152,8 @@
             if (typeof loadAulas === 'function') loadAulas();
             if (typeof carregarAreaMembro === 'function') carregarAreaMembro();
             if (typeof carregarTopicosBiblia === 'function') carregarTopicosBiblia();
+            if (typeof carregarCultos === 'function') carregarCultos();
+            if (typeof carregarEventos === 'function') carregarEventos();
         }
     };
     </script>

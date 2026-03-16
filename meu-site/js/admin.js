@@ -391,14 +391,20 @@ async function salvarEvento() {
     const dataInput = document.getElementById('eventoData').value;
     const local = document.getElementById('eventoLocal').value;
 
-    if (!titulo || !dataInput) {
-        mostrarToast('❌ Título e data são obrigatórios', 'error');
+    if (!titulo) {
+        mostrarToast('❌ Título é obrigatório', 'error');
         return;
     }
 
-    // Extrair a hora do campo datetime-local (formato: YYYY-MM-DDTHH:MM)
-    const horario = dataInput.includes('T') ? dataInput.split('T')[1] : null;
-    const data = dataInput.split('T')[0]; // Apenas a data (YYYY-MM-DD)
+    // Se dataInput estiver vazia, enviar null para data e horario
+    let data = null;
+    let horario = null;
+    
+    if (dataInput) {
+        // Extrair a hora do campo datetime-local (formato: YYYY-MM-DDTHH:MM)
+        horario = dataInput.includes('T') ? dataInput.split('T')[1] : null;
+        data = dataInput.split('T')[0]; // Apenas a data (YYYY-MM-DD)
+    }
 
     try {
         const method = id ? 'PUT' : 'POST';
