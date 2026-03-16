@@ -952,9 +952,12 @@
                     console.log('DEBUG - Exibindo referências:', data.referencias);
                     let html = '<p style="text-align: center; color: #666; margin-bottom: 1rem;">Referências encontradas:</p>';
                     html += data.referencias.map(ref => {
+                        const textoRef = ref.capituloFim 
+                            ? `${ref.livro} ${ref.capitulo} a ${ref.capituloFim}` 
+                            : `${ref.livro} ${ref.capitulo}`;
                         return `
                             <div class="biblia-result-item" onclick="irParaCapitulo('${ref.abreviacao}', ${ref.capitulo})" style="cursor: pointer;">
-                                <div class="reference">${ref.livro} ${ref.capitulo}</div>
+                                <div class="reference">${textoRef}</div>
                                 <div class="texto-destaque">Clique para ir ao capítulo</div>
                             </div>
                         `;
@@ -999,8 +1002,9 @@
                     paginationHtml += `<button onclick="mudarPagina(${offset - buscaLimite})">← Anterior</button>`;
                 }
                 
-                // Números das páginas
-                for (let i = 1; i <= totalPaginas && i <= 5; i++) {
+                // Números das páginas - mostrar até 10 páginas
+                const maxPaginas = Math.min(totalPaginas, 10);
+                for (let i = 1; i <= maxPaginas; i++) {
                     const pageOffset = (i - 1) * buscaLimite;
                     paginationHtml += `<button class="${i === paginaAtual ? 'active' : ''}" onclick="mudarPagina(${pageOffset})">${i}</button>`;
                 }
@@ -1009,6 +1013,9 @@
                 if (paginaAtual < totalPaginas) {
                     paginationHtml += `<button onclick="mudarPagina(${offset + buscaLimite})">Próxima →</button>`;
                 }
+                
+                // Mostrar total de páginas
+                paginationHtml += `<span style="margin-left: 10px; color: #666;">(${totalPaginas} páginas)</span>`;
                 
                 paginationContainer.innerHTML = paginationHtml;
                 
@@ -1069,13 +1076,13 @@
         function parseBiblicalReference(termo) {
             const livrosPT = {
                 // Nomes completos
-                'genesis': 'gn', 'gen': 'gn', 'gn': 'gn', 'exodo': 'ex', 'ex': 'ex', 'levitico': 'lv', 'lv': 'lv', 'numeros': 'nm', 'nm': 'nm', 'deuteronomio': 'dt', 'dt': 'dt',
+                'genesis': 'gn', 'gen': 'gn', 'gn': 'gn', 'exodo': 'ex', 'ex': 'ex', 'levitico': 'lv', 'lv': 'lv', 'numeros': 'nm', 'nm': 'nm', 'deuteronomio': 'dt', 'dt': 'dt', 'deut': 'dt',
                 'josue': 'js', 'js': 'js', 'juizes': 'jz', 'jz': 'jz', 'rute': 'rt', 'rt': 'rt', 
                 '1samuel': '1sm', '1sm': '1sm', '2samuel': '2sm', '2sm': '2sm', 
                 '1reis': '1rs', '1rs': '1rs', '2reis': '2rs', '2rs': '2rs',
                 '1cronicas': '1cr', '1cr': '1cr', '2cronicas': '2cr', '2cr': '2cr', 
                 'esdras': 'ed', 'ed': 'ed', 'neemias': 'ne', 'ne': 'ne', 'ester': 'et', 'et': 'et', 
-                'jo': 'jo', 'salmos': 'sl', 'sl': 'sl',
+                'jo': 'jo', 'salmos': 'sl', 'sl': 'sl', 'sal': 'sl',
                 'proverbios': 'pv', 'pv': 'pv', 'eclesiastes': 'ec', 'ec': 'ec', 'canticos': 'ct', 'ct': 'ct', 
                 'isaias': 'is', 'is': 'is', 'jeremias': 'jr', 'jr': 'jr', 'lamentacoes': 'lm', 'lm': 'lm',
                 'ezequiel': 'ez', 'ez': 'ez', 'daniel': 'dn', 'dn': 'dn', 'oseias': 'os', 'os': 'os', 
@@ -1146,9 +1153,19 @@
             
             console.log('PARSE DEBUG - testando resto:', resto);
             
-            // Intervalo de capítulos
-            const multiCap = resto.match(/^(\d+)\s+(a|e)\s+(\d+)$/);
-            if (multiCap) return { tipo: 'intervalo_capitulos', livro: abrev, capitulo: parseInt(multiCap[1]), capituloFim: parseInt(multiCap[3]) };
+            // Intervalo de capítulos - aceita "32 a 34" ou "32 a 34 Salmos 91"
+            const multiCap = resto.match(/^(\d+)\s+(a|e)\s+(\d+)/);
+            if (multiCap) {
+                console.log('PARSE DEBUG - multiCap match:', multiCap);
+                // Verificar se há mais texto depois (múltiplas referências)
+                const aposMultiCap = resto.match(/^(\d+)\s+(a|e)\s+(\d+)\s+(.+)$/);
+                if (aposMultiCap && aposMultiCap[4].trim()) {
+                    console.log('PARSE DEBUG - múltiplas referências detectadas:', aposMultiCap[4]);
+                    // Há múltiplas referências, retorna null para API processar
+                    return null;
+                }
+                return { tipo: 'intervalo_capitulos', livro: abrev, capitulo: parseInt(multiCap[1]), capituloFim: parseInt(multiCap[3]) };
+            }
             
             // Com dois pontos: 1:1-4 ou 1:1 e 4
             const doisPontos = resto.match(/^(\d+):(\d+)(?:-(\d+)|\s+e\s+(\d+))?$/);

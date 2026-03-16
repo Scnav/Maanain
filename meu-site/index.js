@@ -1529,6 +1529,10 @@ app.put('/api/admin/topicos-biblia/:id', verifyAdmin, (req, res) => {
     const { id } = req.params;
     const { titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao, hora_publicacao } = req.body;
     
+    console.log('PUT /api/admin/topicos-biblia/:id');
+    console.log('ID do tópico:', id);
+    console.log('Tipo do ID:', typeof id);
+    console.log('Dados recebidos:', { titulo, data_publicacao, hora_publicacao });
     console.log('Atualizando - data_publicacao:', data_publicacao, 'hora_publicacao:', hora_publicacao);
     
     // Se não tem data e hora (ou são vazios), publicar diretamente (null)
@@ -1657,7 +1661,10 @@ const ABREVIACOES_SHORT = {
     '1tessalonicenses': 52, '2tessalonicenses': 53,
     '1timoteo': 54, '2timoteo': 55,
     '1pedro': 60, '2pedro': 61,
-    '1joao': 62, '2joao': 63, '3joao': 64
+    '1joao': 62, '2joao': 63, '3joao': 64,
+    // Abreviações extras comuns
+    'deut': 5, 'dt': 5,
+    'sal': 19
 };
 
 // Contagem de capítulos por livro
@@ -1907,11 +1914,46 @@ app.get('/api/biblia/busca', (req, res) => {
         }
         
         // Verificar se é uma busca por múltiplos livros (contém " e " ou " &")
-        const separadores = [' e ', ' e ', ' & ', ' and '];
+        const separadores = [' e ', ' & ', ' and ', ','];
         let termosBusca = [termo];
         
+        // Primeiro verificar se há padrão de referência bíblica com texto misturado
+        // Ex: "deut 32 a 34 salmos 91" -> deve ser tratado como múltiplas refs
+        const temReferenciaMista = termo.match(/\d+\s+(a|e)\s+\d+\s+\w+/);
+        if (temReferenciaMista) {
+            console.log('DEBUG - Referência mista detectada, tentando separar por livro...');
+            // Tentar separar por nomes de livros conhecidos
+            // Buscar por padrões onde um livro termina e outro começa
+            // Padrão: "número a número" seguido de espaço e depois um livro
+            // Ex: "deut 32 a 34 salmos 91" -> "deut 32 a 34" e "salmos 91"
+            
+            // Primeiro, verificar se tem " a " (intervalo) seguido de livro
+            const separacaoPorIntervalo = termo.match(/^(.+?)(\d+)\s+a\s+(\d+)\s+(\w.*)$/i);
+            if (separacaoPorIntervalo) {
+                // Encontrou padrão: "deut 32 a 34 salmos 91"
+                const primeiraParte = separacaoPorIntervalo[1].trim() + ' ' + separacaoPorIntervalo[2] + ' a ' + separacaoPorIntervalo[3]; // "deut 32 a 34"
+                const segundaParte = separacaoPorIntervalo[4].trim(); // "salmos 91"
+                
+                if (primeiraParte && segundaParte) {
+                    // Verificar se a segunda parte começa com um livro conhecido
+                    const segundaParteLower = segundaParte.toLowerCase().trim();
+                    let startsWithBook = false;
+                    for (const [abrev, id] of Object.entries(ABREVIACOES_SHORT)) {
+                        if (segundaParteLower.startsWith(abrev) || segundaParteLower.startsWith(NOMES_LIVROS[id].toLowerCase())) {
+                            startsWithBook = true;
+                            break;
+                        }
+                    }
+                    if (startsWithBook) {
+                        termosBusca = [primeiraParte, segundaParte];
+                        console.log('DEBUG - Termos separados por intervalo:', termosBusca);
+                    }
+                }
+            }
+        }
+        
         for (const sep of separadores) {
-            if (termo.includes(sep)) {
+            if (termo.includes(sep) && termosBusca.length === 1) {
                 termosBusca = termo.split(sep).map(t => t.trim()).filter(t => t.length > 0);
                 break;
             }
@@ -1935,6 +1977,9 @@ app.get('/api/biblia/busca', (req, res) => {
         nomeParaId['1pedro'] = 60;
         nomeParaId['2samuel'] = 10;
         nomeParaId['1samuel'] = 9;
+        // Abreviações comuns extras
+        nomeParaId['deut'] = 5;
+        nomeParaId['sal'] = 19;
         
         // Função para extrair livro, capítulo e versículo de um termo
         function parseReferencia(texto) {
@@ -1980,6 +2025,14 @@ app.get('/api/biblia/busca', (req, res) => {
             }
             
             console.log('DEBUG parseReferencia - texto:', texto, 'livro:', livroNome, 'resto:', resto);
+            
+            // Detectar intervalo de capítulos mesmo com texto depois (ex: "32 a 34 salmos 91")
+            const matchIntervaloCapitulos = resto.match(/^(\d+)\s+(a|e)\s+(\d+)/);
+            if (matchIntervaloCapitulos) {
+                // Retorna com capituloFim para indicar intervalo
+                capitulo = parseInt(matchIntervaloCapitulos[1]);
+                return { livroId, livroNome, capitulo, capituloFim: parseInt(matchIntervaloCapitulos[3]) };
+            }
             
             // Detectar capítulo:verso (ex: "1:10" ou "1:10-15") - formato antigo
             const matchCapituloVerso = resto.match(/(\d+):(\d+(?:-\d+)?)/);
@@ -2039,7 +2092,23 @@ app.get('/api/biblia/busca', (req, res) => {
                     console.log('DEBUG - bibliaLivros[12]:', typeof bibliaLivros[12], Object.keys(bibliaLivros[12] || {}));
                     
                     // Estrutura: bibliaLivros[12]['1'] = objeto com versículos { '1': 'texto', '2': 'texto', ... }
-                    if (ref.versiculo) {
+                    if (ref.capituloFim) {
+                        // Intervalo de capítulos (ex: Deut 32 a 34)
+                        for (let cap = ref.capitulo; cap <= ref.capituloFim; cap++) {
+                            const capituloData = bibliaLivros[livroIdNum]?.[cap];
+                            if (capituloData && typeof capituloData === 'object') {
+                                Object.keys(capituloData).forEach((verso) => {
+                                    resultados.push({
+                                        livro: ref.livroNome,
+                                        abreviacao: ABREVIACOES_LIVROS[livroIdNum],
+                                        capitulo: cap,
+                                        verso: parseInt(verso),
+                                        texto: capituloData[verso]
+                                    });
+                                });
+                            }
+                        }
+                    } else if (ref.versiculo) {
                         // Buscar versículo(s) específico(s)
                         const capituloData = bibliaLivros[livroIdNum]?.[ref.capitulo];
                         console.log('DEBUG - capituloData:', capituloData ? 'existe' : 'null', typeof capituloData);

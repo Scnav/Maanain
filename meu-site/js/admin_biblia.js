@@ -55,6 +55,9 @@ function exibirTopicos(topicos) {
     
     if (!lista) return;
     
+    // Limpar a lista antes de renderizar
+    lista.innerHTML = '';
+    
     loading.style.display = 'none';
     
     if (topicos.length === 0) {
@@ -62,6 +65,8 @@ function exibirTopicos(topicos) {
         lista.style.display = 'block';
         return;
     }
+    
+    console.log('Exibindo', topicos.length, 'tópicos');
     
     // Função para verificar o status real do tópico
     function verificarStatus(topico) {
@@ -243,15 +248,20 @@ document.getElementById('btnSalvarTopico')?.addEventListener('click', async func
     // Converter "00:00" para vazio para publicação imediata
     const horaEnviar = hora_publicacao === '00:00' ? '' : hora_publicacao;
     
-    console.log('Salvando - ativo:', ativo, 'data:', data_publicacao, 'hora:', horaEnviar);
+    console.log('Salvando tópico - ID:', id, 'Título:', titulo);
+    console.log('Data publicacao:', data_publicacao, 'Hora publicacao:', horaEnviar);
+    
+    // Verificar se o ID é válido para edição
+    const idValido = id && id !== '' && !isNaN(parseInt(id));
+    const url = idValido ? `/api/admin/topicos-biblia/${id}` : '/api/admin/topicos-biblia';
+    const method = idValido ? 'PUT' : 'POST';
+    
+    console.log('Método:', method, 'URL:', url);
     
     if (!titulo) {
         alert('Título é obrigatório!');
         return;
     }
-    
-    const url = id ? `/api/admin/topicos-biblia/${id}` : '/api/admin/topicos-biblia';
-    const method = id ? 'PUT' : 'POST';
     
     try {
         const response = await fetch(url, {
@@ -284,6 +294,40 @@ document.getElementById('btnSalvarTopico')?.addEventListener('click', async func
 
 // Editar tópico
 function editarTopico(id, titulo, descricao, conteudo, categoria, icone, ordem, ativo, data_publicacao = '', hora_publicacao = '') {
+    console.log('Editar tópico - ID:', id, 'Título:', titulo);
+    console.log('Data:', data_publicacao, 'Hora:', hora_publicacao);
+    
+    // Processar a data de publicação para o formato correto do input date (YYYY-MM-DD)
+    let dataFormatada = '';
+    if (data_publicacao && data_publicacao !== '') {
+        if (data_publicacao.includes('T')) {
+            // Formato ISO: "2026-03-17T03:00:00.000Z" - extrair apenas a parte da data
+            dataFormatada = data_publicacao.split('T')[0];
+        } else if (data_publicacao.includes('GMT')) {
+            // Formato Date object do SQLite: "Fri Mar 17 2026 00:00:00 GMT-0300"
+            const partes = data_publicacao.split(' ');
+            const meses = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+            const mes = meses[partes[1]];
+            const dia = parseInt(partes[2]);
+            const ano = parseInt(partes[3]);
+            dataFormatada = `${ano}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+        } else {
+            // Já está no formato YYYY-MM-DD
+            dataFormatada = data_publicacao;
+        }
+    }
+    
+    // Processar a hora para remover segundos se necessário
+    let horaFormatada = hora_publicacao || '';
+    if (horaFormatada && horaFormatada.includes(':')) {
+        const partesHora = horaFormatada.split(':');
+        if (partesHora.length >= 2) {
+            horaFormatada = `${partesHora[0]}:${partesHora[1]}`;
+        }
+    }
+    
+    console.log('Data formatada:', dataFormatada, 'Hora formatada:', horaFormatada);
+    
     document.getElementById('formTopico').style.display = 'block';
     document.getElementById('formTopicoTitle').textContent = 'Editar Tópico';
     document.getElementById('topicoId').value = id;
@@ -294,8 +338,10 @@ function editarTopico(id, titulo, descricao, conteudo, categoria, icone, ordem, 
     document.getElementById('topicoIcone').value = icone;
     document.getElementById('topicoOrdem').value = ordem;
     document.getElementById('topicoAtivo').checked = ativo === 1 || ativo === true || ativo === '1';
-    document.getElementById('topicoDataPublicacao').value = data_publicacao;
-    document.getElementById('topicoHoraPublicacao').value = hora_publicacao || '';
+    document.getElementById('topicoDataPublicacao').value = dataFormatada;
+    document.getElementById('topicoHoraPublicacao').value = horaFormatada;
+    
+    console.log('Formulário preenchido - topicoId:', document.getElementById('topicoId').value);
 }
 
 // Excluir tópico
